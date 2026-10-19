@@ -1,3 +1,6 @@
 node_modules/
 *.log
 .firebase/
+tools/out/
+sauvegardes/
+backups/

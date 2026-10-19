@@ -54,12 +54,31 @@ compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en pr
   par les employés côté serveur jusqu'à ce nettoyage (étape 6 ci-dessus). Ce nettoyage doit aller avec une purge du cache local des appareils.
 - Un employé qui modifie sa facture en attente ne modifie pas ses coûts (il ne peut pas les relire).
 
+## Outil de copie des coûts historiques (`tools/migration-couts.mjs`)
+
+Copie les coûts, marges et fournisseurs des anciens documents vers les collections privées. **Il ne modifie ni ne supprime
+jamais aucun document public ni aucun champ financier**, et n'écrase jamais un document privé existant.
+
+```
+# 1. Simulation (lecture seule) : combien de documents seraient copiés, plus un contrôle des données
+GOOGLE_APPLICATION_CREDENTIALS=compte-de-service.json node tools/migration-couts.mjs --project <id> --auth
+
+# 2. Copie réelle (sauvegarde complète obligatoire, projet à confirmer)
+GOOGLE_APPLICATION_CREDENTIALS=compte-de-service.json node tools/migration-couts.mjs --project <id> --backup sauvegardes/avant-couts --apply --confirm <id>
+```
+
+- Le compte de service (Firebase Console, Paramètres du projet, Comptes de service) donne un accès complet : ne jamais le
+  placer dans le dépôt. `sauvegardes/` et `tools/out/` sont ignorés par Git (ils contiennent des données financières).
+- Le rapport ne contient que des identifiants et des compteurs (propriétaires manquants, profils sans statut, comptes
+  sans profil, champs financiers encore présents dans les documents publics).
+- Rejouable sans risque : une seconde exécution ne crée rien.
+
 ## Lancer les tests
 
 ```
 npm install
 npm run test:app     # code de l'application, sans réseau
-npm run test:rules   # règles Firestore, sur l'émulateur
+npm run test:rules   # règles Firestore + outil de migration, sur l'émulateur (données fictives)
 ```
 
 Les tests utilisent l'émulateur Firestore (Java requis) avec des comptes et données fictifs, sans toucher à la production.
