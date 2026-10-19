@@ -5,7 +5,7 @@
 // IMPORTANT : a chaque fois que tu publies une nouvelle version de l'appli,
 // change le numero ci-dessous (v1 -> v2 -> v3...) pour forcer tout le monde
 // a recuperer la derniere version.
-const CACHE_NAME = 'bgm-gestion-v5';
+const CACHE_NAME = 'bgm-gestion-v6';
 
 const PRECACHE_URLS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',

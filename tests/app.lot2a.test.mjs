@@ -147,8 +147,10 @@ describe('Fournisseurs : réservés au patron et à l\'administrateur', () => {
   it('la fiche commande masque le fournisseur à l\'employé', () => {
     assert.match(bodyOf('viewCmd'), /if\(isAdmin\)h\+='<section class="ui-card ui-in" style="--i:'\+\(i\+\+\)\+'"><h2>Fournisseur<\/h2>'/);
   });
-  it('la commande d\'un employé ne contient aucun champ fournisseur', () => {
-    assert.match(bodyOf('saveCmd'), /\.\.\.\(fOpt\?\{fournisseurId:fsel\.value,fournisseurNom:fOpt\.text,fournisseurWa:fOpt\.dataset\.wa\|\|''\}:\{\}\),/);
+  it('le document public d\'une commande ne contient aucun champ fournisseur (document privé réservé à l\'administrateur)', () => {
+    const f = bodyOf('saveCmd');
+    assert.doesNotMatch(f.slice(f.indexOf('var data={'), f.indexOf('showOv(')), /fournisseur/);
+    assert.match(f, /if\(fOpt\)cb\.set\(db\.collection\('commandes_fourn'\)/);
   });
   it('prix fournisseurs (catalogue local) : jamais chargés pour un employé', () => {
     const ctx = sandbox({ isAdmin: false, supplierCatalog: null, localStorage: { getItem: () => JSON.stringify([{ name: 'X', cost: 1 }]) } });
@@ -181,6 +183,6 @@ describe('Équipe : approbation par le patron', () => {
 
 describe('Service worker', () => {
   it('la version du cache a été incrémentée', () => {
-    assert.match(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), /CACHE_NAME = 'bgm-gestion-v5'/);
+    assert.match(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), /CACHE_NAME = 'bgm-gestion-v6'/);
   });
 });

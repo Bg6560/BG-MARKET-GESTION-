@@ -416,3 +416,70 @@ describe('Collections inconnues', () => {
     }
   });
 });
+
+describe('Écritures exactement telles que le code de l\'application les envoie (Lot 2B)', () => {
+  const factureEmp = (uid) => ({
+    num: 'FAC-010', date: '2026-10-19', statut: 'en_attente', client: 'Client', tel: '0100000001', addr: '', products: [{ name: 'Phone', qty: 1, price: 50000 }],
+    sub: 50000, tvaR: 0, tva: 0, livraison: 0, total: 50000, notes: '', garantie: '', paiement: 'Cash', etatTel: 'neuf', biz: { name: 'Boutique' },
+    vendeur: uid, vendeurEmail: `${uid}@test.local`, uid, validation: 'a_valider', auto: false, ts: serverTimestamp(),
+  });
+  it('employé : création d\'une facture + coûts dans le même lot', async () => {
+    const db = as('empA');
+    const b = writeBatch(db);
+    b.set(doc(db, 'factures', 'F10'), factureEmp('empA'));
+    b.set(doc(db, 'factures_couts', 'F10'), { uid: 'empA', ts: serverTimestamp(), cost: 40000, profit: 10000, costs: [40000] });
+    await ok(b.commit());
+  });
+  it('employé : modification de sa facture en attente, sans toucher aux coûts', async () => {
+    const db = as('empA');
+    const b = writeBatch(db);
+    const { uid, vendeur, vendeurEmail, ts, validation, auto, ...modifiable } = factureEmp('empA');
+    b.update(doc(db, 'factures', 'facAattente'), { ...modifiable, total: 60000 });
+    await ok(b.commit());
+  });
+  it('administrateur avec « couts » : modification de facture + coûts (document privé créé s\'il n\'existe pas)', async () => {
+    const db = as('admin1');
+    const b = writeBatch(db);
+    b.update(doc(db, 'factures', 'facAvalidee'), { total: 70000, client: 'Corrigé' });
+    b.set(doc(db, 'factures_couts', 'facAvalidee'), { uid: 'empA', ts: serverTimestamp(), cost: 1, profit: 2, costs: [1] }, { merge: true });
+    await ok(b.commit());
+  });
+  it('administrateur sans « couts » : modification de facture sans document de coûts', async () => {
+    await ok(updateDoc(doc(as('admin2'), 'factures', 'facAvalidee'), { total: 70000 }));
+    await ko(setDoc(doc(as('admin2'), 'factures_couts', 'facAattente'), { uid: 'empA', cost: 1 }, { merge: true })); // coûts existants : modification réservée au droit « couts »
+  });
+  it('administrateur : facture automatique d\'une commande livrée (uid du vendeur) + coûts', async () => {
+    const db = as('admin2');
+    const b = writeBatch(db);
+    b.set(doc(db, 'factures', 'AUTO'), { ...factureEmp('empA'), vendeur: 'A', validation: 'validee', auto: true, statut: 'payee', cmdId: 'cmdA', cmdNum: 'CMD-1' });
+    b.set(doc(db, 'factures_couts', 'AUTO'), { uid: 'empA', ts: serverTimestamp(), cost: 0, profit: null, costs: [0] });
+    await ok(b.commit());
+  });
+  it('administrateur : produit sans prix d\'achat + prix d\'achat à part', async () => {
+    const db = as('admin1');
+    const b = writeBatch(db);
+    b.update(doc(db, 'produits', 'p1'), { marque: 'M', modele: 'Phone Test', stockage: '128 GB', ram: '', prixVente: 120000, quantite: 5, description: '' });
+    b.set(doc(db, 'produits_prive', 'p1'), { prixAchat: 90000 }, { merge: true });
+    await ok(b.commit());
+  });
+  it('administrateur : choix du fournisseur d\'une commande + changement de statut', async () => {
+    const db = as('admin2');
+    const b = writeBatch(db);
+    b.set(doc(db, 'commandes_fourn', 'cmdB'), { uid: 'empB', ts: serverTimestamp(), fournisseurId: 'f1', fournisseurNom: 'Fournisseur Test', fournisseurWa: '0100' }, { merge: true });
+    b.update(doc(db, 'commandes', 'cmdB'), { statut: 'envoyee' });
+    await ok(b.commit());
+  });
+  it('suppression d\'une commande et de ses documents privés : droit « suppr » requis', async () => {
+    const lot = (u) => { const db = as(u); const b = writeBatch(db); b.delete(doc(db, 'commandes', 'cmdA')); b.delete(doc(db, 'commandes_couts', 'cmdA')); b.delete(doc(db, 'commandes_fourn', 'cmdA')); return b.commit(); };
+    await ko(lot('admin1'));
+    await ko(lot('empA'));
+    await ok(lot('admin2'));
+  });
+  it('employé : commande sans coût ni fournisseur dans le document public', async () => {
+    const db = as('empA');
+    const b = writeBatch(db);
+    b.set(doc(db, 'commandes', 'N1'), { client: 'C', tel: '01', produit: 'Phone', produits: [{ name: 'Phone', qty: 1, prix: 1000 }], nbArticles: 1, prix: 1000, livraison: 0, total: 1000, etat: 'neuf', statut: 'en_attente', vendeur: 'A', vendeurEmail: 'a@test.local', uid: 'empA', num: 'CMD-1', ts: serverTimestamp() });
+    b.set(doc(db, 'commandes_couts', 'N1'), { uid: 'empA', ts: serverTimestamp(), coutCatalogue: 0, profit: 0, costs: [0] });
+    await ok(b.commit());
+  });
+});

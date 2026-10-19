@@ -42,11 +42,24 @@ compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en pr
 5. Publier ces règles, après les tests ci-dessous. Garder l'ancienne version pour un retour arrière immédiat.
 6. Plus tard, avec accord explicite : retirer les anciens champs de coûts des documents publics.
 
+## Ce que fait désormais l'application (Lots 2A et 2B)
+
+- Nouveaux comptes en `en_attente` ; le patron approuve dans l'onglet Équipe.
+- L'employé ne charge que ses clients ; fournisseurs et prix fournisseurs : patron et administrateur.
+- Coûts : écrits dans `commandes_couts`, `factures_couts`, `produits_prive` (et le fournisseur d'une commande dans
+  `commandes_fourn`), dans le même lot d'écritures que le document public. Les documents publics n'ont plus de coût.
+- À la lecture, chaque document est « hydraté » (`coutsCmd`, `coutsFac`, `coutsProd`) : sans le droit `couts`, tout coût
+  est retiré, même dans un ancien document. L'employé ne voit plus ses propres bénéfices.
+- Les anciens documents gardent leurs champs de coût **tant que la migration n'est pas faite** : ils restent lisibles
+  par les employés côté serveur jusqu'à ce nettoyage (étape 6 ci-dessus). Ce nettoyage doit aller avec une purge du cache local des appareils.
+- Un employé qui modifie sa facture en attente ne modifie pas ses coûts (il ne peut pas les relire).
+
 ## Lancer les tests
 
 ```
 npm install
-npm run test:rules
+npm run test:app     # code de l'application, sans réseau
+npm run test:rules   # règles Firestore, sur l'émulateur
 ```
 
 Les tests utilisent l'émulateur Firestore (Java requis) avec des comptes et données fictifs, sans toucher à la production.

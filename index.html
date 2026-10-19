@@ -1367,7 +1367,7 @@ async function doSignup(){
   }catch(e){setAuthMsg('s-err',authErrText(e));}
   finally{window._signupName=null;authBusy('btn-signup',false);}
 }
-function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();auth.signOut();}
+function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}coutsStop();}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();auth.signOut();}
 auth.onAuthStateChanged(async user=>{
   try{
     if(user){
@@ -1378,7 +1378,7 @@ auth.onAuthStateChanged(async user=>{
         loadUserProfile(user).then(()=>loadGlobalSettings()),
         new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout Firebase - verifie ta connexion')),10000))
       ]);
-      startNotifListener();startJournalListener();
+      startNotifListener();startJournalListener();coutsStart();
       hideOv();
       document.getElementById('login-page').style.display='none';
       document.getElementById('app-page').style.display='flex';
@@ -1495,7 +1495,7 @@ async function renderDashboard(){
       '<span class="h-ring-c"><span><b class="num" id="h-pct">'+(goal?'0 %':'–')+'</b><span>'+(goal?'de l\'objectif':'sans objectif')+'</span></span></span></button>'+
     '<div><h2>'+(can('totaux')?'Ventes de ce mois':'Mes ventes de ce mois')+'</h2>'+
       '<div class="h-amount num" id="h-amount"><span class="h-skel">000 000 F</span></div>'+
-      '<div class="h-row"><span>Bénéfice</span><strong class="profit num" id="h-profit">…</strong></div>'+
+      (can('couts')?'<div class="h-row"><span>Bénéfice</span><strong class="profit num" id="h-profit">…</strong></div>':'')+
       '<div class="h-row"><span>Objectif</span>'+(goal?'<strong class="num">'+v2Money(goal)+'</strong>':(isBoss?'<button type="button" onclick="v2OpenGoal()">Définir</button>':'<strong>Pas encore défini</strong>'))+'</div>'+
     '</div>'+
     '<div class="h-week" id="h-week" aria-label="Ventes des 7 derniers jours"></div>'+
@@ -1531,7 +1531,8 @@ async function renderDashboard(){
   if(activeTab!=='dashboard'||!document.getElementById('h-orders'))return; // l'utilisateur est parti ailleurs
   const docs=i=>r[i]&&r[i].status==='fulfilled'?r[i].value.docs.map(d=>({id:d.id,...d.data()})):null;
   const failed=r.filter(x=>x.status==='rejected');
-  const facs=docs(0)||[],cmds=docs(1),pres=docs(2),savs=docs(3);
+  await coutsReady();
+  const facs=(docs(0)||[]).map(coutsFac),cmds=docs(1),pres=docs(2),savs=docs(3);
 
   // Ventes du mois + 7 derniers jours (factures)
   let ventes=0,profit=0;const days=[0,0,0,0,0,0,0];
@@ -1541,7 +1542,7 @@ async function renderDashboard(){
     const k=6-Math.floor((d0-new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()).getTime())/864e5);
     if(k>=0&&k<=6)days[k]+=+f.total||0;});
   v2CountUp(document.getElementById('h-amount'),ventes,true);
-  document.getElementById('h-profit').textContent='+'+v2Money(profit);
+  const hp=document.getElementById('h-profit');if(hp)hp.textContent='+'+v2Money(profit);
   if(goal){
     const pct=Math.min(ventes/goal,1);
     requestAnimationFrame(()=>requestAnimationFrame(()=>{const p=document.getElementById('h-prog');if(p)p.style.strokeDashoffset=(339.3*(1-pct)).toFixed(1);}));
@@ -1895,6 +1896,7 @@ async function loadCmds(){
       snap=await db.collection('commandes').where('uid','==',currentUser.uid).limit(150).get();
     }
     allCmds=snap.docs.map(d=>({id:d.id,...d.data()}));
+    await coutsReady();allCmds.forEach(coutsCmd);
     // Tri cote client par date decroissante
     allCmds.sort((a,b)=>{
       const ta=a.ts?.seconds||0, tb=b.ts?.seconds||0;
@@ -1994,6 +1996,9 @@ async function saveCmd(){
   var cout=produits.reduce(function(a,p){return a+p.cost*p.qty;},0);
   var profit=produits.reduce(function(a,p){return a+(p.cost>0?(p.prix-p.cost)*p.qty:0);},0);
   var resume=produits.map(function(p){return p.name+(p.qty>1?' x'+p.qty:'');}).join(' + ');
+  /* les coûts partent dans commandes_couts : le document public n'en contient aucun */
+  var costs=produits.map(function(p){return p.cost||0;});
+  produits=coutsNoCost(produits);
   var first=produits[0];
   var fsel=document.getElementById('fc-fourn-id');
   var fOpt=(fsel&&fsel.value)?fsel.options[fsel.selectedIndex]:null;
@@ -2005,15 +2010,18 @@ async function saveCmd(){
     paiement:payMode||'',notes:((document.getElementById('fc-notes')||{}).value||'').trim(),
     expOn:expOn,expVille:expOn?((document.getElementById('fc-expv')||{}).value||'').trim():'',
     expTrans:expOn?((document.getElementById('fc-expt')||{}).value||'').trim():'',expFrais:expf,
-    etat:etatCmd||'neuf',coutCatalogue:cout,profit:profit,beneficeCmd:profit,total:sous+liv+expf,
-    ...(fOpt?{fournisseurId:fsel.value,fournisseurNom:fOpt.text,fournisseurWa:fOpt.dataset.wa||''}:{}),
+    etat:etatCmd||'neuf',total:sous+liv+expf,
     statut:'en_attente',vendeur:(userProfile&&userProfile.nom)||currentUser.email,vendeurEmail:currentUser.email,uid:currentUser.uid,
     num:'CMD-'+pad(Date.now()%100000),date:new Date().toLocaleDateString('fr-FR'),
     ts:firebase.firestore.FieldValue.serverTimestamp()
   };
   showOv('Enregistrement...');
   try{
-    await db.collection('commandes').add(data);
+    var cref=db.collection('commandes').doc(),TS=firebase.firestore.FieldValue.serverTimestamp(),cb=db.batch();
+    cb.set(cref,data);
+    cb.set(db.collection('commandes_couts').doc(cref.id),{uid:currentUser.uid,ts:TS,coutCatalogue:cout,profit:profit,costs:costs});
+    if(fOpt)cb.set(db.collection('commandes_fourn').doc(cref.id),{uid:currentUser.uid,ts:TS,fournisseurId:fsel.value,fournisseurNom:fOpt.text,fournisseurWa:fOpt.dataset.wa||''});
+    await cb.commit();
     try{var ec=await cliBaseQuery().where('tel','==',tel).limit(1).get();if(ec.empty){await db.collection('clients').add({nom:nom,tel:tel,whatsapp:tel,adresse:data.adresse,notes:'',uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});}}catch(ce){}
     hideOv();showToast('Commande enregistree ('+data.nbArticles+' telephone'+(data.nbArticles>1?'s':'')+') !','s');renderCommandes();
   }catch(e){hideOv();showToast('Erreur: '+e.message,'e');}
@@ -2036,7 +2044,7 @@ async function deleteCmd(id){
   showOv('Suppression...');
   try{
     rlLogDel('cmd',allCmds,id,function(x){return ((x.num||'')+' '+(x.client||'')).trim();});
-    await db.collection('commandes').doc(id).delete();
+    await delWithPrivate('commandes',id,['commandes_couts','commandes_fourn']);
     hideOv();
     showToast('Commande supprimee !','s');
     renderCommandes();
@@ -2086,6 +2094,7 @@ async function updateStockAfterSale(soldProducts){
       const match=prods.find(p=>((p.nom||p.modele||'')).toLowerCase().includes(spN)||spN.includes(((p.nom||p.modele||'')).toLowerCase().substring(0,8)));
       if(match){
         const newQ=Math.max(0,(match.quantite||0)-(sp.qty||1));
+        if(newQ===(match.quantite||0))continue;
         await db.collection('produits').doc(match.id).update({quantite:newQ});
       }
     }
@@ -2405,7 +2414,8 @@ async function viewCmd(id){
   var snap;
   try{snap=await db.collection('commandes').doc(id).get();}catch(e){showToast('Commande non chargée : '+e.message,'e');return;}
   if(!snap.exists){showToast('Cette commande n\'existe plus','e');renderCommandes();return;}
-  var c=snap.data();
+  await coutsReady();
+  var c=coutsCmd(Object.assign({id:id},snap.data()));
   var steps=[['en_attente','En attente'],['validee','Validée'],['envoyee','Envoyée'],['livree','Livrée']];
   var si=-1;steps.forEach(function(s,i){if(s[0]===c.statut)si=i;});
   var st=V2_STATUS[c.statut]||[c.statut||'—','p-other'];
@@ -2414,7 +2424,7 @@ async function viewCmd(id){
   var digits=String(c.tel||'').replace(/[^0-9]/g,'');var wa=digits.length===10?'225'+digits:digits;
   var next={en_attente:['validee','Valider la commande'],validee:['envoyee','Marquer envoyée au fournisseur'],envoyee:['livree','Marquer livrée au client']}[c.statut];
   var d=uiDate(c);var sous=c.prix||prods.reduce(function(a,p){return a+(p.prix||0)*(p.qty||1);},0);
-  var voitBenef=can('couts')||(currentUser&&c.uid===currentUser.uid);
+  var voitBenef=can('couts');
   var i=0,h='<div class="ui-page">';
   h+='<div class="ui-head">'+backBtn+'<div class="ui-head-txt"><h1>'+esc(uiName(c.client)||'Commande')+'</h1><p class="ui-sub">'+esc(c.num||'Commande')+(d?', '+uiDayLabel(d).toLowerCase():'')+'</p></div></div>';
 
@@ -3014,6 +3024,8 @@ async function uiExport(col){
   try{
     var snap=await db.collection(col).get();
     var rows=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    await coutsReady();
+    rows.forEach(col==='commandes'?coutsCmd:(col==='factures'?coutsFac:(col==='produits'?coutsProd:function(){})));
     var lines=[cols.map(function(c){return uiCsvCell(c[0]);}).join(';')].concat(rows.map(function(r){return cols.map(function(c){var v;try{v=c[1](r);}catch(e){v='';}return uiCsvCell(v);}).join(';');}));
     var blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -3129,7 +3141,8 @@ async function uiMember(uid){
   try{
     var cs=await db.collection('commandes').where('uid','==',uid).get();
     var now=new Date(),m0=new Date(now.getFullYear(),now.getMonth(),1);
-    var all=cs.docs.map(function(d){return d.data();}).filter(function(c){return c.statut!=='annulee';});
+    await coutsReady();
+    var all=cs.docs.map(function(d){return coutsCmd(Object.assign({id:d.id},d.data()));}).filter(function(c){return c.statut!=='annulee';});
     var mois=all.filter(function(c){var d=uiDate(c);return d&&d>=m0;});
     var ca=mois.reduce(function(a,c){return a+(c.total||c.prix||0);},0),ben=mois.reduce(function(a,c){return a+Math.max(0,c.profit||0);},0);
     var k=document.getElementById('tm-kpis');
@@ -3264,7 +3277,7 @@ function facMine(f){return !!(currentUser&&f&&f.uid===currentUser.uid);}
 function facNeedsValidation(){return !isAdmin&&globalSettings.validationFactures!==false;}
 function facCanSend(f){return isAdmin||!facPending(f);}
 function facGuard(f){if(facCanSend(f))return true;showToast(t('fac.wait'),'e');return false;}
-function facSeesProfit(f){return can('couts')||facMine(f);}
+function facSeesProfit(f){return can('couts');}
 function facNum(){return (globalSettings.invPrefix||'FAC-')+pad(invNumR||1);}
 function facCompute(lines,tvaR,liv){
   var sub=0,cost=0,profit=0,hasCost=false;
@@ -3401,6 +3414,7 @@ async function loadFacs(){
     if(isAdmin)snap=await db.collection('factures').orderBy('ts','desc').limit(150).get();
     else snap=await db.collection('factures').where('uid','==',currentUser.uid).limit(150).get();
     allFacs=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    await coutsReady();allFacs.forEach(coutsFac);
     allFacs.sort(function(a,b){var x=facDate(a),y=facDate(b);return (y?y.getTime():0)-(x?x.getTime():0);});
     if(activeTab!=='factures'||!document.getElementById('fac-list'))return;
     renderFacList();
@@ -3570,7 +3584,7 @@ async function facDelete(id,fromDetail){
     var cmdId=f&&f.cmdId;
     rlLogDel('fac',allFacs,id,function(x){return x.num;});
     if(!cmdId){try{var sn=await db.collection('factures').doc(id).get();if(sn.exists)cmdId=sn.data().cmdId;}catch(e0){}}
-    await db.collection('factures').doc(id).delete();
+    await delWithPrivate('factures',id,['factures_couts']);
     if(cmdId){try{await db.collection('commandes').doc(cmdId).update({facturee:false});}catch(e1){}}
     allFacs=allFacs.filter(function(x){return x.id!==id;});
     hideOv();showToast(t('fac.deleted'),'s');
@@ -3599,7 +3613,8 @@ async function viewFacture(id){
   try{
     var snap=await db.collection('factures').doc(id).get();
     if(!snap.exists){showToast(t('fac.err.act')+'?','e');renderFactures();return;}
-    f=Object.assign({id:id},snap.data());
+    await coutsReady();
+    f=coutsFac(Object.assign({id:id},snap.data()));
   }catch(e){showToast(t('fac.err.act')+e.message,'e');renderFactures();return;}
   currentInvoice=f;
   var pend=facPending(f),paid=f.statut==='payee',locked=!facCanSend(f);
@@ -3842,8 +3857,8 @@ async function facSave(){
   var data={
     num:num,date:uiVal('fn-date')||facToday(),statut:d.statut==='payee'?'payee':'en_attente',
     client:client,tel:uiVal('fn-tel'),addr:uiVal('fn-addr'),
-    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price,cost:l.cost||0};}),
-    sub:r.sub,tvaR:tvaR,tva:r.tva,livraison:liv,total:r.total,cost:r.cost,profit:r.profit,
+    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price};}),
+    sub:r.sub,tvaR:tvaR,tva:r.tva,livraison:liv,total:r.total,
     notes:uiVal('fn-notes'),garantie:uiVal('fn-gar'),paiement:d.paiement||'',etatTel:d.etat||'neuf',
     biz:facBizSnapshot()
   };
@@ -3851,7 +3866,11 @@ async function facSave(){
   showOv('…');
   try{
     if(d.id){
-      await db.collection('factures').doc(d.id).update(data);
+      var ub=db.batch(),inv0=allFacs.find(function(x){return x.id===d.id;})||currentInvoice||{};
+      ub.update(db.collection('factures').doc(d.id),data);
+      /* les coûts ne se modifient que par un utilisateur qui peut les voir */
+      if(can('couts'))ub.set(db.collection('factures_couts').doc(d.id),{uid:inv0.uid||currentUser.uid,ts:inv0.ts||firebase.firestore.FieldValue.serverTimestamp(),cost:r.cost,profit:r.profit,costs:lines.map(function(l){return l.cost||0;})},{merge:true});
+      await ub.commit();
       hideOv();showToast(t('fac.updated'),'s');
       var c=allFacs.find(function(x){return x.id===d.id;});if(c)Object.assign(c,data);
       facDraft=null;viewFacture(d.id);
@@ -3863,7 +3882,13 @@ async function facSave(){
       data.ts=firebase.firestore.FieldValue.serverTimestamp();
       if(d.cmdId)await db.collection('commandes').doc(d.cmdId).update({facturee:true});
       var ref;
-      try{ref=await db.collection('factures').add(data);}
+      try{
+        ref=db.collection('factures').doc();
+        var fb=db.batch();
+        fb.set(ref,data);
+        fb.set(db.collection('factures_couts').doc(ref.id),{uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp(),cost:r.cost,profit:r.profit,costs:lines.map(function(l){return l.cost||0;})});
+        await fb.commit();
+      }
       catch(e2){if(d.cmdId){try{await db.collection('commandes').doc(d.cmdId).update({facturee:false});}catch(e3){}}throw e2;}
       if(num===facNum()){invNumR=(invNumR||1)+1;try{await db.collection('app_config').doc('settings').set({invNumR:invNumR},{merge:true});}catch(e4){}}
       updateStockAfterSale(data.products);
@@ -3879,7 +3904,8 @@ async function editFacture(id){
     var snap=await db.collection('factures').doc(id).get();
     hideOv();
     if(!snap.exists){showToast(t('fac.err.act')+'?','e');renderFactures();return;}
-    var f=Object.assign({id:id},snap.data());
+    await coutsReady();
+    var f=coutsFac(Object.assign({id:id},snap.data()));
     if(!isAdmin&&!(facPending(f)&&facMine(f))){showToast(t('fac.err.act')+t('fac.wait'),'e');return;}
     activeTab='factures';v2Nav('factures');
     openNvFac(facDraftFromFac(f));
@@ -3890,7 +3916,8 @@ async function editFacture(id){
 async function creerFactureDepuisCmd(cmdId){
   try{
     var snap=await db.collection('commandes').doc(cmdId).get();if(!snap.exists)return;
-    var c=snap.data();
+    await coutsReady();
+    var c=coutsCmd(Object.assign({id:cmdId},snap.data()));
     var d=facDraftFromCmd(c,cmdId);
     d.banner=facTx('fac.fromCmd',{n:c.num||''});
     activeTab='factures';v2Nav('factures');
@@ -3918,7 +3945,8 @@ async function facturePrecommande(id){
 async function facAutoFromCmd(cmdId){
   var ref=db.collection('commandes').doc(cmdId);
   var snap=await ref.get();if(!snap.exists)return null;
-  var c=snap.data();if(c.facturee)return null;
+  await coutsReady();
+  var c=coutsCmd(Object.assign({id:cmdId},snap.data()));if(c.facturee)return null;
   var d=facDraftFromCmd(c,cmdId);
   var lines=d.lines.filter(function(l){return (l.name||'').trim()&&l.price>0;});
   if(!lines.length)return null;
@@ -3926,8 +3954,8 @@ async function facAutoFromCmd(cmdId){
   var r=facCompute(lines,0,d.liv);
   var data={
     num:num,date:facToday(),statut:'payee',client:c.client||'',tel:c.tel||'',addr:c.adresse||'',
-    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price,cost:l.cost||0};}),
-    sub:r.sub,tvaR:0,tva:0,livraison:d.liv,total:r.total,cost:r.cost,profit:r.profit,
+    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price};}),
+    sub:r.sub,tvaR:0,tva:0,livraison:d.liv,total:r.total,
     notes:'',garantie:globalSettings.garantieDefaut||'',paiement:c.paiement||'',etatTel:c.etat||'neuf',
     biz:facBizSnapshot(),
     vendeur:c.vendeur||(userProfile&&userProfile.nom)||(currentUser&&currentUser.email)||'',vendeurEmail:c.vendeurEmail||(currentUser&&currentUser.email)||'',uid:c.uid||(currentUser&&currentUser.uid)||'',
@@ -3936,7 +3964,13 @@ async function facAutoFromCmd(cmdId){
   };
   await ref.update({facturee:true});
   var added;
-  try{added=await db.collection('factures').add(data);}
+  try{
+    added=db.collection('factures').doc();
+    var ab=db.batch();
+    ab.set(added,data);
+    ab.set(db.collection('factures_couts').doc(added.id),{uid:data.uid,ts:firebase.firestore.FieldValue.serverTimestamp(),cost:r.cost,profit:r.profit,costs:lines.map(function(l){return l.cost||0;})});
+    await ab.commit();
+  }
   catch(e){try{await ref.update({facturee:false});}catch(e2){}throw e;}
   invNumR=(invNumR||1)+1;
   try{await db.collection('app_config').doc('settings').set({invNumR:invNumR},{merge:true});}catch(e3){}
@@ -3990,7 +4024,8 @@ async function waFournisseur(id){
     var res=await Promise.all([db.collection('commandes').doc(id).get(),db.collection('fournisseurs').orderBy('nom').get()]);
     if(supCtx!==cur)return;
     if(!res[0].exists){facCloseSheet();showToast('Cette commande n\'existe plus','e');return;}
-    var c=res[0].data();
+    await coutsReady();
+    var c=coutsCmd(Object.assign({id:id},res[0].data()));
     if(c.statut==='annulee'){facCloseSheet();showToast(t('sup.cancelled'),'e');return;}
     cur.cmd=c;cur.fourns=res[1].docs.map(function(d){return Object.assign({id:d.id},d.data());});
     facSupRender();
@@ -4040,11 +4075,16 @@ function facSupOther(){
 }
 async function facSupSave(ctx,f){
   if(!isAdmin)return;
-  var upd={},st=ctx.cmd.statut;
-  if(f){upd.fournisseurId=f.id;upd.fournisseurNom=f.nom||'';upd.fournisseurWa=f.whatsapp||'';}
+  var upd={},st=ctx.cmd.statut,fo=null;
+  if(f)fo={uid:ctx.cmd.uid||currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp(),fournisseurId:f.id,fournisseurNom:f.nom||'',fournisseurWa:f.whatsapp||''};
   if(st==='validee'||(st==='en_attente'&&isAdmin))upd.statut='envoyee';
   try{
-    if(Object.keys(upd).length)await db.collection('commandes').doc(ctx.id).update(upd);
+    if(fo||upd.statut){
+      var sb=db.batch();
+      if(fo)sb.set(db.collection('commandes_fourn').doc(ctx.id),fo,{merge:true});
+      if(upd.statut)sb.update(db.collection('commandes').doc(ctx.id),upd);
+      await sb.commit();
+    }
     facCloseSheet();
     showToast(f?facTx('sup.sent',{n:f.nom||''}):'WhatsApp','s');
     viewCmd(ctx.id);
@@ -4635,7 +4675,8 @@ async function loadFourns(){
   try{
     var snap=await db.collection('fournisseurs').orderBy('nom').get();
     var fs_=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
-    var stats=await Promise.all(fs_.map(function(f){return db.collection('commandes').where('fournisseurId','==',f.id).get().then(function(s){return foStats(s.docs.map(function(d){return d.data();}));});}));
+    var cmdsAll=await foAllCmds();
+    var stats=fs_.map(function(f){return foStats(cmdsAll.filter(function(c){return c.fournisseurId===f.id;}));});
     fs_.forEach(function(f,i){f._st=stats[i];});
     allFourns=fs_;
     if(!document.getElementById('fourns-list'))return;
@@ -4675,15 +4716,14 @@ function foWa(id){
 
 async function viewFourn(id){
   if(!foGuard())return;
-  if(!foGuard())return;
   var mc=document.getElementById('main-content');
   mc.innerHTML='<div class="ui-page"><div class="ui-head">'+lotBack('renderFournisseurs()')+'<div class="ui-head-txt"><h1>'+t('fo.title')+'</h1><p class="ui-sub">…</p></div></div><div class="ui-skel" style="height:140px"></div><div class="ui-skel" style="height:120px"></div></div>';
   var f,cmds;
   try{
-    var res=await Promise.all([db.collection('fournisseurs').doc(id).get(),db.collection('commandes').where('fournisseurId','==',id).get()]);
+    var res=await Promise.all([db.collection('fournisseurs').doc(id).get(),foAllCmds()]);
     if(!res[0].exists){showToast(t('c.err.act')+'?','e');renderFournisseurs();return;}
     f=Object.assign({id:id},res[0].data());
-    cmds=res[1].docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    cmds=res[1].filter(function(c){return c.fournisseurId===id;});
   }catch(e){showToast(t('c.err.act')+e.message,'e');renderFournisseurs();return;}
   var st=foStats(cmds);
   cmds.sort(function(a,b){var x=uiDate(a),y=uiDate(b);return (y?y.getTime():0)-(x?x.getTime():0);});
@@ -5052,7 +5092,8 @@ function renderProduits(){
 async function loadProduits(){
   try{
     var snap=await db.collection('produits').get();
-    allProduits=snap.docs.map(function(d){var p=Object.assign({id:d.id},d.data());p._brand=prodBrand(p);return p;});
+    await coutsReady();
+    allProduits=snap.docs.map(function(d){var p=coutsProd(Object.assign({id:d.id},d.data()));p._brand=prodBrand(p);return p;});
     allProduits.sort(function(a,b){return a._brand.localeCompare(b._brand,'fr')||prodName(a).localeCompare(prodName(b),'fr',{numeric:true});});
     if(!document.getElementById('prod-list'))return;
     renderProdList();
@@ -5076,7 +5117,7 @@ function renderProdList(){
   var val=all.reduce(function(a,p){return a+(p.quantite||0)*(p.prixAchat||0);},0);
   var st=document.getElementById('prod-stats');
   if(st)st.innerHTML=all.length?('<div class="fo-stat"><b class="num">'+all.length+'</b><span>'+t('pr.stat.models')+'</span></div><div class="fo-stat"><b class="num">'+units+'</b><span>'+t('pr.stat.units')+'</span></div>'+
-    (can('totaux')?'<div class="fo-stat"><b class="num">'+v2Money(val)+'</b><span>'+t('pr.stat.value')+'</span></div>':'<div class="fo-stat"><b class="num'+(low?' warn':'')+'">'+low+'</b><span>'+t('pr.stat.low')+'</span></div>')):'';
+    (can('totaux')&&can('couts')?'<div class="fo-stat"><b class="num">'+v2Money(val)+'</b><span>'+t('pr.stat.value')+'</span></div>':'<div class="fo-stat"><b class="num'+(low?' warn':'')+'">'+low+'</b><span>'+t('pr.stat.low')+'</span></div>')):'';
   var sub=document.getElementById('prod-sub');if(sub)sub.textContent=all.length?facTx('pr.models',{n:all.length,s:lotPlural(all.length)})+' · '+facTx('pr.units',{n:units}):t('pr.sub0');
   var list=prodBase().filter(function(p){return prodMatch(p,prodFilter);});
   if(!list.length){
@@ -5113,7 +5154,8 @@ async function viewProd(id){
   var p;
   try{var snap=await db.collection('produits').doc(id).get();
     if(!snap.exists){showToast(t('pr.gone'),'e');renderProduits();return;}
-    p=Object.assign({id:id},snap.data());}
+    await coutsReady();
+    p=coutsProd(Object.assign({id:id},snap.data()));}
   catch(e){showToast(t('pr.err.act')+e.message,'e');renderProduits();return;}
   var brand=prodBrand(p),s=prodState(p),q=p.quantite||0,i=0;
   var pill=s==='ok'?['p-done',t('pr.inStock')]:(s==='low'?['p-wait',t('pr.low')]:['p-cancel',t('pr.out')]);
@@ -5145,7 +5187,7 @@ async function updateStock(id){
 async function deleteProd(id){
   if(!can('suppr'))return;
   if(!confirm(t('pr.confirmDel')))return;
-  try{rlLogDel('pr',allProduits,id,function(x){return prodName(x);});await db.collection('produits').doc(id).delete();allProduits=allProduits.filter(function(x){return x.id!==id;});showToast(t('pr.deleted'),'s');renderProduits();}
+  try{rlLogDel('pr',allProduits,id,function(x){return prodName(x);});await delWithPrivate('produits',id,['produits_prive']);allProduits=allProduits.filter(function(x){return x.id!==id;});showToast(t('pr.deleted'),'s');renderProduits();}
   catch(e){showToast(t('pr.err.act')+e.message,'e');}
 }
 
@@ -5178,19 +5220,24 @@ function prodMargin(){
 }
 async function editProd(id){
   if(!isAdmin)return;
-  try{var snap=await db.collection('produits').doc(id).get();if(!snap.exists){showToast(t('pr.gone'),'e');return;}openNvProd(Object.assign({id:id},snap.data()));}
+  try{var snap=await db.collection('produits').doc(id).get();if(!snap.exists){showToast(t('pr.gone'),'e');return;}await coutsReady();openNvProd(coutsProd(Object.assign({id:id},snap.data())));}
   catch(e){showToast(t('pr.err.act')+e.message,'e');}
 }
 async function saveProd(id){
   if(!isAdmin)return;
   var marque=uiVal('pr-marque'),modele=uiVal('pr-modele');
   if(!marque||!modele){showToast(t('pr.err.req'),'e');return;}
-  var data={marque:marque,modele:modele,stockage:uiVal('pr-stock'),ram:uiVal('pr-ram'),prixAchat:parseFloat(uiVal('pr-achat'))||0,prixVente:parseFloat(uiVal('pr-vente'))||0,quantite:Math.max(0,parseInt(uiVal('pr-qte'),10)||0),description:uiVal('pr-desc')};
+  var data={marque:marque,modele:modele,stockage:uiVal('pr-stock'),ram:uiVal('pr-ram'),prixVente:parseFloat(uiVal('pr-vente'))||0,quantite:Math.max(0,parseInt(uiVal('pr-qte'),10)||0),description:uiVal('pr-desc')};
   var btn=document.getElementById('pr-save');if(btn)btn.disabled=true;
   showOv('…');
   try{
-    if(id){await db.collection('produits').doc(id).update(data);hideOv();showToast(t('pr.updated'),'s');viewProd(id);}
-    else{data.ts=firebase.firestore.FieldValue.serverTimestamp();await db.collection('produits').add(data);hideOv();showToast(t('pr.saved'),'s');renderProduits();}
+    var achat=parseFloat(uiVal('pr-achat'))||0,pb=db.batch(),pref=id?db.collection('produits').doc(id):db.collection('produits').doc();
+    if(id)pb.update(pref,data);else{data.ts=firebase.firestore.FieldValue.serverTimestamp();pb.set(pref,data);}
+    /* le prix d'achat est enregistré à part, et seulement par qui a le droit « couts » */
+    if(can('couts'))pb.set(db.collection('produits_prive').doc(pref.id),{prixAchat:achat},{merge:true});
+    await pb.commit();
+    hideOv();
+    if(id){showToast(t('pr.updated'),'s');viewProd(id);}else{showToast(t('pr.saved'),'s');renderProduits();}
   }catch(e){hideOv();if(btn)btn.disabled=false;showToast(t('pr.err.act')+e.message,'e');}
 }
 /* Import du catalogue fournisseur : la marque est reconnue d'après le nom (plus de marque « Catalogue ») */
@@ -5201,7 +5248,10 @@ async function importCatalogToProduits(){
   try{
     for(var k=0;k<supplierCatalog.length;k++){
       var item=supplierCatalog[k],b=prodBrand({modele:item.name});
-      await db.collection('produits').add({marque:b===t('pr.other')?'':b,modele:item.name,nom:item.name,stockage:'',ram:'',prixAchat:item.cost,prixVente:item.sell,quantite:0,description:'',ts:firebase.firestore.FieldValue.serverTimestamp()});count++;
+      var iref=db.collection('produits').doc(),ib=db.batch();
+      ib.set(iref,{marque:b===t('pr.other')?'':b,modele:item.name,nom:item.name,stockage:'',ram:'',prixVente:item.sell,quantite:0,description:'',ts:firebase.firestore.FieldValue.serverTimestamp()});
+      if(can('couts'))ib.set(db.collection('produits_prive').doc(iref.id),{prixAchat:item.cost});
+      await ib.commit();count++;
     }
     hideOv();showToast(facTx('pr.catDone',{n:count}),'s');renderProduits();
   }catch(e){hideOv();showToast(t('pr.err.act')+e.message,'e');}
@@ -5237,12 +5287,14 @@ async function histLoad(){
     if(histTab==='mois'){
       var res=await Promise.all([db.collection('commandes').orderBy('ts','desc').limit(500).get(),db.collection('factures').orderBy('ts','desc').limit(500).get()]);
       if(mySeq!==histSeq)return;
-      histMonths(res[0].docs.map(function(d){return d.data();}),res[1].docs.map(function(d){return d.data();}));return;
+      await coutsReady();
+      histMonths(res[0].docs.map(function(d){return coutsCmd(Object.assign({id:d.id},d.data()));}),res[1].docs.map(function(d){return coutsFac(Object.assign({id:d.id},d.data()));}));return;
     }
     var col=histTab==='factures'?'factures':(histTab==='sav'?'sav':'commandes');
     var snap=isAdmin?await db.collection(col).orderBy('ts','desc').limit(200).get():await db.collection(col).where('uid','==',currentUser.uid).limit(200).get();
     if(mySeq!==histSeq)return;
     histRows=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    await coutsReady();histRows.forEach(histTab==='factures'?coutsFac:(histTab==='sav'?function(){}:coutsCmd));
     histRows.sort(function(a,b){var x=uiDate(a),y=uiDate(b);return (y?y.getTime():0)-(x?x.getTime():0);});
     histRender();
   }catch(e){if(mySeq===histSeq)body.innerHTML=lotErr(e,'histLoad()');}
@@ -5276,7 +5328,7 @@ function histRender(){
   var amount=counted.reduce(function(a,x){return a+histAmount(x);},0);
   var profit=counted.reduce(function(a,x){return a+Math.max(0,typeof x.profit==='number'?x.profit:0);},0);
   var tiles='<div class="fo-stats"><div class="fo-stat"><b class="num">'+shown.length+'</b><span>'+t('hi.s.count')+'</span></div><div class="fo-stat"><b class="num">'+v2Money(amount)+'</b><span>'+t('hi.s.amount')+'</span></div>'+
-    (histTab!=='sav'&&(can('totaux')||!isAdmin)?'<div class="fo-stat"><b class="num ui-pos">'+(profit>0?'+'+v2Money(profit):'—')+'</b><span>'+(isAdmin?t('hi.s.profit'):t('hi.s.profitMe'))+'</span></div>':'<div class="fo-stat"><b>—</b><span>&nbsp;</span></div>')+'</div>';
+    (histTab!=='sav'&&can('couts')&&(can('totaux')||!isAdmin)?'<div class="fo-stat"><b class="num ui-pos">'+(profit>0?'+'+v2Money(profit):'—')+'</b><span>'+(isAdmin?t('hi.s.profit'):t('hi.s.profitMe'))+'</span></div>':'<div class="fo-stat"><b>—</b><span>&nbsp;</span></div>')+'</div>';
   var vseg='';
   if(isAdmin&&vnames.length>1){
     vseg='<div class="ui-seg" id="hist-vend" role="tablist"><button type="button" class="ui-press'+(!histVend?' on':'')+'" onclick="histSetVend(\'\')">'+t('hi.all')+'<span class="n">'+histRows.length+'</span></button>'+
@@ -5348,6 +5400,76 @@ function v2Create(kind){
   ({commande:openNvCmd,precommande:openNvPrecommande,sav:openNvSAV,client:openNvClient,produit:openNvProd})[kind]();
 }
 
+/* ===== Coûts, marges et bénéfices : stockés à part (collections privées), jamais dans les documents publics =====
+   commandes_couts / factures_couts / produits_prive : patron, ou administrateur ayant le droit « couts ».
+   commandes_fourn : fournisseur d'une commande, patron et administrateur.
+   Les documents chargés sont « hydratés » : un utilisateur sans droit ne voit aucun coût, même dans d'anciens documents. */
+var COUTS={cmd:new Map(),fac:new Map(),prod:new Map(),fourn:new Map()},coutsUnsubs=[],coutsReadyP=Promise.resolve();
+function coutsStop(){coutsUnsubs.forEach(function(u){try{u();}catch(e){}});coutsUnsubs=[];Object.keys(COUTS).forEach(function(k){COUTS[k].clear();});coutsReadyP=Promise.resolve();}
+function coutsStart(){
+  coutsStop();
+  if(!currentUser)return;
+  var waits=[];
+  var watch=function(col,key,allowed){
+    if(!allowed)return;
+    waits.push(new Promise(function(res){
+      var first=true;
+      coutsUnsubs.push(db.collection(col).onSnapshot(function(s){
+        s.docChanges().forEach(function(ch){if(ch.type==='removed')COUTS[key].delete(ch.doc.id);else COUTS[key].set(ch.doc.id,ch.doc.data());});
+        if(first){first=false;res();}
+      },function(){if(first){first=false;res();}}));
+    }));
+  };
+  watch('commandes_couts','cmd',can('couts'));
+  watch('factures_couts','fac',can('couts'));
+  watch('produits_prive','prod',can('couts'));
+  watch('commandes_fourn','fourn',isAdmin);
+  coutsReadyP=Promise.race([Promise.all(waits),new Promise(function(r){setTimeout(r,6000);})]);
+}
+function coutsReady(){return coutsReadyP;}
+function coutsNoCost(list){return Array.isArray(list)?list.map(function(p){var q=Object.assign({},p);delete q.cost;return q;}):list;}
+function coutsCmd(c){
+  if(!c)return c;
+  if(!can('couts')){delete c.coutCatalogue;delete c.profit;delete c.beneficeCmd;c.produits=coutsNoCost(c.produits);}
+  else{
+    var k=COUTS.cmd.get(c.id);
+    if(k){c.coutCatalogue=k.coutCatalogue||0;c.profit=k.profit||0;c.beneficeCmd=k.profit||0;
+      if(Array.isArray(c.produits))c.produits=c.produits.map(function(p,i){return Object.assign({},p,{cost:(k.costs&&k.costs[i])||0});});}
+  }
+  if(!isAdmin){delete c.fournisseurId;delete c.fournisseurNom;delete c.fournisseurWa;}
+  else{var fo=COUTS.fourn.get(c.id);if(fo){c.fournisseurId=fo.fournisseurId||'';c.fournisseurNom=fo.fournisseurNom||'';c.fournisseurWa=fo.fournisseurWa||'';}}
+  return c;
+}
+function coutsFac(f){
+  if(!f)return f;
+  if(!can('couts')){delete f.cost;delete f.profit;f.products=coutsNoCost(f.products);}
+  else{
+    var k=COUTS.fac.get(f.id);
+    if(k){f.cost=k.cost||0;f.profit=(typeof k.profit==='number')?k.profit:null;
+      if(Array.isArray(f.products))f.products=f.products.map(function(p,i){return Object.assign({},p,{cost:(k.costs&&k.costs[i])||0});});}
+  }
+  return f;
+}
+function coutsProd(p){
+  if(!p)return p;
+  if(!can('couts'))delete p.prixAchat;
+  else{var k=COUTS.prod.get(p.id);if(k)p.prixAchat=k.prixAchat||0;}
+  return p;
+}
+/* Suppression d'un document et de ses documents privés dans le même lot */
+async function delWithPrivate(col,id,privCols){
+  var b=db.batch();
+  b.delete(db.collection(col).doc(id));
+  privCols.forEach(function(c){b.delete(db.collection(c).doc(id));});
+  await b.commit();
+}
+/* Toutes les commandes (hydratées) : sert aux chiffres par fournisseur */
+async function foAllCmds(){
+  await coutsReady();
+  var s=await db.collection('commandes').orderBy('ts','desc').limit(1000).get();
+  return s.docs.map(function(d){return coutsCmd(Object.assign({id:d.id},d.data()));});
+}
+
 /* ===== Rôles : patron / administrateur / employé ===== */
 var ROLE_DEF={suppr:false,couts:true,totaux:false,reglages:true};
 var RL_EDITABLE=['margeDefaut','stockAlerte','garantieDefaut'];
@@ -5368,7 +5490,7 @@ function rlLive(d){
   var was=isAdmin;
   userProfile=Object.assign({},userProfile,d);
   rlApply();
-  try{loadLocalCatalog();}catch(e){}
+  try{loadLocalCatalog();coutsStart();}catch(e){}
   try{updateNavUser();v2Nav(activeTab);}catch(e){}
   showToast(was!==isAdmin?t(isAdmin?'rl.nowAdmin':'rl.noLongerAdmin'):t('rl.permsChanged'),'s');
   try{goTab(was!==isAdmin?'dashboard':activeTab);}catch(e){}
