@@ -1,0 +1,198 @@
+rules_version = '2';
+// BG-MARKET Gestion : règles Firestore CIBLES (non publiées).
+// Ne pas publier avant que le code de l'application écrive les coûts dans les
+// collections *_couts / *_prive / commandes_fourn et crée les comptes en « en_attente »
+// (voir docs/SECURITE.md). Remplacer PATRON_UID_A_REMPLACER par l'UID Firebase du patron.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Identité et rôles ----------
+    function connecte() { return request.auth != null; }
+    function patron() { return connecte() && request.auth.uid == 'PATRON_UID_A_REMPLACER'; }
+    function profilPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function aProfil() { return exists(profilPath(request.auth.uid)); }
+    function monProfil() { return get(profilPath(request.auth.uid)).data; }
+    // Compte actif : profil existant et statut « actif » (statut absent = actif, comptes anciens).
+    // en_attente, pause, suspendu, retire et « sans profil » n'ont aucun accès aux données.
+    function actif() {
+      return patron() || (connecte() && aProfil() && monProfil().get('statut', 'actif') == 'actif');
+    }
+    function admin() {
+      return patron() || (actif() && monProfil().get('role', 'employe') == 'administrateur');
+    }
+    // Droit précis de l'administrateur (cases cochées par le patron) ; le patron a tous les droits.
+    function droit(nom, defaut) {
+      return patron() || (admin() &&
+        (monProfil().get('perms', {}) is map ? monProfil().get('perms', {}).get(nom, defaut) : defaut));
+    }
+
+    // ---------- Outils de comparaison ----------
+    function champsModifies() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function proprietaire() { return resource.data.get('uid', '') == request.auth.uid; }
+    function jeSuisAuteur() { return request.resource.data.get('uid', '') == request.auth.uid; }
+    // Interdit d'écrire (ou de modifier) ces champs ; les retirer d'un ancien document reste permis.
+    function sansChamps(liste) {
+      return !(request.resource.data.keys().hasAny(liste) && champsModifies().hasAny(liste));
+    }
+    function sansChampsCreation(liste) { return !request.resource.data.keys().hasAny(liste); }
+    function docPath(col, id) { return /databases/$(database)/documents/$(col)/$(id); }
+    function validationActive() {
+      let p = /databases/$(database)/documents/app_config/settings;
+      return !exists(p) || get(p).data.get('validationFactures', true) != false;
+    }
+
+    // ---------- Comptes ----------
+    match /users/{uid} {
+      // Chacun lit son propre profil (même bloqué : l'application y lit son statut) ; le patron lit tout.
+      allow read: if patron() || (connecte() && request.auth.uid == uid);
+      // Un nouveau compte attend l'approbation du patron et ne peut être ni administrateur ni avoir de droits.
+      allow create: if patron() || (connecte() && request.auth.uid == uid
+                    && request.resource.data.get('statut', '') == 'en_attente'
+                    && request.resource.data.get('role', 'employe') == 'employe'
+                    && !('perms' in request.resource.data)
+                    && request.resource.data.get('uid', uid) == uid
+                    && request.resource.data.get('email', '').lower() == request.auth.token.get('email', '').lower());
+      allow update: if patron()
+                    || (connecte() && request.auth.uid == uid && actif()
+                        && !champsModifies().hasAny(['statut', 'statutAt', 'statutBy', 'role', 'roleAt', 'roleBy',
+                                                     'perms', 'email', 'uid', 'createdAt']));
+      allow delete: if patron();
+    }
+
+    // ---------- Réglages de la boutique ----------
+    match /app_config/{doc} {
+      allow read: if actif();
+      allow create: if patron();
+      allow update: if patron()
+        || (admin() && droit('reglages', true)
+            && champsModifies().hasOnly(['margeDefaut', 'stockAlerte', 'garantieDefaut']))
+        // compteur de numéros de facture : seulement vers le haut
+        || (actif() && champsModifies().hasOnly(['invNumR'])
+            && request.resource.data.invNumR is int
+            && request.resource.data.invNumR > resource.data.get('invNumR', 0));
+      allow delete: if patron();
+    }
+
+    // ---------- Journal d'activité (lu par le patron seul) ----------
+    match /journal/{id} {
+      allow read: if patron();
+      allow create: if actif() && jeSuisAuteur()
+                    && request.resource.data.get('vu', false) == false
+                    && request.resource.data.keys().hasOnly(['ts', 'uid', 'nom', 'role', 'type', 'label', 'detail', 'vu']);
+      allow update: if patron() && champsModifies().hasOnly(['vu']);
+      allow delete: if patron();
+    }
+
+    // ---------- Clients : chaque employé ne voit que les siens ----------
+    match /clients/{id} {
+      allow read: if admin() || (actif() && proprietaire());
+      allow create: if actif() && jeSuisAuteur();
+      // l'employé ne modifie pas les clients ; seul le patron peut changer le propriétaire
+      allow update: if patron() || (admin() && !champsModifies().hasAny(['uid']));
+      allow delete: if droit('suppr', false);
+    }
+
+    // ---------- Fournisseurs : patron et administrateur seulement ----------
+    match /fournisseurs/{id} {
+      allow read, create, update: if admin();
+      allow delete: if droit('suppr', false);
+    }
+
+    // ---------- Produits (sans prix d'achat) ----------
+    match /produits/{id} {
+      allow read: if actif();
+      allow create: if admin() && sansChampsCreation(['prixAchat']);
+      allow update: if (admin() && sansChamps(['prixAchat']))
+        // un employé peut seulement diminuer le stock (vente)
+        || (actif() && champsModifies().hasOnly(['quantite'])
+            && request.resource.data.quantite is int
+            && request.resource.data.quantite >= 0
+            && request.resource.data.quantite < resource.data.get('quantite', 0));
+      allow delete: if droit('suppr', false);
+    }
+    match /produits_prive/{id} {
+      allow read, create, update: if droit('couts', true);
+      allow delete: if droit('suppr', false);
+    }
+
+    // ---------- Commandes ----------
+    match /commandes/{id} {
+      allow read: if admin() || (actif() && proprietaire());
+      allow create: if actif() && jeSuisAuteur()
+                    && request.resource.data.get('statut', '') == 'en_attente'
+                    && sansChampsCreation(['coutCatalogue', 'profit', 'beneficeCmd',
+                                           'fournisseurId', 'fournisseurNom', 'fournisseurWa']);
+      allow update: if (patron() || (admin() && !champsModifies().hasAny(['uid'])))
+                    && sansChamps(['coutCatalogue', 'profit', 'beneficeCmd',
+                                   'fournisseurId', 'fournisseurNom', 'fournisseurWa']);
+      allow delete: if droit('suppr', false);
+    }
+    match /commandes_couts/{id} {
+      allow read: if droit('couts', true);
+      // l'employé écrit les coûts de SA commande (même lot d'écritures que la commande)
+      allow create: if admin()
+        || (actif() && jeSuisAuteur()
+            && existsAfter(docPath('commandes', id))
+            && getAfter(docPath('commandes', id)).data.get('uid', '') == request.auth.uid);
+      allow update: if droit('couts', true);
+      allow delete: if droit('suppr', false);
+    }
+    match /commandes_fourn/{id} {
+      allow read, create, update: if admin();
+      allow delete: if droit('suppr', false);
+    }
+
+    // ---------- Factures ----------
+    match /factures/{id} {
+      allow read: if admin() || (actif() && proprietaire());
+      allow create: if sansChampsCreation(['cost', 'profit'])
+        && (admin()
+            || (actif() && jeSuisAuteur()
+                && request.resource.data.get('ts', null) == request.time
+                && request.resource.data.get('auto', false) == false
+                && !request.resource.data.keys().hasAny(['validePar', 'valideAt'])
+                && (!validationActive() || request.resource.data.get('validation', '') == 'a_valider')));
+      allow update: if sansChamps(['cost', 'profit'])
+        && ((patron() || (admin() && !champsModifies().hasAny(['uid'])))
+            // l'employé ne modifie que sa facture non validée, sans toucher à la validation
+            || (actif() && proprietaire()
+                && resource.data.get('validation', 'validee') == 'a_valider'
+                && request.resource.data.get('validation', 'validee') == 'a_valider'
+                && !champsModifies().hasAny(['uid', 'vendeur', 'vendeurEmail', 'ts', 'validation',
+                                             'validePar', 'valideAt', 'auto', 'cmdId', 'cmdNum'])));
+      allow delete: if droit('suppr', false);
+    }
+    match /factures_couts/{id} {
+      allow read: if droit('couts', true);
+      allow create: if admin()
+        || (actif() && jeSuisAuteur()
+            && existsAfter(docPath('factures', id))
+            && getAfter(docPath('factures', id)).data.get('uid', '') == request.auth.uid);
+      allow update: if droit('couts', true)
+        || (actif() && proprietaire() && jeSuisAuteur()
+            && exists(docPath('factures', id))
+            && get(docPath('factures', id)).data.get('validation', 'validee') == 'a_valider');
+      allow delete: if droit('suppr', false);
+    }
+
+    // ---------- Précommandes et SAV ----------
+    match /precommandes/{id} {
+      allow read: if admin() || (actif() && proprietaire());
+      allow create: if actif() && jeSuisAuteur();
+      allow update: if patron() || (admin() && !champsModifies().hasAny(['uid']))
+        || (actif() && proprietaire()
+            && !champsModifies().hasAny(['uid', 'vendeur', 'vendeurEmail', 'ts']));
+      allow delete: if droit('suppr', false);
+    }
+    match /sav/{id} {
+      allow read: if admin() || (actif() && proprietaire());
+      allow create: if actif() && jeSuisAuteur();
+      allow update: if patron() || (admin() && !champsModifies().hasAny(['uid']))
+        || (actif() && proprietaire()
+            && !champsModifies().hasAny(['uid', 'vendeur', 'vendeurEmail', 'ts']));
+      allow delete: if droit('suppr', false);
+    }
+
+    // Toute autre collection : refusée (aucune règle fourre-tout).
+  }
+}
