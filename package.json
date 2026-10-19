@@ -4,7 +4,8 @@
   "private": true,
   "description": "Règles Firestore et tests de BG-MARKET Gestion",
   "scripts": {
-    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test \"tests/*.test.mjs\"\""
+    "test:app": "node --test \"tests/app.*.test.mjs\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test \"tests/firestore.*.test.mjs\"\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",

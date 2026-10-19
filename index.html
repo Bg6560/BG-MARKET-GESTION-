@@ -1152,7 +1152,7 @@ body.v2-sheet-create #v2SheetCreate,body.v2-sheet-more #v2SheetMore,body.v2-shee
         <div class="l-field"><label for="s-pwd2">Confirmer le mot de passe</label>
           <input type="password" id="s-pwd2" autocomplete="new-password" placeholder="Retape le mot de passe" onkeydown="if(event.key==='Enter')doSignup()"/></div>
         <button type="button" class="l-btn" id="btn-signup" onclick="doSignup()">Créer mon compte</button>
-        <p class="l-note">Ton compte est actif tout de suite.<br/>Le patron te verra dans l'onglet Équipe.</p>
+        <p class="l-note">Ton compte sera activé après l'approbation du patron.<br/>Il te verra dans l'onglet Équipe.</p>
       </div>
     </div>
 
@@ -1359,14 +1359,15 @@ async function doSignup(){
   if(pwd.length<6){setAuthMsg('s-err','Le mot de passe doit avoir au moins 6 caractères.');return;}
   if(pwd!==pwd2){setAuthMsg('s-err','Les deux mots de passe ne sont pas identiques.');return;}
   authBusy('btn-signup',true,'Création du compte…');
+  window._signupName=nom;
   try{
     const cred=await auth.createUserWithEmailAndPassword(email,pwd);
-    await cred.user.updateProfile({displayName:nom});
-    showToast('Compte créé. Bienvenue '+nom+' !','s');
+    try{await cred.user.updateProfile({displayName:nom});}catch(e0){}
+    showToast('Compte créé. Le patron doit l\'approuver avant ta première connexion.','s');
   }catch(e){setAuthMsg('s-err',authErrText(e));}
-  finally{authBusy('btn-signup',false);}
+  finally{window._signupName=null;authBusy('btn-signup',false);}
 }
-function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}}catch(e){}rlJournalN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();auth.signOut();}
+function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();auth.signOut();}
 auth.onAuthStateChanged(async user=>{
   try{
     if(user){
@@ -1405,7 +1406,9 @@ auth.onAuthStateChanged(async user=>{
   }
 });
 
-async function loadGlobalSettings(){try{const snap=await db.collection('app_config').doc('settings').get();if(snap.exists){globalSettings=snap.data();if(globalSettings.logoB64)localStorage.setItem('bg_logo_cache',globalSettings.logoB64);}selectedTemplate=globalSettings.invTemplate||1;invNumR=globalSettings.invNumR||1;if(settingsListener)settingsListener();settingsListener=db.collection('app_config').doc('settings').onSnapshot(s=>{if(s.exists){globalSettings=s.data();selectedTemplate=globalSettings.invTemplate||1;}});}catch(e){}try{supplierCatalog=JSON.parse(localStorage.getItem('bg_cat')||'[]');}catch(e){}}
+async function loadGlobalSettings(){try{const snap=await db.collection('app_config').doc('settings').get();if(snap.exists){globalSettings=snap.data();if(globalSettings.logoB64)localStorage.setItem('bg_logo_cache',globalSettings.logoB64);}selectedTemplate=globalSettings.invTemplate||1;invNumR=globalSettings.invNumR||1;if(settingsListener)settingsListener();settingsListener=db.collection('app_config').doc('settings').onSnapshot(s=>{if(s.exists){globalSettings=s.data();selectedTemplate=globalSettings.invTemplate||1;}});}catch(e){}loadLocalCatalog();}
+/* Prix fournisseurs : jamais chargés pour un employé (le catalogue local n'est pas effacé) */
+function loadLocalCatalog(){supplierCatalog=[];if(!isAdmin)return;try{supplierCatalog=JSON.parse(localStorage.getItem('bg_cat')||'[]');}catch(e){}}
 async function saveGlobalSettingsRaw(data){await db.collection('app_config').doc('settings').set(data,{merge:true});Object.assign(globalSettings,data);}
 function updateNavUser(){
   if(!userProfile)return;
@@ -2003,7 +2006,7 @@ async function saveCmd(){
     expOn:expOn,expVille:expOn?((document.getElementById('fc-expv')||{}).value||'').trim():'',
     expTrans:expOn?((document.getElementById('fc-expt')||{}).value||'').trim():'',expFrais:expf,
     etat:etatCmd||'neuf',coutCatalogue:cout,profit:profit,beneficeCmd:profit,total:sous+liv+expf,
-    fournisseurId:fOpt?fsel.value:'',fournisseurNom:fOpt?fOpt.text:'',fournisseurWa:fOpt?(fOpt.dataset.wa||''):'',
+    ...(fOpt?{fournisseurId:fsel.value,fournisseurNom:fOpt.text,fournisseurWa:fOpt.dataset.wa||''}:{}),
     statut:'en_attente',vendeur:(userProfile&&userProfile.nom)||currentUser.email,vendeurEmail:currentUser.email,uid:currentUser.uid,
     num:'CMD-'+pad(Date.now()%100000),date:new Date().toLocaleDateString('fr-FR'),
     ts:firebase.firestore.FieldValue.serverTimestamp()
@@ -2011,7 +2014,7 @@ async function saveCmd(){
   showOv('Enregistrement...');
   try{
     await db.collection('commandes').add(data);
-    try{var ec=await db.collection('clients').where('tel','==',tel).limit(1).get();if(ec.empty){await db.collection('clients').add({nom:nom,tel:tel,whatsapp:tel,adresse:data.adresse,notes:'',uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});}}catch(ce){}
+    try{var ec=await cliBaseQuery().where('tel','==',tel).limit(1).get();if(ec.empty){await db.collection('clients').add({nom:nom,tel:tel,whatsapp:tel,adresse:data.adresse,notes:'',uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});}}catch(ce){}
     hideOv();showToast('Commande enregistree ('+data.nbArticles+' telephone'+(data.nbArticles>1?'s':'')+') !','s');renderCommandes();
   }catch(e){hideOv();showToast('Erreur: '+e.message,'e');}
 }
@@ -2167,6 +2170,7 @@ function getBrandStyle(name){
 /* (ancienne fonction retirée) */
 
 async function editFourn(id){
+  if(!isAdmin)return;
   const snap=await db.collection('fournisseurs').doc(id).get();
   if(!snap.exists)return;
   openAddFourn({id,...snap.data()});
@@ -2175,6 +2179,7 @@ async function editFourn(id){
 /* (ancienne fonction retirée) */
 
 async function loadFournsForSelect(selectId){
+  if(!isAdmin)return;
   const sel=document.getElementById(selectId);if(!sel)return;
   try{
     const snap=await db.collection('fournisseurs').orderBy('nom').get();
@@ -2435,7 +2440,7 @@ async function viewCmd(id){
      (voitBenef&&(c.profit||0)>0?'<div class="ui-profit">Bénéfice : +'+v2Money(c.profit)+'</div>':'')+
   '</section>';
 
-  h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><h2>Fournisseur</h2>'+
+  if(isAdmin)h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><h2>Fournisseur</h2>'+
      (c.fournisseurNom?uiKV('Envoyée à',esc(c.fournisseurNom)):'<p class="ui-muted">Aucun fournisseur choisi pour cette commande.</p>')+
      '<button type="button" class="ui-btn ui-btn-turq ui-press" onclick="waFournisseur(\''+id+'\')">'+UI_ICO.wa+'Envoyer au fournisseur</button>'+
   '</section>';
@@ -2494,10 +2499,11 @@ function openNvCmd(){
       '<div class="ui-collapse" id="exp-blk"><div class="ui-grid2">'+uiField('Ville','<input type="text" id="fc-expv" placeholder="Bouaké"/>')+
         uiField('Transporteur','<input type="text" id="fc-expt" placeholder="UTB"/>')+'</div>'+
         uiField('Frais d\'expédition (F)','<input type="number" id="fc-expf" placeholder="0" inputmode="numeric" oninput="calcCmdTotal()"/>')+'</div></section>'+
+    (!isAdmin?'<section class="ui-card"><h2>Notes</h2>'+uiField('Notes','<textarea id="fc-notes" placeholder="Couleur souhaitée, délai…"></textarea>')+'</section>':
     '<section class="ui-card"><h2>Fournisseur</h2>'+
       uiField('Envoyer la commande à','<select id="fc-fourn-id" onchange="onSelectFourn(this.value)"><option value="">Choisir un fournisseur</option></select>')+
       '<div id="fourn-contact-hint" class="ui-note" style="display:none;margin:-4px 0 12px"></div>'+
-      uiField('Notes pour le fournisseur','<textarea id="fc-notes" placeholder="Couleur souhaitée, délai…"></textarea>')+'</section>'+
+      uiField('Notes pour le fournisseur','<textarea id="fc-notes" placeholder="Couleur souhaitée, délai…"></textarea>')+'</section>')+
     '<button type="button" class="ui-btn ui-btn-primary ui-btn-lg ui-press" onclick="saveCmd()">Enregistrer la commande</button>'+
   '</div>';
   renderCmdProducts();
@@ -2682,10 +2688,11 @@ function uiApplyAvatar(){
 var _origUpdateNavUser=updateNavUser;
 updateNavUser=function(){try{_origUpdateNavUser();}catch(e){}uiApplyAvatar();uiApplyShellLang();};
 
-var UI_BLOCKED=['pause','suspendu','retire'];
+var UI_BLOCKED=['en_attente','pause','suspendu','retire'];
 function uiIsBlocked(s){return UI_BLOCKED.indexOf(s)>=0;}
 function uiBlockedMsg(s){
-  return {pause:'Ton compte est en pause. Contacte le patron pour le réactiver.',
+  return {en_attente:'Ton compte est en attente d\'approbation par le patron. Tu pourras te connecter dès qu\'il l\'aura validé.',
+          pause:'Ton compte est en pause. Contacte le patron pour le réactiver.',
           suspendu:'Ton compte a été suspendu par le patron. Contacte-le pour en savoir plus.',
           retire:'Tu ne fais plus partie de l\'équipe. Contacte le patron si c\'est une erreur.'}[s]||'Accès refusé.';
 }
@@ -2707,9 +2714,13 @@ function uiWatchMyStatus(uid){
 async function loadUserProfile(user){
   try{
     var snap=await db.collection('users').doc(user.uid).get();
-    userProfile=snap.exists?snap.data():{uid:user.uid,email:user.email,nom:user.displayName||user.email.split('@')[0],role:isBoss?'admin':'employe',statut:'actif'};
+    userProfile=snap.exists?snap.data():{uid:user.uid,email:user.email,nom:window._signupName||user.displayName||user.email.split('@')[0],role:isBoss?'admin':'employe',statut:isBoss?'actif':'en_attente'};
     if(!snap.exists)await db.collection('users').doc(user.uid).set(Object.assign({},userProfile,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-  }catch(e){userProfile={uid:user.uid,email:user.email,nom:user.email,role:isBoss?'admin':'employe'};}
+  }catch(e){
+    /* échec fermé : seul le patron garde un accès de secours si le profil est illisible */
+    if(!isBoss)throw e;
+    userProfile={uid:user.uid,email:user.email,nom:user.email,role:'admin'};
+  }
   if(!isBoss&&userProfile&&uiIsBlocked(userProfile.statut)){
     var err=new Error(uiBlockedMsg(userProfile.statut));err.blocked=true;
     try{await auth.signOut();}catch(x){}
@@ -2771,7 +2782,7 @@ function renderParametres(){
       stRow(ST_ICO.target,'c-warn',t('st.goal'),gs.objectifMois?v2Money(gs.objectifMois):'—',"uiSettings('objectifs')")+
       stRow(ST_ICO.chart,'c-turq',t('st.sales'),(gs.margeDefaut||supplierMargin||12)+' %',"uiSettings('ventes')")+'</div>';
     h+='<div class="st-label">'+t('st.g.team')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
-      stRow(ST_ICO.team,'c-ok',t('st.team'),'',"uiTeam(true)",'Membres, pauses, suspensions')+
+      stRow(ST_ICO.team,'c-ok',t('st.team'),rlPendN?rlPendN+' à approuver':'',"uiTeam(true)",'Membres, pauses, suspensions')+
       stRow(ST_ICO.info,'c-warn',t('rl.jRow'),rlJournalN?facTx('rl.jNew',{n:rlJournalN}):'',"uiJournal()",t('rl.jRowSub'))+'</div>';
   }
   h+='<div class="st-label">'+t('st.g.data')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
@@ -3024,7 +3035,7 @@ async function uiClearCache(){
 
 
 /* ===================== V2 : ÉQUIPE ET SÉCURITÉ ===================== */
-var UI_MSTATUS={actif:['Actif','p-done'],pause:['En pause','p-pause'],suspendu:['Suspendu','p-susp'],retire:['Retiré','p-gone']};
+var UI_MSTATUS={en_attente:['À approuver','p-wait'],actif:['Actif','p-done'],pause:['En pause','p-pause'],suspendu:['Suspendu','p-susp'],retire:['Retiré','p-gone']};
 function uiIsBoss(u){return !!u&&(u.email||'').toLowerCase()===ADMIN.toLowerCase();}
 function uiSeen(u){
   if(u.isOnline)return 'En ligne maintenant';
@@ -3046,6 +3057,7 @@ async function uiTeam(fromSettings){
   catch(e){mc.innerHTML='<div class="ui-page">'+head+'<p class="h-err">Équipe non chargée : '+esc(e.message)+'</p></div>';return;}
   var st=function(u){return uiIsBoss(u)?'boss':(u.statut||'actif');};
   var actifs=users.filter(function(u){var s=st(u);return s==='boss'||s==='actif';}).sort(function(a,b){return (uiIsBoss(b)-uiIsBoss(a))||((b.isOnline?1:0)-(a.isOnline?1:0))||String(a.nom||'').localeCompare(String(b.nom||''));});
+  var attente=users.filter(function(u){return st(u)==='en_attente';});
   var bloques=users.filter(function(u){var s=st(u);return s==='pause'||s==='suspendu';});
   var anciens=users.filter(function(u){return st(u)==='retire';});
   var online=users.filter(function(u){return u.isOnline&&!uiIsBlocked(u.statut);}).length;
@@ -3058,15 +3070,16 @@ async function uiTeam(fromSettings){
       '<span class="ui-row-side"><span class="h-pill '+pill[1]+'">'+pill[0]+'</span></span></button>';
   };
   var i=0,h='<div class="ui-page">'+head;
-  h+='<div class="tm-stats ui-in" style="--i:'+(i++)+'"><div class="tm-stat"><b>'+users.filter(function(u){return st(u)!=='retire';}).length+'</b><span>Membres</span></div>'+
+  h+='<div class="tm-stats ui-in" style="--i:'+(i++)+'"><div class="tm-stat"><b>'+users.filter(function(u){return st(u)!=='retire'&&st(u)!=='en_attente';}).length+'</b><span>Membres</span></div>'+
      '<div class="tm-stat"><b style="color:var(--ok)">'+online+'</b><span>En ligne</span></div>'+
      '<div class="tm-stat"><b style="color:'+(bloques.length?'var(--warn)':'var(--text)')+'">'+bloques.length+'</b><span>En pause</span></div></div>';
+  if(attente.length)h+='<div class="st-label">À approuver</div><div class="ui-list">'+attente.map(function(u){return row(u,i++);}).join('')+'</div>';
   h+='<div class="st-label">Actifs</div><div class="ui-list">'+actifs.map(function(u){return row(u,i++);}).join('')+'</div>';
   if(bloques.length)h+='<div class="st-label">En pause ou suspendus</div><div class="ui-list">'+bloques.map(function(u){return row(u,i++);}).join('')+'</div>';
   if(anciens.length)h+='<div class="st-label">Anciens membres</div><div class="ui-list">'+anciens.map(function(u){return row(u,i++);}).join('')+'</div>';
   h+='<p class="ui-note ui-in" style="--i:'+(i++)+'">Un nouvel employé apparaît ici dès qu\'il crée son compte dans l\'app. Tu peux ensuite le mettre en pause, le suspendre ou le retirer.</p></div>';
   mc.innerHTML=h;
-  var sub=document.getElementById('tm-sub');if(sub)sub.textContent=online+' en ligne sur '+users.filter(function(u){return st(u)!=='retire';}).length;
+  var sub=document.getElementById('tm-sub');if(sub)sub.textContent=online+' en ligne sur '+users.filter(function(u){return st(u)!=='retire'&&st(u)!=='en_attente';}).length;
 }
 
 async function uiMember(uid){
@@ -3093,7 +3106,10 @@ async function uiMember(uid){
   if(!boss){
     h+=rlRoleCard(u,status,i++);
     var acts='';
-    if(status==='actif'){
+    if(status==='en_attente'){
+      acts+='<button type="button" class="ui-btn ui-btn-primary ui-press" onclick="uiSetMember(\''+uid+'\',\'actif\')">'+ST_ICO.play+'Approuver le compte</button>';
+      acts+='<button type="button" class="ui-btn ui-btn-danger ui-press" onclick="uiSetMember(\''+uid+'\',\'retire\')">'+ST_ICO.leave+'Refuser la demande</button>';
+    }else if(status==='actif'){
       acts+='<button type="button" class="ui-btn ui-btn-ghost ui-press" onclick="uiSetMember(\''+uid+'\',\'pause\')">'+ST_ICO.pause+'Mettre en pause</button>';
       acts+='<button type="button" class="ui-btn ui-btn-ghost ui-press" style="color:var(--danger)" onclick="uiSetMember(\''+uid+'\',\'suspendu\')">'+ST_ICO.ban+'Suspendre le compte</button>';
     }else if(status==='pause'||status==='suspendu'){
@@ -3102,9 +3118,9 @@ async function uiMember(uid){
     }else if(status==='retire'){
       acts+='<button type="button" class="ui-btn ui-btn-primary ui-press" onclick="uiSetMember(\''+uid+'\',\'actif\')">'+ST_ICO.play+'Réintégrer dans l\'équipe</button>';
     }
-    if(status!=='retire')acts+='<button type="button" class="ui-btn ui-btn-danger ui-press" onclick="uiSetMember(\''+uid+'\',\'retire\')">'+ST_ICO.leave+'Retirer de l\'équipe</button>';
+    if(status!=='retire'&&status!=='en_attente')acts+='<button type="button" class="ui-btn ui-btn-danger ui-press" onclick="uiSetMember(\''+uid+'\',\'retire\')">'+ST_ICO.leave+'Retirer de l\'équipe</button>';
     h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><h2>Accès au compte</h2>'+
-       '<p class="ui-muted">'+({actif:'Ce membre peut utiliser l\'app normalement.',pause:'Accès bloqué temporairement. Réactive-le quand tu veux.',suspendu:'Accès bloqué. Ce membre est déconnecté et ne peut plus se reconnecter.',retire:'Ce membre ne fait plus partie de l\'équipe. Ses ventes restent dans l\'historique.'}[status]||'')+'</p>'+acts+'</section>';
+       '<p class="ui-muted">'+({en_attente:'Ce compte attend ton approbation. Il n\'a accès à aucune donnée tant que tu ne l\'as pas approuvé.',actif:'Ce membre peut utiliser l\'app normalement.',pause:'Accès bloqué temporairement. Réactive-le quand tu veux.',suspendu:'Accès bloqué. Ce membre est déconnecté et ne peut plus se reconnecter.',retire:'Ce membre ne fait plus partie de l\'équipe. Ses ventes restent dans l\'historique.'}[status]||'')+'</p>'+acts+'</section>';
   }else{
     h+='<p class="ui-note ui-in" style="--i:'+(i++)+'">Le compte du patron ne peut pas être mis en pause ni suspendu.</p>';
   }
@@ -3130,7 +3146,7 @@ async function uiSetMember(uid,statut){
   if(q&&!confirm(q))return;
   try{
     await db.collection('users').doc(uid).update(Object.assign(statut==='retire'?{role:'employe',perms:null}:{},{statut:statut,statutAt:firebase.firestore.FieldValue.serverTimestamp(),statutBy:(currentUser&&currentUser.email)||''}));
-    showToast({pause:'Compte mis en pause',suspendu:'Compte suspendu',retire:'Membre retiré de l\'équipe',actif:'Compte réactivé'}[statut]||'Enregistré','s');
+    showToast({pause:'Compte mis en pause',suspendu:'Compte suspendu',retire:'Membre retiré de l\'équipe',actif:'Compte activé'}[statut]||'Enregistré','s');
     uiMember(uid);
   }catch(e){showToast('Action impossible : '+e.message,'e');}
 }
@@ -3964,6 +3980,7 @@ function facCloseSheet(){var ov=document.getElementById('fs-ov');if(ov)ov.classL
 document.addEventListener('keydown',function(e){if(e.key==='Escape')facCloseSheet();});
 
 async function waFournisseur(id){
+  if(!isAdmin)return;
   var ov=facSupEnsure(),body=document.getElementById('fs-body');
   supCtx={id:id,cmd:null,fourns:[],busy:false};
   body.innerHTML='<h3 id="fs-title">'+t('sup.title')+'</h3><p class="fs-sub">'+t('sup.sub')+'</p><div class="ui-skel"></div><div class="ui-skel"></div>';
@@ -4022,6 +4039,7 @@ function facSupOther(){
   facSupSave(ctx,null);
 }
 async function facSupSave(ctx,f){
+  if(!isAdmin)return;
   var upd={},st=ctx.cmd.statut;
   if(f){upd.fournisseurId=f.id;upd.fournisseurNom=f.nom||'';upd.fournisseurWa=f.whatsapp||'';}
   if(st==='validee'||(st==='en_attente'&&isAdmin))upd.statut='envoyee';
@@ -4308,7 +4326,7 @@ async function savePrecommande(){
   showOv('…');
   try{
     await db.collection('precommandes').add(data);
-    try{var ec=await db.collection('clients').where('tel','==',tel).limit(1).get();
+    try{var ec=await cliBaseQuery().where('tel','==',tel).limit(1).get();
       if(ec.empty)await db.collection('clients').add({nom:nom,tel:tel,whatsapp:tel,adresse:data.adresse,notes:'',uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});}catch(ce){}
     hideOv();showToast(t('pre.saved'),'s');renderPrecommandes();
   }catch(e){hideOv();if(btn)btn.disabled=false;showToast(t('c.err.act')+e.message,'e');}
@@ -4612,6 +4630,7 @@ function renderFournsContacts(el){
   loadFourns();
 }
 async function loadFourns(){
+  if(!isAdmin)return;
   var el=document.getElementById('fourns-list');if(!el)return;
   try{
     var snap=await db.collection('fournisseurs').orderBy('nom').get();
@@ -4655,6 +4674,7 @@ function foWa(id){
 }
 
 async function viewFourn(id){
+  if(!foGuard())return;
   if(!foGuard())return;
   var mc=document.getElementById('main-content');
   mc.innerHTML='<div class="ui-page"><div class="ui-head">'+lotBack('renderFournisseurs()')+'<div class="ui-head-txt"><h1>'+t('fo.title')+'</h1><p class="ui-sub">…</p></div></div><div class="ui-skel" style="height:140px"></div><div class="ui-skel" style="height:120px"></div></div>';
@@ -4700,6 +4720,7 @@ function openAddFourn(data){
     '<button type="button" class="ui-btn ui-btn-primary ui-btn-lg ui-press" onclick="saveFourn(\''+(edit?data.id:'')+'\')">'+(edit?t('fo.update'):t('fo.save'))+'</button></div>';
 }
 async function saveFourn(id){
+  if(!isAdmin)return;
   var nom=uiVal('f-nom-fourn');
   if(!nom){showToast(t('fo.err.name'),'e');return;}
   var data={nom:nom,whatsapp:uiVal('f-wa-fourn'),specialite:uiVal('f-spe-fourn'),ville:uiVal('f-ville-fourn'),notes:uiVal('f-notes-fourn'),ts:firebase.firestore.FieldValue.serverTimestamp()};
@@ -4854,9 +4875,11 @@ function renderClients(){
     '<div class="ui-seg" id="cli-seg" role="tablist"></div><div id="cli-list"><div class="ui-skel"></div><div class="ui-skel"></div><div class="ui-skel"></div></div></div>';
   loadClients();
 }
+/* Clients : le patron et l'administrateur voient tout, l'employé seulement ceux qu'il a enregistrés (uid) */
+function cliBaseQuery(){var c=db.collection('clients');return isAdmin?c:c.where('uid','==',currentUser.uid);}
 async function loadClients(){
   try{
-    var snap=await db.collection('clients').get();
+    var snap=await cliBaseQuery().get();
     allClients=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     allClients.sort(function(a,b){return uiName(a.nom).toLowerCase().localeCompare(uiName(b.nom).toLowerCase(),'fr');});
     if(!document.getElementById('cli-list'))return;
@@ -4979,7 +5002,7 @@ async function saveClient(id){
   var btn=document.getElementById('cl-save');if(btn)btn.disabled=true;
   try{
     if(!id&&tel){
-      var dup=await db.collection('clients').where('tel','==',tel).limit(1).get();
+      var dup=await cliBaseQuery().where('tel','==',tel).limit(1).get();
       if(!dup.empty&&!confirm(facTx('cl.dup',{n:uiName(dup.docs[0].data().nom)}))){if(btn)btn.disabled=false;return;}
     }
     showOv('…');
@@ -5328,7 +5351,7 @@ function v2Create(kind){
 /* ===== Rôles : patron / administrateur / employé ===== */
 var ROLE_DEF={suppr:false,couts:true,totaux:false,reglages:true};
 var RL_EDITABLE=['margeDefaut','stockAlerte','garantieDefaut'];
-var rlJournalN=0,rlJournalUnsub=null;
+var rlJournalN=0,rlJournalUnsub=null,rlPendN=0,rlPendUnsub=null,rlPendInit=false;
 /* Droit précis : le patron a tout, l'administrateur selon ses cases cochées, l'employé rien de ces droits-là */
 function can(k){
   if(isBoss)return true;
@@ -5345,6 +5368,7 @@ function rlLive(d){
   var was=isAdmin;
   userProfile=Object.assign({},userProfile,d);
   rlApply();
+  try{loadLocalCatalog();}catch(e){}
   try{updateNavUser();v2Nav(activeTab);}catch(e){}
   showToast(was!==isAdmin?t(isAdmin?'rl.nowAdmin':'rl.noLongerAdmin'):t('rl.permsChanged'),'s');
   try{goTab(was!==isAdmin?'dashboard':activeTab);}catch(e){}
@@ -5387,6 +5411,14 @@ function startJournalListener(){
   if(!isBoss)return;
   try{
     if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}
+    if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}
+    rlPendInit=false;
+    rlPendUnsub=db.collection('users').where('statut','==','en_attente').onSnapshot(function(s){
+      var n=(s&&(s.size!=null?s.size:(s.docs||[]).length))||0;
+      if(rlPendInit&&n>rlPendN)showToast('Nouveau compte à approuver','i');
+      rlPendInit=true;rlPendN=n;rlDotsPaint();
+      if(activeTab==='parametres'&&!window._stSec){try{renderParametres();}catch(e){}}
+    },function(){});
     rlJournalUnsub=db.collection('journal').where('vu','==',false).onSnapshot(function(s){
       rlJournalN=(s&&(s.size!=null?s.size:(s.docs||[]).length))||0;
       rlDotsPaint();
@@ -5395,7 +5427,7 @@ function startJournalListener(){
   }catch(e){}
 }
 function rlDotsPaint(){
-  var n=rlJournalN;
+  var n=rlJournalN+rlPendN;
   ['rl-dot-tab','rl-dot-mod'].forEach(function(id){var e=document.getElementById(id);if(e){e.hidden=!n;e.textContent=n>9?'9+':String(n);}});
 }
 async function uiJournal(){
