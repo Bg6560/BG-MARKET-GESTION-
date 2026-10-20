@@ -40,7 +40,7 @@ before(async () => {
     await setDoc(doc(db, 'clients', 'k1'), { nom: 'Client démo A', tel: '0100000001', uid: U.emp, ts: at(0, 4) });
     await setDoc(doc(db, 'clients', 'k2'), { nom: 'Client démo B', tel: '0100000002', uid: U.patron, ts: at(0, 3) });
     await setDoc(doc(db, 'precommandes', 'r1'), { uid: U.emp, vendeur: 'Vendeur Démo', client: 'Client démo C', tel: '0100000003', produit: 'iPhone 15 Pro', prixTotal: 650000, acompte: 200000, versements: [], statut: 'acompte', ts: at(0, 2) });
-    await setDoc(doc(db, 'sav', 's1'), { uid: U.emp, vendeur: 'Vendeur Démo', client: 'Client démo D', tel: '0100000004', produit: 'Tecno Spark 20', panne: 'Écran cassé', statut: 'en_cours', ts: at(0, 2) });
+    await setDoc(doc(db, 'sav', 's1'), { uid: U.emp, vendeur: 'Vendeur Démo', client: 'Client démo D', tel: '0100000004', produit: 'Tecno Spark 20', panne: 'Écran cassé', statut: 'en_reparation', ts: at(0, 2) });
     await setDoc(doc(db, 'fournisseurs', 'F1'), { nom: 'Fournisseur Démo', whatsapp: '0100000009', ville: 'Abidjan', specialite: 'Samsung' });
     await setDoc(doc(db, 'catalogue_fournisseurs', 'F1_a15'), { fournisseurId: 'F1', fournisseurNom: 'Fournisseur Démo', nom: 'Samsung A15 128GB', prixAchat: 82000, devise: 'FCFA', majAt: at(0, 3) });
   });
@@ -64,7 +64,7 @@ const VUES = [
   ['produits', "goTab('produits')"], ['produit-fiche', "viewProd('p1')"], ['sav', "goTab('sav')"],
   ['fournisseurs', "goTab('fournisseurs')"], ['fournisseur-fiche', "viewFourn('F1')"], ['import', "CF.fid='F1';CF.fnom='Fournisseur Démo';cfOpenImport('F1')"],
   ['comparer', "goTab('fournisseurs');setTimeout(function(){showFournTab('compare')},300)"], ['equipe', "goTab('equipe')"], ['historique', "goTab('historique')"],
-  ['reglages', "goTab('parametres')"], ['reglages-notifs', "uiSettings('notifications')"], ['menu-creer', "goTab('dashboard');setTimeout(function(){v2Toggle('create')},400)"],
+  ['reglages', "goTab('parametres')"], ['reglages-notifs', "uiSettings('notifications')"], ['menu-creer', "goTab('dashboard');setTimeout(function(){v2Toggle('create')},400)"], ['menu-plus', "goTab('dashboard');setTimeout(function(){v2Toggle('more')},400)"],
 ];
 async function tour(page, prefix, vues, check) {
   for (const [nom, js] of vues) {
@@ -77,6 +77,21 @@ async function tour(page, prefix, vues, check) {
   }
 }
 describe('Galerie', () => {
+  it('page de connexion : sombre et clair, ordinateur et téléphone, onglet inscription', async () => {
+    for (const [nom, vp] of [['pc', { width: 1440, height: 900 }], ['tel', { width: 390, height: 844 }]]) {
+      for (const theme of ['dark', 'light']) {
+        const s = await openApp(browser, vp);
+        await s.page.evaluate((t) => { localStorage.setItem('bg_theme', t); document.documentElement.setAttribute('data-theme', t); }, theme);
+        await s.page.waitForSelector('#l-email', { state: 'visible' });
+        await s.page.waitForTimeout(1200);
+        assert.ok(await s.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth) <= 0);
+        await s.page.screenshot({ path: SHOT(`${nom}-${theme}-connexion`) });
+        if (nom === 'tel') { await s.page.evaluate(() => switchAuthTab('signup')); await s.page.waitForTimeout(500); await s.page.screenshot({ path: SHOT(`${nom}-${theme}-inscription`) }); }
+        assert.deepEqual(s.errors, []);
+        await s.context.close();
+      }
+    }
+  });
   for (const [nom, vp] of [['pc', { width: 1440, height: 1000 }], ['tel', { width: 390, height: 860 }]]) {
     for (const theme of ['dark', 'light']) {
       it(`patron · ${nom} · ${theme}`, async () => {
