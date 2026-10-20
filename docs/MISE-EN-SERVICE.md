@@ -24,7 +24,7 @@ Chaque étape marquée ✋ demande l'accord explicite du patron.
 | 6 | **Copie** des coûts historiques : `... --backup sauvegardes/avant-couts --apply --confirm <id>`. Copie seulement : rien n'est modifié ni supprimé. | ✋ |
 | 7 | Publier les **règles** : console Firebase › Firestore › Règles › remplacer tout le texte par le contenu de `firestore.rules` › Publier. À faire le jour même de l'étape 6 : avec les anciennes règles, tout compte connecté peut encore lire les coûts. | ✋ |
 | 8 | Vérification de la section 4 (5 minutes, un compte par rôle). | |
-| 9 | Plus tard, quelques jours sans incident : retrait des anciens champs financiers des documents publics **et** purge du cache local des appareils (voir `SECURITE.md`). Outil non écrit : il se prépare à part, avec nouvel accord. | ✋ |
+| 9 | Retrait des anciens champs financiers : `node tools/effacement-couts.mjs --project <id>` (simulation), puis `... --backup sauvegardes/avant-effacement --apply --confirm <id>`. Ne touche jamais un document dont la copie privée manque ; sauvegarde automatique juste avant. Puis, sur chaque appareil employé déjà « Synchronisé » : effacer les données du site dans le navigateur (copies locales anciennes). | ✋ |
 | 10 | Notifications push (facultatif, plus tard) : `docs/NOTIFICATIONS.md` (forfait Blaze). | ✋ |
 
 **Variante** si l'étape 2 échoue : choisir une plage horaire calme, sauvegarde faite, publier code (3) et règles (7) à quelques minutes d'intervalle, puis vérifier (8). Les écritures en attente sur les appareils partent après la publication.
