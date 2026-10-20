@@ -47,7 +47,7 @@ const importer = async (page, fid, text) => {
   await page.evaluate((i) => { CF.fid = i; cfOpenImport(i); }, fid);
   await page.fill('#cf-txt', text);
   await page.evaluate(() => cfAnalyze());
-  await page.waitForSelector('#cf-preview .ui-btn-primary, #cf-preview .ui-note-danger', { timeout: 10000 });
+  await page.waitForSelector('#cf-preview button.ui-btn-primary, #cf-preview .ui-note-danger', { timeout: 10000 });
 };
 
 describe('Catalogue fournisseur', () => {
@@ -57,8 +57,8 @@ describe('Catalogue fournisseur', () => {
     await page.waitForFunction(() => /Aucun téléphone enregistré/.test((document.querySelector('#cf-body')||{textContent:''}).textContent), null, { timeout: 10000 });
     await importer(page, 'F1', LIST + '\niPhone 13 128Go');
     const prev = await page.locator('#cf-preview').textContent();
-    assert.match(prev, /Nouveaux téléphones\s*4/);
-    assert.match(prev, /Lignes sans prix \(ignorées\)\s*1/);
+    assert.match(prev, /Nouveaux produits\s*4/);
+    assert.match(prev, /Lignes sans prix\s*1/);
     await page.evaluate(() => cfSaveImport());
     await page.waitForFunction(() => document.querySelector('#cf-body') && /Samsung Galaxy A15/.test((document.querySelector('#cf-body')||{textContent:''}).textContent), null, { timeout: 15000 });
     const docs = await catalogue();
@@ -76,13 +76,14 @@ describe('Catalogue fournisseur', () => {
     await fiche(page, 'F1');
     await page.waitForFunction(() => /Samsung Galaxy A15/.test((document.querySelector('#cf-body')||{textContent:''}).textContent), null, { timeout: 10000 });
     await importer(page, 'F1', LIST);
-    assert.match(await page.locator('#cf-preview').textContent(), /Prix confirmés \(inchangés\)\s*4/);
+    assert.match(await page.locator('#cf-preview').textContent(), /Prix inchangés\s*4/);
     await page.evaluate(() => cfSaveImport());
     await page.waitForTimeout(800);
     assert.equal((await catalogue()).length, 4, 'toujours 4 documents');
     await importer(page, 'F1', LIST.replace('85000', '83000'));
     assert.match(await page.locator('#cf-preview').textContent(), /Prix modifiés\s*1/);
     assert.match(await page.locator('#cf-preview').textContent(), /baisse de 2 000 F/);
+    page.once('dialog', (d) => d.accept()); // confirmation avant remplacement d'un prix existant
     await page.evaluate(() => cfSaveImport());
     await page.waitForFunction(() => /83 000 F/.test((document.querySelector('#cf-body')||{textContent:''}).textContent), null, { timeout: 15000 });
     const a15 = (await catalogue()).find((d) => /A15/.test(d.nom));
@@ -145,6 +146,37 @@ describe('Catalogue fournisseur', () => {
     await login(s.page, EMAILS.emp);
     await s.page.waitForSelector('#main-content .dsk-hello', { timeout: 25000 });
     assert.doesNotMatch(await s.page.locator('#dsk-nav').textContent(), /Fournisseurs/);
+    await s.context.close();
+  });
+
+  it('catalogue WhatsApp réel sur téléphone : années jamais prises pour des prix, Kazi neuf conservé, rien enregistré avant validation', async () => {
+    const CAT = `*SAMSUNG SERIES A*\n\nA14 128gb….50.000\nA16 128….70.000\n\n*KAZI NEUFS*\nHonor 5A ……………12.000\nHUAWEI Y9 2018…………20.000\nY7 Pro 2019 : 30.000\nMotorola G 2025 128GB : 80.000\nGalaxy A05 - 2024\nContact : 07 07 12 34 56`;
+    const s = await openApp(browser, { width: 390, height: 2400 });
+    await login(s.page, EMAILS.patron);
+    await s.page.waitForSelector('#main-content .dsk-hello', { timeout: 25000 });
+    const avant = (await catalogue()).length;
+    await importer(s.page, 'F2', CAT);
+    const t = await s.page.locator('#cf-preview').textContent();
+    assert.match(t, /Nouveaux produits\s*6/);
+    assert.match(t, /À vérifier\s*1/);
+    assert.match(t, /ressemble à une année/);
+    assert.match(t, /Lignes ignorées\s*1/);
+    assert.doesNotMatch(t, /2 0(18|19|25) F/);
+    assert.match(t, /Kazi neuf/);
+    assert.equal((await catalogue()).length, avant, 'rien d\'enregistré avant validation');
+    await s.page.evaluate(() => { document.querySelectorAll('#cf-preview details').forEach((d) => { d.open = true; }); });
+    await s.page.screenshot({ path: new URL('./shots/import-catalogue-mobile.png', import.meta.url).pathname });
+    // décocher un produit : il n'est pas enregistré
+    await s.page.locator('#cf-preview label:has-text("Honor 5A") input[type=checkbox]').uncheck();
+    await s.page.evaluate(() => cfSaveImport());
+    await s.page.waitForFunction(() => document.querySelector('#cf-body') && /Honor 5A|Motorola/.test(document.querySelector('#cf-body').textContent), null, { timeout: 15000 });
+    const apres = (await catalogue()).filter((d) => d.fournisseurId === 'F2' && d.source === 'import');
+    assert.equal(apres.length, 5);
+    assert.equal(apres.some((d) => /Honor/.test(d.nom)), false, 'produit décoché : non enregistré');
+    const moto = apres.find((d) => /Motorola/.test(d.nom));
+    assert.equal(moto.prixAchat, 80000);
+    assert.equal(moto.etat, 'kazi neuf');
+    assert.equal(moto.stockage, '128GB');
     await s.context.close();
   });
 });

@@ -21,9 +21,9 @@ function extractFn(name) {
   }
   throw new Error('accolades non équilibrées : ' + name);
 }
-const brands = /var CF_BRANDS=\[[^\]]*\];/.exec(app)[0];
+const brands = /var CF_BRANDS=\[[^\]]*\];/.exec(app)[0] + /var CF_MARQUES=[\s\S]*?var CF_ETAT_LIB=[^;]*;/.exec(app)[0];
 const ctx = vm.createContext({ Date });
-vm.runInContext(brands + ['cfNorm', 'cfKey', 'cfTokens', 'cfWeak', 'cfSet', 'cfDocId', 'cfPrice', 'getPrice', 'getName', 'cfParse', 'cfPlan', 'cfCompare', 'cfAgeTxt'].map(extractFn).join('\n'), ctx);
+vm.runInContext(brands + ['cfNorm', 'cfKey', 'cfTokens', 'cfWeak', 'cfSet', 'cfDocId', 'cfPrice', 'cfLow', 'cfEtat', 'cfSansEtat', 'cfMarquesDe', 'cfItemKey', 'cfPrixFin', 'cfNomPropre', 'cfStockage', 'cfAnalyse', 'cfParse', 'cfPlan', 'cfCompare', 'cfAgeTxt'].map(extractFn).join('\n'), ctx);
 const f = (name, ...a) => vm.runInContext(`${name}`, ctx)(...a);
 const J = (o) => JSON.parse(JSON.stringify(o));
 
@@ -80,13 +80,18 @@ Redmi 13C 4/128 : 79k`;
   });
 });
 
-describe('Plan d\'import : jamais de doublon', () => {
-  const items = [{ nom: 'Samsung A15 128Go', prix: 85000 }, { nom: 'Tecno Spark 20 128Go', prix: 72000 }, { nom: 'samsung a15 128 go', prix: 83000 }];
-  it('première fois : tout est créé, le dernier doublon l\'emporte', () => {
-    const p = J(f('cfPlan', items, {}, 'F1', 1));
+describe('Plan d\'import : jamais de doublon ni de remplacement silencieux', () => {
+  const items = [{ nom: 'Samsung A15 128Go', prix: 85000 }, { nom: 'Tecno Spark 20 128Go', prix: 72000 }];
+  it('même produit deux fois au même prix : un seul, signalé en doublon', () => {
+    const p = J(f('cfPlan', [...items, { nom: 'samsung a15 128 go', prix: 85000 }], {}, 'F1', 1));
     assert.equal(p.creer.length, 2);
-    assert.equal(p.doublons, 1);
-    assert.equal(p.creer.find((x) => /a15/i.test(x.nom)).prix, 83000);
+    assert.equal(p.doublons.length, 1);
+  });
+  it('même produit avec deux prix différents : rien n\'est enregistré, « à vérifier »', () => {
+    const p = J(f('cfPlan', [...items, { nom: 'samsung a15 128 go', prix: 83000 }], {}, 'F1', 1));
+    assert.equal(p.creer.length, 1);
+    assert.equal(p.conflits.length, 1);
+    assert.deepEqual(p.conflits[0].prix.sort(), [83000, 85000]);
   });
   it('réimport de la même liste : rien de créé, tout confirmé (mêmes identifiants)', () => {
     const first = J(f('cfPlan', items, {}, 'F1', 1));
@@ -96,7 +101,7 @@ describe('Plan d\'import : jamais de doublon', () => {
     assert.equal(p2.confirmer.length, 2);
     assert.equal(p2.modifier.length, 0);
   });
-  it('prix changé : modification avec l\'ancien prix conservé', () => {
+  it('prix changé : modification listée avec l\'ancien prix', () => {
     const first = J(f('cfPlan', items, {}, 'F1', 1));
     const existing = Object.fromEntries(first.creer.map((x) => [x.id, { nom: x.nom, prixAchat: x.prix, majMs: 5000 }]));
     const p2 = J(f('cfPlan', [{ nom: 'Tecno Spark 20 128 Go', prix: 75000 }], existing, 'F1', 2));
@@ -104,6 +109,17 @@ describe('Plan d\'import : jamais de doublon', () => {
     assert.equal(p2.modifier[0].avant, 72000);
     assert.equal(p2.modifier[0].prix, 75000);
     assert.equal(p2.modifier[0].avantMs, 5000);
+  });
+  it('un ancien document enregistré sous une autre écriture est retrouvé (pas de doublon)', () => {
+    const existing = { 'F1_ancien-id': { nom: 'Huawei P30 Pro 128 Go', prixAchat: 80000, majMs: 1 } };
+    const p = J(f('cfPlan', [{ nom: 'Huawei P30pro 128gb', prix: 82000 }], existing, 'F1', 2));
+    assert.equal(p.creer.length, 0);
+    assert.equal(p.modifier[0].id, 'F1_ancien-id');
+  });
+  it('même modèle, état différent (Kazi neuf) : deux produits distincts', () => {
+    const p = J(f('cfPlan', [{ nom: 'Redmi 9A', prix: 27500, etat: 'kazi neuf' }, { nom: 'Redmi 9A', prix: 40000, etat: '' }], {}, 'F1', 1));
+    assert.equal(p.creer.length, 2);
+    assert.equal(p.conflits.length, 0);
   });
   it('un autre fournisseur a ses propres documents', () => {
     const a = J(f('cfPlan', items, {}, 'F1', 1)), b = J(f('cfPlan', items, {}, 'F2', 1));

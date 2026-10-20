@@ -1175,6 +1175,9 @@ button.dsk-kpi:hover{border-color:var(--line-strong)}
   #main-content .fo-stats{max-width:760px}
   .v2-sheet{max-width:560px;left:50%;right:auto;margin-left:-280px;width:560px}
 }
+.cf-check{-webkit-appearance:checkbox;appearance:auto;width:20px!important;height:20px;min-width:20px;flex:none;margin:0 12px 0 0;accent-color:#00A7AE;padding:0;border:0;box-shadow:none}
+.cf-mini{flex:none;font:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid var(--border,rgba(127,127,127,.3));background:transparent;color:var(--text);cursor:pointer}
+.cf-etat{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,98,8,.14);color:#FF6208;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -2567,36 +2570,7 @@ function analyzeList(){
   const errEl=document.getElementById('sup-err');
   if(errEl)errEl.style.display='none';
   if(!text){if(errEl){errEl.textContent='Colle ta liste ci-dessus !';errEl.style.display='block';}return;}
-  const lines=text.split('\n');
-  const out=[];
-  for(let line of lines){
-    line=line.trim();
-    if(!line||line.length<3)continue;
-    line=line.replace(/^[-*#>]+\s*/,'').trim();
-    if(!line)continue;
-    // Format avec | : "Samsung Galaxy A20S | 32Go | 40000 F CFA"
-    if(line.includes('|')){
-      const parts=line.split('|').map(p=>p.trim());
-      // Chercher le prix dans la dernière partie
-      let pricePart=parts[parts.length-1];
-      let namePart=parts[0];
-      if(parts.length>=2 && parts[1].match(/\d+go/i)) namePart=parts[0]+' '+parts[1]; // inclure stockage
-      const priceMatch=pricePart.match(/(\d[\d\s]+)/);
-      if(priceMatch){
-        const val=parseInt(priceMatch[1].replace(/\s+/g,''));
-        if(val>1000&&val<100000000){
-          out.push({name:namePart.trim(),price:val});
-          continue;
-        }
-      }
-    }
-    // Format normal
-    const pr=getPrice(line);
-    if(!pr)continue;
-    const nm=getName(line,pr.pos);
-    if(!nm||nm.length<2)continue;
-    out.push({name:nm,price:pr.val});
-  }
+  const out=cfAnalyse(text).items.map(function(x){return {name:x.nom,price:x.prix};});
   if(!out.length){
     if(errEl){errEl.textContent='Aucun produit detecte. Verifie le format de ta liste.';errEl.style.display='block';}
     return;
@@ -6416,11 +6390,12 @@ function cfNorm(s){
     .replace(/\b(\d{1,2})[\/+](\d{2,4})\b/g,'$1gb $2gb')
     .replace(/\b(\d+)\s*(?:go|gb)\b/g,'$1gb').replace(/\b(\d+)\s*(?:to|tb)\b/g,'$1tb')
     .replace(/\b(32|64|128|256|512)\s*g\b/g,'$1gb')
+    .replace(/([0-9])(pro|max|plus|ultra|lite|prime|mini|neo|note|fe|s)\b/g,'$1 $2')
     .replace(/\b(?:smartphone|telephone|tel|portable|dual sim|dualsim|double sim|neuf|new|sealed)\b/g,' ')
     .replace(/[^a-z0-9+]+/g,' ').replace(/\s+/g,' ').trim();
 }
 function cfKey(s){var seen={},t=cfTokens(s).filter(function(x){if(seen[x])return false;seen[x]=1;return true;});return t.sort().join(' ');}
-function cfTokens(s){return cfNorm(s).split(' ').filter(function(x){return x&&CF_BRANDS.indexOf(x)<0;});}
+function cfTokens(s){return cfNorm(s).split(' ').filter(function(x){return x&&x!=='galaxy'&&CF_BRANDS.indexOf(x)<0;});}
 function cfWeak(x){return /^(\d{1,2}gb|4g|5g|lte|global|version|noir|black|blue|bleu|white|blanc|gris|gray|grey|green|vert|gold|or|rouge|red)$/.test(x);}
 function cfSet(a){var o={};a.forEach(function(x){o[x]=1;});return Object.keys(o).sort().join(' ');}
 function cfDocId(fid,key){return fid+'_'+String(key).replace(/ /g,'-').replace(/\+/g,'p').slice(0,120);}
@@ -6430,34 +6405,121 @@ function cfPrice(s){
   var n=parseInt(m[1].replace(/[^\d]/g,''),10);if(m[2])n*=1000;
   return n>=1000&&n<100000000?n:null;
 }
-/* Texte collé ou fichier CSV/TXT → lignes reconnues + lignes sans prix (signalées, jamais enregistrées) */
-function cfParse(text){
-  var items=[],sansPrix=[];
-  String(text||'').split(/\r?\n/).forEach(function(raw){
-    var line=raw.replace(/^[\s\-*#>•]+/,'').trim();
-    if(line.length<3)return;
-    var cells=line.split(/[;\t|]/).map(function(c){return c.trim();}).filter(Boolean);
-    if(cells.length<2&&(line.match(/,/g)||[]).length>=1){var c2=line.split(',').map(function(c){return c.trim();}).filter(Boolean);if(c2.length>=2&&cfPrice(c2[c2.length-1]))cells=c2;}
-    var name='',price=null,i;
-    if(cells.length>=2){for(i=cells.length-1;i>=1;i--){var v=cfPrice(cells[i]);if(v){price=v;name=cells.slice(0,i).join(' ');break;}}}
-    if(price===null){var pr=getPrice(line);if(pr){price=pr.val;name=getName(line,pr.pos);}}
-    if(/^(mod[eè]le|produit|nom|d[ée]signation|article|libell[ée])\b/i.test(name||line)&&price===null)return;
-    if(price!==null){
-      name=name.replace(/\s+/g,' ').replace(/[-|@:,;]+$/,'').trim();
-      if(name.length>=3&&/[a-z]{2}/i.test(name))items.push({nom:name,prix:price});
-    }else if(line.length<=80&&/[a-z]{3}/i.test(line)&&/\d/.test(line)&&!/:\s*$/.test(line)){sansPrix.push(line);}
-  });
-  return {items:items,sansPrix:sansPrix};
+/* ---- Lecture des catalogues (messages WhatsApp, texte collé, CSV) ----
+   Une ligne = un produit seulement si un prix est lu SANS AMBIGUÏTÉ en fin de ligne, séparé du nom.
+   Les titres (*SAMSUNG SERIES A*, KAZI NEUFS…) donnent le contexte (marque, état) aux lignes suivantes.
+   Tout doute va dans « À vérifier » ; rien n'est deviné (ni marque, ni capacité, ni état, ni prix). */
+var CF_MARQUES={samsung:'Samsung',galaxy:'Samsung',apple:'Apple',iphone:'Apple',xiaomi:'Xiaomi',redmi:'Xiaomi',poco:'Xiaomi',huawei:'Huawei',honor:'Honor',
+  tecno:'Tecno',infinix:'Infinix',itel:'Itel',oppo:'Oppo',vivo:'Vivo',realme:'Realme',nokia:'Nokia',motorola:'Motorola',moto:'Motorola',google:'Google',pixel:'Google',
+  oneplus:'OnePlus',zte:'ZTE',lenovo:'Lenovo',hmd:'HMD',alcatel:'Alcatel',tcl:'TCL',blackview:'Blackview',oukitel:'Oukitel',doogee:'Doogee',umidigi:'Umidigi',
+  cubot:'Cubot',wiko:'Wiko',sony:'Sony',lg:'LG',asus:'Asus',nothing:'Nothing'};
+var CF_ETATS=[['kazi neuf',/\bkazi[\s-]*neufs?\b/],['kazi',/\bkazis?\b/],['quasi neuf',/\bquasi[\s-]*neufs?\b/],['reconditionne',/\breconditionnee?s?\b|\brefurbished\b/],
+  ['occasion',/\boccasions?\b|\bvenants?\b|\bused\b/],['scelle',/\bscellee?s?\b|\bsealed\b/],['neuf',/\bneufs?\b|\bnew\b/]];
+var CF_ETAT_LIB={'kazi neuf':'Kazi neuf',kazi:'Kazi','quasi neuf':'Quasi neuf',reconditionne:'Reconditionné',occasion:'Occasion',scelle:'Scellé',neuf:'Neuf'};
+function cfLow(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function cfEtat(s){var l=cfLow(s);for(var i=0;i<CF_ETATS.length;i++)if(CF_ETATS[i][1].test(l))return CF_ETATS[i][0];return '';}
+function cfSansEtat(s){var l=String(s||'');CF_ETATS.forEach(function(e){var src=e[1].source.replace(/\\b/g,'').replace(/e/g,'[eéèê]');l=l.replace(new RegExp('(^|[^A-Za-z])(?:'+src+')(?=[^A-Za-zéèê]|$)','gi'),'$1 ');});return l.replace(/\(\s*\)/g,'').replace(/\s+/g,' ').trim();}
+function cfMarquesDe(s){
+  var t=cfLow(s).replace(/[^a-z0-9]+/g,' ').split(' '),out={};
+  t.forEach(function(w,i){if(CF_MARQUES[w]&&(w!=='mi'))out[CF_MARQUES[w]]=1;if(w==='mi'&&/^\d/.test(t[i+1]||''))out.Xiaomi=1;});
+  return Object.keys(out);
 }
-/* Compare la liste lue à ce qui est déjà enregistré pour ce fournisseur : créer / modifier / confirmer (même prix). Le dernier doublon de la liste l'emporte. */
+function cfItemKey(nom,etat){var k=cfKey(nom);return k?(etat?k+' #'+etat:k):'';}
+/* Prix en fin de ligne : renvoie {prix} ou {doute} ou null (aucun prix). */
+function cfPrixFin(t){
+  var s=t.replace(/[\s.…·*_]+$/,''),devise=false,kilo=false,m;
+  if((m=/(\d)\s*(?:f\s*cfa|fcfa|cfa|xof|frs?|francs?|f)\.?$/i.exec(s))){devise=true;s=s.slice(0,m.index+1);}
+  else if((m=/(\d)\s*(k|mille)$/i.exec(s))){kilo=true;s=s.slice(0,m.index+1);}
+  /* un seul séparateur entre groupes de 3 chiffres : « 50.000 », « 50 000 », « 50,000 » ; « 128....70.000 » = capacité, points, prix */
+  m=/(\d{1,3}(?:([.,\u00a0\u202f ])\d{3})(?:\2\d{3})*|\d+(?:[.,]\d{1,2})?)$/.exec(s);if(!m)return null;
+  var run=m[1].replace(/[\u00a0\u202f]/g,' '),start=m.index;
+  var avant=s.slice(0,start),sepAvant=(avant.match(/[^A-Za-z0-9]*$/)||[''])[0];
+  if(/[A-Za-z0-9]$/.test(avant))return null;              /* « A14 », « P30 » : le nombre fait partie du modèle */
+  var sepExplicite=/[^\s]/.test(sepAvant),val;
+  var plain=/^\d+$/.test(run);
+  if(/^\d{1,3}([.,])\d{3}(\1\d{3})*$/.test(run))val=parseInt(run.replace(/[.,]/g,''),10);
+  else if(/^\d{1,3}( \d{3})+$/.test(run))val=parseInt(run.replace(/ /g,''),10);
+  else if(plain)val=parseInt(run,10);
+  else if(kilo&&/^\d+[.,]\d{1,2}$/.test(run))val=Math.round(parseFloat(run.replace(',','.'))*1000);
+  else return {doute:'prix avec virgule ou point décimal (« '+run+' ») : montant incertain',nom:avant};
+  if(kilo&&plain)val*=1000;
+  if(plain&&!kilo&&!devise&&/^(19[89]\d|20[0-3]\d)$/.test(run)){
+    if(!sepExplicite)return null;                         /* « Y9 2018 » : l'année fait partie du modèle */
+    return {doute:'« '+run+' » ressemble à une année, pas à un prix',nom:avant};
+  }
+  if(val<1000){
+    if(!sepExplicite&&!devise)return null;                /* « A16 128 » : capacité, pas un prix */
+    if(!devise)return {doute:'montant inférieur à 1 000 F ('+val+')',nom:avant};
+  }
+  if(val>50000000)return {doute:'montant anormalement élevé ('+val+')',nom:avant};
+  return {prix:val,nom:avant};
+}
+function cfNomPropre(s){return String(s||'').replace(/[;|\t]/g,' ').replace(/\s*,\s*/g,' ').replace(/^[\s\-*#>•·.…]+/,'').replace(/[\s.…·:=\-–—|;,_*>\/]+$/,'').replace(/\s+/g,' ').trim();}
+function cfStockage(nom){
+  var l=cfLow(nom),m=/\b(\d{1,2})\s*[\/+]\s*(\d{2,4})\s*(?:go|gb)?\b/.exec(l);
+  if(m&&+m[2]>=16)return {stockage:m[2]+'GB',ram:m[1]+'GB'};
+  var all=[];l.replace(/\b(\d+)\s*(go|gb|g|to|tb)\b/g,function(x,n,u){if(u==='g'&&[32,64,128,256,512].indexOf(+n)<0)return x;all.push({n:+n,u:/t/.test(u)?'TB':'GB'});return x;});
+  var big=all.filter(function(x){return x.u==='TB'||x.n>=16;}),small=all.filter(function(x){return x.u==='GB'&&x.n<16;});
+  if(big.length)return {stockage:big[big.length-1].n+big[big.length-1].u,ram:small.length?small[0].n+'GB':''};
+  var b=/\s(16|32|64|128|256|512|1024)$/.exec(l.trim());
+  if(b&&/[a-z]/.test(l))return {stockage:b[1]+'GB',ram:'',nu:true};
+  return {stockage:'',ram:''};
+}
+function cfAnalyse(text){
+  var R={items:[],aVerifier:[],sansPrix:[],ignorees:[],titres:[]},ctx={titre:'',marque:'',etat:''};
+  String(text||'').split(/\r?\n/).forEach(function(raw,num){
+    var ligne=raw.trim();if(!ligne)return;
+    var etoile=/^[*_~]+[^*_~].*[*_~]+$/.test(ligne);
+    var t=ligne.replace(/[*_~]/g,'').replace(/^[\s\-•·>#]+/,'').replace(/\u2026/g,'...').trim();
+    if(!t||!/[A-Za-z0-9]/.test(t)){R.ignorees.push({ligne:ligne,raison:'séparateur ou décoration'});return;}
+    if(/(?:\+?225[\s.]?)?\b0\d(?:[\s.]?\d{2}){4}\b/.test(t)){R.ignorees.push({ligne:ligne,raison:'numéro de téléphone'});return;}
+    var p=cfPrixFin(t);
+    var maj=t.replace(/[^A-Za-z]/g,''),toutMaj=maj.length>=3&&maj===maj.toUpperCase();
+    var aStock=/\d\s*(go|gb|to|tb)\b/i.test(t);
+    if(!p&&(etoile||/:\s*$/.test(t)||(toutMaj&&!aStock&&!/\d{2,}/.test(t)))){
+      var m=cfMarquesDe(t);ctx={titre:cfNomPropre(t),marque:m.length===1?m[0]:'',etat:cfEtat(t)};R.titres.push(ctx.titre);return;
+    }
+    if(!p){
+      if(/\d/.test(t))R.sansPrix.push({ligne:ligne,categorie:ctx.titre});
+      else R.ignorees.push({ligne:ligne,raison:'texte sans prix ni modèle'});
+      return;
+    }
+    var nomBrut=cfNomPropre(p.nom);
+    if(p.doute){R.aVerifier.push({ligne:ligne,raison:p.doute,categorie:ctx.titre});return;}
+    if(!nomBrut||!/[A-Za-z]/.test(nomBrut)){R.aVerifier.push({ligne:ligne,raison:'prix sans nom de produit',categorie:ctx.titre});return;}
+    if(/\d{1,3}[.,]\d{3}(?!\d)|\d{4,}\s*f\b/i.test(nomBrut)){R.aVerifier.push({ligne:ligne,raison:'plusieurs montants sur la ligne',categorie:ctx.titre});return;}
+    var etat=cfEtat(nomBrut)||ctx.etat,nom=cfSansEtat(nomBrut)||nomBrut;
+    var mq=cfMarquesDe(nom),marque=mq.length===1?mq[0]:(mq.length?'':ctx.marque);
+    if(mq.length>1){R.aVerifier.push({ligne:ligne,raison:'plusieurs marques sur la même ligne',categorie:ctx.titre});return;}
+    var aff=(!mq.length&&marque?marque+' ':'')+nom;
+    var st=cfStockage(nom);
+    var cleNom=st.nu?aff.replace(/\s(16|32|64|128|256|512|1024)$/,' $1GB'):aff;
+    R.items.push({nom:aff,prix:p.prix,marque:marque,stockage:st.stockage,ram:st.ram,etat:etat,categorie:ctx.titre,ligne:ligne,num:num+1,cle:cfItemKey(cleNom,etat)});
+  });
+  return R;
+}
+/* Compatibilité : ancienne forme { items:[{nom,prix}], sansPrix:[ligne] } */
+function cfParse(text){var r=cfAnalyse(text);return {items:r.items.map(function(x){return {nom:x.nom,prix:x.prix};}),sansPrix:r.sansPrix.map(function(x){return x.ligne;})};}
+/* Compare la liste lue au catalogue existant du fournisseur.
+   Même produit (modèle + capacité + variante + état) : un seul document. Jamais de remplacement silencieux :
+   tout prix modifié est listé ; deux prix différents pour le même produit dans la liste → « à vérifier », rien n'est enregistré. */
 function cfPlan(items,existing,fid,nowMs){
-  var last={},res={creer:[],modifier:[],confirmer:[],doublons:0};
-  (items||[]).forEach(function(it){var k=cfKey(it.nom);if(!k)return;if(last[k])res.doublons++;last[k]={nom:it.nom,prix:it.prix,cle:k};});
-  Object.keys(last).sort().forEach(function(k){
-    var it=last[k],id=cfDocId(fid,k),old=existing&&existing[id];
-    if(!old)res.creer.push({id:id,nom:it.nom,cle:k,prix:it.prix});
-    else if(old.prixAchat!==it.prix)res.modifier.push({id:id,nom:old.nom||it.nom,cle:k,prix:it.prix,avant:old.prixAchat,avantMs:old.majMs||0});
-    else res.confirmer.push({id:id,nom:old.nom||it.nom,cle:k,prix:it.prix});
+  var res={creer:[],modifier:[],confirmer:[],doublons:[],conflits:[]},groups={},order=[];
+  (items||[]).forEach(function(it){
+    var k=it.cle||cfItemKey(it.nom,it.etat||'');if(!k)return;
+    if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(it);
+  });
+  var byKey={};
+  Object.keys(existing||{}).forEach(function(id){var x=existing[id];var k=cfItemKey(x.nom||'',x.etat||'');if(k&&!byKey[k])byKey[k]=id;});
+  order.sort().forEach(function(k){
+    var g=groups[k],prix={};g.forEach(function(x){prix[x.prix]=1;});
+    if(Object.keys(prix).length>1){res.conflits.push({cle:k,nom:g[0].nom,lignes:g.map(function(x){return x.ligne||x.nom;}),prix:Object.keys(prix).map(Number)});return;}
+    if(g.length>1)res.doublons.push({cle:k,nom:g[0].nom,lignes:g.slice(1).map(function(x){return x.ligne||x.nom;})});
+    var it=g[0],id=byKey[k]||cfDocId(fid,k.replace(' #','#')),old=existing&&existing[id];
+    var base={id:id,nom:it.nom,cle:k,prix:it.prix,marque:it.marque||'',stockage:it.stockage||'',etat:it.etat||'',categorie:it.categorie||'',ligne:it.ligne||''};
+    if(!old)res.creer.push(base);
+    else if(old.prixAchat!==it.prix)res.modifier.push(Object.assign(base,{nom:old.nom||it.nom,avant:old.prixAchat,avantMs:old.majMs||0}));
+    else res.confirmer.push(Object.assign(base,{nom:old.nom||it.nom}));
   });
   return res;
 }
@@ -6465,7 +6527,7 @@ function cfPlan(items,existing,fid,nowMs){
 function cfCompare(entries,produits,nowMs,staleDays){
   var lim=(staleDays||30)*86400000,groups={};
   (entries||[]).forEach(function(e){
-    var ck=cfKey(e.nom||e.cle)||e.cle,g=groups[ck]||(groups[ck]={cle:ck,nom:e.nom||ck,offres:[]});
+    var ck=cfItemKey(e.nom||'',e.etat||'')||e.cle,g=groups[ck]||(groups[ck]={cle:ck,nom:e.nom||ck,etat:e.etat||'',offres:[]});
     g.offres.push({fournisseurId:e.fournisseurId,fournisseur:e.fournisseurNom||'',prix:e.prixAchat,majMs:e.majMs||0,ancien:!e.majMs||nowMs-e.majMs>lim});
   });
   var prods=(produits||[]).map(function(p){var t=cfTokens([p.marque,p.modele||p.nom,p.stockage,p.ram].filter(Boolean).join(' '));return {p:p,full:cfSet(t),strong:cfSet(t.filter(function(x){return !cfWeak(x);}))};});
@@ -6473,9 +6535,11 @@ function cfCompare(entries,produits,nowMs,staleDays){
   var rows=Object.keys(groups).map(function(k){
     var g=groups[k];g.offres.sort(function(a,b){return a.prix-b.prix;});
     g.meilleur=g.offres[0];g.ecart=g.offres.length>1?g.offres[1].prix-g.offres[0].prix:null;
-    var tk=k.split(' ').filter(function(x){return x&&CF_BRANDS.indexOf(x)<0;}),full=cfSet(tk),strong=cfSet(tk.filter(function(x){return !cfWeak(x);}));
+    var tk=k.split(' #')[0].split(' ').filter(function(x){return x&&CF_BRANDS.indexOf(x)<0;}),full=cfSet(tk),strong=cfSet(tk.filter(function(x){return !cfWeak(x);}));
     var ex=prods.filter(function(x){return x.full===full;}),ap=prods.filter(function(x){return x.strong===strong;}),m=null;
     if(ex.length===1)m={p:ex[0].p,approx:false};else if(!ex.length&&ap.length===1)m={p:ap[0].p,approx:true};
+    /* un état particulier (Kazi neuf, occasion…) n'est pas comparé au stock neuf */
+    if(g.etat&&g.etat!=='neuf'&&g.etat!=='scelle'){m=null;g.etatNonCompare=true;}
     if(m){
       used[m.p.id]=1;g.produit={id:m.p.id,nom:[m.p.marque,m.p.modele||m.p.nom,m.p.stockage].filter(Boolean).join(' '),prixVente:+m.p.prixVente||0};g.approx=m.approx;
       if(g.produit.prixVente>0){g.marge=g.produit.prixVente-g.meilleur.prix;g.margePct=Math.round(g.marge/g.produit.prixVente*1000)/10;}else g.sansPrixVente=true;
@@ -6493,8 +6557,9 @@ function cfAgeTxt(ms,now){
 function cfDocToItem(d){var x=d.data(),ms=x.majAt&&x.majAt.toMillis?x.majAt.toMillis():(x.majAt?Date.now():0);return Object.assign({id:d.id},x,{majMs:ms});}
 function cfBatches(fid,fnom,plan,source){
   var ts=firebase.firestore.FieldValue.serverTimestamp(),ops=[];
-  plan.creer.forEach(function(x){ops.push(['set',x.id,{fournisseurId:fid,fournisseurNom:fnom||'',nom:x.nom,cle:x.cle,prixAchat:x.prix,devise:'FCFA',source:source,majAt:ts}]);});
-  plan.modifier.forEach(function(x){var d={fournisseurId:fid,fournisseurNom:fnom||'',nom:x.nom,cle:x.cle,prixAchat:x.prix,devise:'FCFA',source:source,majAt:ts,prixPrecedent:x.avant};if(x.avantMs)d.precedentAt=firebase.firestore.Timestamp.fromMillis(x.avantMs);ops.push(['set',x.id,d]);});
+  var info=function(x){return {marque:x.marque||'',stockage:x.stockage||'',etat:x.etat||'',categorie:x.categorie||'',ligne:String(x.ligne||'').slice(0,200)};};
+  plan.creer.forEach(function(x){ops.push(['set',x.id,Object.assign({fournisseurId:fid,fournisseurNom:fnom||'',nom:x.nom,cle:x.cle,prixAchat:x.prix,devise:'FCFA',source:source,majAt:ts},info(x))]);});
+  plan.modifier.forEach(function(x){var d=Object.assign({fournisseurId:fid,fournisseurNom:fnom||'',nom:x.nom,cle:x.cle,prixAchat:x.prix,devise:'FCFA',source:source,majAt:ts,prixPrecedent:x.avant},info(x));if(x.avantMs)d.precedentAt=firebase.firestore.Timestamp.fromMillis(x.avantMs);ops.push(['set',x.id,d]);});
   plan.confirmer.forEach(function(x){ops.push(['update',x.id,{majAt:ts,source:source}]);});
   var out=[];
   for(var i=0;i<ops.length;i+=400){
@@ -6536,7 +6601,7 @@ function cfRenderList(){
   body.innerHTML=(old?'<div class="ui-note">'+old+' prix de plus de '+CF.staleDays+' jours : à reconfirmer auprès du fournisseur.</div>':'')+
     '<div class="ui-lines">'+CF.items.map(function(x){
       var stale=!x.majMs||now-x.majMs>lim,chg=x.prixPrecedent!=null&&x.prixPrecedent!==x.prixAchat?(x.prixAchat>x.prixPrecedent?' <span class="ui-neg">▲ '+v2Money(x.prixAchat-x.prixPrecedent)+'</span>':' <span class="ui-pos">▼ '+v2Money(x.prixPrecedent-x.prixAchat)+'</span>'):'';
-      return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(x.nom||x.cle)+'</b><span>'+cfAgeTxt(x.majMs,now)+(stale?' · <b class="ui-neg">prix ancien</b>':'')+chg+'</span></span>'+
+      return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(x.nom||x.cle)+(x.etat?' <small class="cf-etat">'+esc(CF_ETAT_LIB[x.etat]||x.etat)+'</small>':'')+'</b><span>'+cfAgeTxt(x.majMs,now)+(stale?' · <b class="ui-neg">prix ancien</b>':'')+chg+'</span></span>'+
         '<span class="ui-line-side"><b class="num">'+v2Money(x.prixAchat)+'</b></span>'+
         '<button type="button" class="ui-icon-btn ui-press" onclick="cfEditPrice(\''+x.id+'\')" aria-label="Modifier le prix">'+FAC_ICO.edit+'</button>'+
         '<button type="button" class="ui-icon-btn ui-press" onclick="cfDelete(\''+x.id+'\')" aria-label="Retirer">'+UI_ICO.x+'</button></div>';}).join('')+'</div>';
@@ -6556,7 +6621,7 @@ async function cfEditPrice(id){
   var x=CF.map[id];if(!x||!can('couts'))return;
   var v=prompt('Nouveau prix d\'achat de '+(x.nom||'')+' (F CFA)',x.prixAchat);if(v===null)return;
   var p=cfPrice(v);if(!p){showToast('Prix invalide','e');return;}
-  var plan=cfPlan([{nom:x.nom,prix:p}],cfExisting(),CF.fid,Date.now());
+  var plan=cfPlan([{nom:x.nom,prix:p,etat:x.etat||''}],cfExisting(),CF.fid,Date.now());
   try{await cfCommit(CF.fid,CF.fnom,plan,'manuel');showToast(plan.confirmer.length?'Prix confirmé':'Prix modifié','s');await cfLoad(CF.fid,{nom:CF.fnom});}
   catch(e){showToast('Modification impossible : '+e.message,'e');}
 }
@@ -6576,38 +6641,76 @@ function cfOpenImport(fid){
     '<textarea id="cf-txt" style="min-height:160px" placeholder="Samsung A15 128Go - 85000&#10;Tecno Spark 20 | 128Go | 72 000 F"></textarea>'+
     '<input type="file" id="cf-file" accept=".csv,.txt,text/plain,text/csv" onchange="cfReadFile(this)" style="margin-top:8px"/>'+
     '<button type="button" class="ui-btn ui-btn-primary ui-press" style="margin-top:12px" onclick="cfAnalyze()">Analyser</button></section>'+
-    '<div id="cf-preview"></div></div>';
+    '<div id="cf-preview">'+cfHistHtml()+'</div></div>';
 }
 function cfReadFile(inp){
   var f=inp.files&&inp.files[0];if(!f)return;
   if(f.size>2000000){showToast('Fichier trop volumineux (2 Mo maximum)','e');return;}
   var r=new FileReader();r.onload=function(){var t=document.getElementById('cf-txt');if(t){t.value=String(r.result||'');cfAnalyze();}};r.onerror=function(){showToast('Lecture du fichier impossible','e');};r.readAsText(f);
 }
+/* Historique local des analyses (texte + résumé), pour vérification ultérieure : 10 dernières, sur cet appareil */
+function cfHistLoad(){try{return JSON.parse(localStorage.getItem('bg_cf_imports')||'[]')||[];}catch(e){return [];}}
+function cfHistSave(entry){try{var h=cfHistLoad().filter(function(x){return x.at!==entry.at;});h.unshift(entry);localStorage.setItem('bg_cf_imports',JSON.stringify(h.slice(0,10)));}catch(e){}}
+function cfHistHtml(){
+  var h=cfHistLoad().filter(function(x){return x.fid===CF.fid;});if(!h.length)return '';
+  return '<section class="ui-card"><h2>Analyses récentes <span class="ui-count">'+h.length+'</span></h2><div class="ui-lines">'+h.map(function(x,i){
+    return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(new Date(x.at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}))+(x.enregistre?' · enregistrée':' · non enregistrée')+'</b><span>'+esc(x.resume||'')+'</span></span><button type="button" class="cf-mini ui-press" onclick="cfHistReload('+i+')">Revoir</button></div>';}).join('')+'</div></section>';
+}
+function cfHistReload(i){var h=cfHistLoad().filter(function(x){return x.fid===CF.fid;})[i];if(!h)return;var t=document.getElementById('cf-txt');if(t){t.value=h.texte||'';cfAnalyze();t.scrollIntoView({behavior:'smooth'});}}
+function cfResume(plan,an){return plan.creer.length+' nouveaux, '+plan.modifier.length+' modifiés, '+plan.confirmer.length+' inchangés, '+(an.aVerifier.length+plan.conflits.length)+' à vérifier, '+an.sansPrix.length+' sans prix';}
 async function cfAnalyze(){
   var pv=document.getElementById('cf-preview');if(!pv)return;
-  var parsed=cfParse(uiVal('cf-txt'));
-  if(!parsed.items.length){pv.innerHTML='<div class="ui-note ui-note-danger">Aucun téléphone avec un prix n\'a été reconnu. Vérifie le format de la liste.</div>';CF.plan=null;return;}
+  var texte=uiVal('cf-txt'),an=cfAnalyse(texte);
+  if(!an.items.length&&!an.aVerifier.length&&!an.sansPrix.length){pv.innerHTML='<div class="ui-note ui-note-danger">Aucun produit reconnu. Colle la liste telle qu\'elle a été reçue.</div>';CF.plan=null;return;}
   try{
     var snap=await db.collection('catalogue_fournisseurs').where('fournisseurId','==',CF.fid).get();
     CF.items=snap.docs.map(cfDocToItem);
   }catch(e){pv.innerHTML=lotErr(e,'cfAnalyze()');return;}
-  var plan=cfPlan(parsed.items,cfExisting(),CF.fid,Date.now());CF.plan=plan;
-  var line=function(x,extra){return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(x.nom)+'</b>'+(extra?'<span>'+extra+'</span>':'')+'</span><span class="ui-line-side"><b class="num">'+v2Money(x.prix)+'</b></span></div>';};
-  var tot=plan.creer.length+plan.modifier.length+plan.confirmer.length;
-  pv.innerHTML='<section class="ui-card"><h2>Résultat de l\'analyse</h2>'+
-    uiKV('Nouveaux téléphones',plan.creer.length)+uiKV('Prix modifiés',plan.modifier.length)+uiKV('Prix confirmés (inchangés)',plan.confirmer.length)+
-    (plan.doublons?uiKV('Doublons dans la liste (le dernier est gardé)',plan.doublons):'')+(parsed.sansPrix.length?uiKV('Lignes sans prix (ignorées)',parsed.sansPrix.length):'')+'</section>'+
-    (plan.modifier.length?'<section class="ui-card"><h2>Prix modifiés</h2><div class="ui-lines">'+plan.modifier.map(function(x){return line(x,v2Money(x.avant)+' → <b class="'+(x.prix>x.avant?'ui-neg':'ui-pos')+'">'+(x.prix>x.avant?'hausse':'baisse')+' de '+v2Money(Math.abs(x.prix-x.avant))+'</b>');}).join('')+'</div></section>':'')+
-    (plan.creer.length?'<section class="ui-card"><h2>Nouveaux</h2><div class="ui-lines">'+plan.creer.slice(0,60).map(function(x){return line(x);}).join('')+(plan.creer.length>60?'<p class="ui-muted">… et '+(plan.creer.length-60)+' autres</p>':'')+'</div></section>':'')+
-    (parsed.sansPrix.length?'<section class="ui-card"><h2>Lignes sans prix</h2><p class="ui-muted">Non enregistrées : '+parsed.sansPrix.slice(0,15).map(esc).join(' · ')+(parsed.sansPrix.length>15?' …':'')+'</p></section>':'')+
-    '<button type="button" class="ui-btn ui-btn-primary ui-btn-lg ui-press" onclick="cfSaveImport()">Enregistrer ('+tot+')</button>';
+  var plan=cfPlan(an.items,cfExisting(),CF.fid,Date.now());CF.plan=plan;CF.an=an;CF.texte=texte;CF.histAt=Date.now();
+  cfHistSave({fid:CF.fid,at:CF.histAt,texte:texte.slice(0,60000),resume:cfResume(plan,an),enregistre:false});
+  cfRenderPreview();
 }
+function cfEtatTag(e){return e?' <small class="cf-etat">'+esc(CF_ETAT_LIB[e]||e)+'</small>':'';}
+function cfRenderPreview(){
+  var pv=document.getElementById('cf-preview'),plan=CF.plan,an=CF.an;if(!pv||!plan)return;
+  var sel=function(x){return !x.skip;};
+  var row=function(x,i,kind,extra){
+    return '<label class="ui-line" style="cursor:pointer"><input type="checkbox" class="cf-check" '+(x.skip?'':'checked ')+'onchange="cfToggle(\''+kind+'\','+i+',this.checked)"/>'+
+      '<span class="ui-line-main"><b>'+esc(x.nom)+cfEtatTag(x.etat)+'</b><span>'+(extra||esc([x.stockage,x.categorie].filter(Boolean).join(' · ')||'—'))+'</span></span><span class="ui-line-side"><b class="num">'+v2Money(x.prix)+'</b></span></label>';
+  };
+  var simple=function(txt,sub){return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(txt)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')+'</span></div>';};
+  var bloc=function(titre,n,html,open,tone){if(!n)return '';return '<details class="ui-card cf-bloc"'+(open?' open':'')+'><summary style="cursor:pointer;font-weight:700;display:flex;justify-content:space-between;gap:8px"><span'+(tone?' class="'+tone+'"':'')+'>'+titre+'</span><span class="ui-count">'+n+'</span></summary><div class="ui-lines" style="margin-top:10px">'+html+'</div></details>';};
+  var nb=plan.creer.filter(sel).length+plan.modifier.filter(sel).length;
+  var verif=an.aVerifier.map(function(x){return simple(x.ligne,x.raison+(x.categorie?' · '+x.categorie:''));}).concat(plan.conflits.map(function(c){return simple(c.nom,'même produit avec plusieurs prix ('+c.prix.map(v2Money).join(' / ')+') : rien n\'est enregistré, corrige la liste');}));
+  pv.innerHTML='<section class="ui-card"><h2>Résultat de l\'analyse</h2>'+
+      uiKV('Nouveaux produits',plan.creer.length)+uiKV('Prix modifiés',plan.modifier.length)+uiKV('Prix inchangés',plan.confirmer.length)+
+      uiKV('Doublons (même produit, même prix)',plan.doublons.length)+uiKV('À vérifier',verif.length,verif.length?'ui-neg':'')+uiKV('Lignes sans prix',an.sansPrix.length)+uiKV('Lignes ignorées',an.ignorees.length)+
+      (an.titres.length?'<p class="ui-muted" style="margin-top:8px;font-size:12px">Catégories lues : '+an.titres.map(esc).join(' · ')+'</p>':'')+
+      '<p class="ui-muted" style="margin-top:6px;font-size:12px">Rien n\'est enregistré tant que tu n\'as pas validé. Décoche ce qu\'il ne faut pas enregistrer ; corrige la liste ci-dessus et relance l\'analyse pour les lignes à vérifier.</p></section>'+
+    bloc('À vérifier',verif.length,verif.join(''),true,'ui-neg')+
+    bloc('Prix modifiés',plan.modifier.length,plan.modifier.map(function(x,i){return row(x,i,'modifier',v2Money(x.avant)+' → <b class="'+(x.prix>x.avant?'ui-neg':'ui-pos')+'">'+(x.prix>x.avant?'hausse':'baisse')+' de '+v2Money(Math.abs(x.prix-x.avant))+'</b>');}).join(''),true)+
+    bloc('Nouveaux produits',plan.creer.length,plan.creer.map(function(x,i){return row(x,i,'creer');}).join(''),plan.creer.length<=40)+
+    bloc('Prix inchangés (date de mise à jour rafraîchie)',plan.confirmer.length,plan.confirmer.map(function(x){return simple(x.nom,v2Money(x.prix));}).join(''),false)+
+    bloc('Doublons',plan.doublons.length,plan.doublons.map(function(x){return simple(x.nom,'répété : '+x.lignes.join(' | '));}).join(''),false)+
+    bloc('Lignes sans prix',an.sansPrix.length,an.sansPrix.map(function(x){return simple(x.ligne,x.categorie||'');}).join(''),false)+
+    bloc('Lignes ignorées',an.ignorees.length,an.ignorees.map(function(x){return simple(x.ligne,x.raison);}).join(''),false)+
+    '<button type="button" class="ui-btn ui-btn-primary ui-btn-lg ui-press" onclick="cfSaveImport()"'+(nb+plan.confirmer.length?'':' disabled style="opacity:.5"')+'>Enregistrer ('+nb+' prix'+(plan.confirmer.length?' + '+plan.confirmer.length+' confirmés':'')+')</button>'+
+    cfHistHtml();
+}
+function cfToggle(kind,i,on){var x=CF.plan&&CF.plan[kind]&&CF.plan[kind][i];if(!x)return;x.skip=!on;var y=window.scrollY;cfRenderPreview();window.scrollTo(0,y);}
 async function cfSaveImport(){
   if(!CF.plan||!can('couts'))return;
-  var plan=CF.plan;CF.plan=null;
+  var full=CF.plan,keep=function(x){return !x.skip;};
+  var plan={creer:full.creer.filter(keep),modifier:full.modifier.filter(keep),confirmer:full.confirmer,doublons:[],conflits:[]};
+  if(plan.modifier.length&&!confirm(plan.modifier.length+' prix existant(s) vont être remplacés (l\'ancien prix est conservé dans la fiche). Continuer ?'))return;
+  CF.plan=null;
   showOv('…');
-  try{await cfCommit(CF.fid,CF.fnom,plan,'import');hideOv();showToast('Catalogue mis à jour','s');viewFourn(CF.fid);}
-  catch(e){CF.plan=plan;hideOv();showToast('Import impossible : '+e.message,'e');}
+  try{
+    await cfCommit(CF.fid,CF.fnom,plan,'import');
+    cfHistSave({fid:CF.fid,at:CF.histAt||Date.now(),texte:(CF.texte||'').slice(0,60000),resume:cfResume(full,CF.an||{aVerifier:[],sansPrix:[]}),enregistre:true});
+    hideOv();showToast('Catalogue mis à jour','s');viewFourn(CF.fid);
+  }
+  catch(e){CF.plan=full;hideOv();showToast('Import impossible : '+e.message,'e');}
 }
 /* ---- Onglet « Comparer » ---- */
 async function renderCfCompare(el){
@@ -6634,8 +6737,9 @@ function cfRenderCompare(){
     if(g.ancien)flags.push('<b class="ui-neg">Prix ancien</b>');
     if(g.approx)flags.push('<b class="ui-neg">Correspondance à vérifier</b>');
     if(g.produit&&g.sansPrixVente)flags.push('<b class="ui-neg">Prix de vente absent</b>');
-    if(!g.produit)flags.push('Pas dans ton stock');
-    return '<section class="ui-card"><h2 style="display:flex;justify-content:space-between;gap:8px"><span>'+esc(g.nom)+'</span><span class="num">'+v2Money(g.meilleur.prix)+'</span></h2>'+
+    if(g.etatNonCompare)flags.push('État « '+esc(CF_ETAT_LIB[g.etat]||g.etat)+' » : non comparé au stock');
+    else if(!g.produit)flags.push('Pas dans ton stock');
+    return '<section class="ui-card"><h2 style="display:flex;justify-content:space-between;gap:8px"><span>'+esc(g.nom)+(g.etat?' <small class="cf-etat">'+esc(CF_ETAT_LIB[g.etat]||g.etat)+'</small>':'')+'</span><span class="num">'+v2Money(g.meilleur.prix)+'</span></h2>'+
       '<p class="ui-muted">Meilleur prix : <b>'+esc(g.meilleur.fournisseur||'—')+'</b> · '+cfAgeTxt(g.meilleur.majMs,now)+(g.ecart!=null?' · le suivant est +'+v2Money(g.ecart):'')+'</p>'+
       (g.offres.length>1?'<div class="ui-lines">'+g.offres.slice(1).map(function(o){return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(o.fournisseur||'—')+'</b><span>'+cfAgeTxt(o.majMs,now)+(o.ancien?' · <b class="ui-neg">ancien</b>':'')+'</span></span><span class="ui-line-side"><b class="num">'+v2Money(o.prix)+'</b></span></div>';}).join('')+'</div>':'')+
       (g.produit&&g.marge!=null?uiKV('Prix de vente ('+esc(g.produit.nom)+')',v2Money(g.produit.prixVente))+uiKV('Marge brute estimée',(g.marge>=0?'+':'−')+v2Money(Math.abs(g.marge))+' ('+g.margePct+' %)',g.marge>=0?'ui-pos':'ui-neg'):'')+
