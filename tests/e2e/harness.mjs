@@ -43,7 +43,7 @@ export async function launch() {
 }
 
 /* Ouvre l'application. opts : viewport, offline control via context */
-export async function openApp(browser, { width = 1440, height = 900, log = null } = {}) {
+export async function openApp(browser, { width = 1440, height = 900, log = null, hash = '', permissions = [] } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, serviceWorkers: 'block', reducedMotion: 'reduce', locale: 'fr-FR' });
   let html = readFileSync(new URL('index.html', root), 'utf8');
   html = html.replace('const auth=firebase.auth(),db=firebase.firestore(),ADMIN=',
@@ -56,6 +56,7 @@ export async function openApp(browser, { width = 1440, height = 900, log = null 
     'firebase-app-compat.js': sdk('firebase-app-compat.js'),
     'firebase-auth-compat.js': sdk('firebase-auth-compat.js'),
     'firebase-firestore-compat.js': sdk('firebase-firestore-compat.js'),
+    'firebase-messaging-compat.js': sdk('firebase-messaging-compat.js'),
   };
   /* les émulateurs (127.0.0.1) ne passent pas par l'interception ; tout le reste d'Internet est coupé */
   await context.route((url) => !/^(http:\/\/127\.0\.0\.1|data:|blob:)/.test(url.href), async (route) => {
@@ -66,7 +67,7 @@ export async function openApp(browser, { width = 1440, height = 900, log = null 
       if (path === '/sw.js') return route.fulfill({ contentType: 'text/javascript', body: readFileSync(new URL('sw.js', root), 'utf8') });
       return route.fulfill({ status: 404, body: '' });
     }
-    const m = /firebase-(app|auth|firestore)-compat\.js/.exec(u);
+    const m = /firebase-(app|auth|firestore|messaging)-compat\.js/.exec(u);
     if (m && u.includes('gstatic')) return route.fulfill({ contentType: 'text/javascript', body: files[`firebase-${m[1]}-compat.js`] });
     if (/html2canvas/.test(u)) return route.fulfill({ contentType: 'text/javascript', body: '' });
     if (u.startsWith('http://127.0.0.1') || u.startsWith('http://localhost') || u.startsWith('data:') || u.startsWith('blob:')) return route.continue();
@@ -80,7 +81,8 @@ export async function openApp(browser, { width = 1440, height = 900, log = null 
     page.on('requestfailed', (r) => log('REQFAIL ' + r.url().slice(0, 140) + ' ' + (r.failure() && r.failure().errorText)));
     page.on('response', (r) => { if (!r.url().startsWith('data:') && !r.url().startsWith(ORIGIN)) log('RESP ' + r.status() + ' ' + r.url().slice(0, 120)); });
   }
-  await page.goto(ORIGIN + '/index.html');
+  if (permissions.length) await context.grantPermissions(permissions, { origin: ORIGIN });
+  await page.goto(ORIGIN + '/index.html' + hash);
   return { context, page, errors };
 }
 

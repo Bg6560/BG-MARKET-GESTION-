@@ -4,8 +4,8 @@
   "private": true,
   "description": "Règles Firestore et tests de BG-MARKET Gestion",
   "scripts": {
-    "test:app": "node --test \"tests/app.*.test.mjs\"",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test --test-concurrency=1 \"tests/firestore.*.test.mjs\" \"tests/migration.*.test.mjs\"\"",
+    "test:app": "node --test \"tests/app.*.test.mjs\" tests/sw.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test --test-concurrency=1 \\\"tests/firestore.*.test.mjs\\\" \\\"tests/migration.*.test.mjs\\\" \\\"tests/functions.*.test.mjs\\\"\"",
     "test:e2e": "firebase emulators:exec --only firestore,auth --project demo-bgmarket \"node --test --test-concurrency=1 \\\"tests/e2e/*.e2e.test.mjs\\\"\""
   },
   "devDependencies": {

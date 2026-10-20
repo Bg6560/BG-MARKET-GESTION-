@@ -183,6 +183,6 @@ describe('Équipe : approbation par le patron', () => {
 
 describe('Service worker', () => {
   it('la version du cache a été incrémentée', () => {
-    assert.match(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), /CACHE_NAME = 'bgm-gestion-v6'/);
+    assert.match(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), /CACHE_NAME = 'bgm-gestion-v7'/);
   });
 });

@@ -37,6 +37,7 @@ let _animating = false;
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" async></script>
 <style>
 :root{--bg:#0d1b2a;--bg2:#112236;--bg3:#1a3350;--card:rgba(255,255,255,.05);--card2:rgba(255,255,255,.08);--border:rgba(249,115,22,.2);--border2:rgba(255,255,255,.08);--text:#e8e4d8;--muted:#7a8fa6;--gold:#f97316;--gold2:#fb923c;--gold3:rgba(249,115,22,.12);--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--shadow:rgba(0,0,0,.3);--sidebar:260px;}
@@ -1702,7 +1703,7 @@ async function doSignup(){
   }catch(e){setAuthMsg('s-err',authErrText(e));}
   finally{window._signupName=null;authBusy('btn-signup',false);}
 }
-function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}coutsStop();}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();auth.signOut();}
+function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}coutsStop();}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();var _so=function(){auth.signOut();};if(navigator.onLine)Promise.race([pushForget(),new Promise(function(r){setTimeout(r,2500);})]).then(_so,_so);else _so();}
 auth.onAuthStateChanged(async user=>{
   try{
     if(user){
@@ -1717,9 +1718,9 @@ auth.onAuthStateChanged(async user=>{
       hideOv();
       document.getElementById('login-page').style.display='none';
       document.getElementById('app-page').style.display='flex';
-      updateNavUser();syncPaint();syncRestore();updatePresence();
+      updateNavUser();syncPaint();syncRestore();updatePresence();pushSync();
       setInterval(updatePresence,60000);
-      splashDone(function(){goTab('dashboard');});
+      splashDone(function(){goTab('dashboard');pushOpenPending();});
     }else{
       document.getElementById('login-page').style.display='flex';
       document.getElementById('app-page').style.display='none';
@@ -3099,7 +3100,8 @@ function renderParametres(){
   h+='<div class="st-label">'+t('st.g.pref')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
     stRow(ST_ICO.user,'c-turq',t('st.profile'),'',"uiSettings('profil')",t('st.profileSub'))+
     stRow(ST_ICO.palette,'c-violet',t('st.look'),stThemeLabel(),"uiSettings('apparence')")+
-    stRow(ST_ICO.globe,'c-blue',t('st.lang'),uiLang==='en'?'English':'Français',"uiSettings('langue')")+'</div>';
+    stRow(ST_ICO.globe,'c-blue',t('st.lang'),uiLang==='en'?'English':'Français',"uiSettings('langue')")+
+    stRow(ST_ICO.info,'c-warn','Notifications',pushIsOn()?'Activées':'',"uiSettings('notifications')","Commandes, factures, stock")+'</div>';
   if(isAdmin&&!isBoss&&can('reglages')){
     h+='<div class="st-label">'+t('rl.work')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
       stRow(ST_ICO.chart,'c-turq',t('st.sales'),(gs.margeDefaut||supplierMargin||12)+' %',"uiSettings('ventes')")+
@@ -3239,6 +3241,7 @@ function uiSettings(sec){
       '<p class="ui-muted" style="margin-top:10px">Technologie pour tous</p></section>'+
     '<section class="ui-card ui-in" style="--i:1">'+uiKV('Boutique',esc(gs.bizName||'BG-MARKET'))+uiKV('Téléphone',esc(gs.bizPhone||'05 65 60 36 89'))+uiKV('Adresse',esc(gs.bizAddr||'Yopougon, Abidjan'))+uiKV('Connecté en tant que',esc((currentUser&&currentUser.email)||''))+'</section>';
   }
+  else if(sec==='notifications'){h+=pushSettingsHtml();}
   else {renderParametres();return;}
   h+='</div>';mc.innerHTML=h;window.scrollTo(0,0);
 }
@@ -6301,4 +6304,119 @@ async function renderDashboard(){
   mc.innerHTML='<div class="ui-page">'+dskGreeting(role)+body+'</div>';
   if(goal)dskRingAnimate(pct);
 }
+
+/* ===== Notifications push (Firebase Cloud Messaging) =====
+   Le navigateur s'abonne, l'appareil est enregistré dans appareils/{uid}_{idAppareil}, le serveur (functions/) envoie.
+   Rien n'est affiché ici qui ne vienne d'un vrai message push : pas de fausse notification. */
+var PUSH={pending:null,busy:false};
+var PUSH_TYPES=[
+  {k:'commande.creee',l:'Nouvelles commandes',r:'admin'},
+  {k:'facture.a_valider',l:'Factures à valider',r:'admin'},
+  {k:'stock.bas',l:'Stock bas ou rupture',r:'admin'},
+  {k:'compte.en_attente',l:'Comptes à approuver',r:'boss'},
+  {k:'vente.importante',l:'Ventes importantes (avec le montant)',r:'boss'},
+  {k:'commande.statut',l:'Statut de mes commandes',r:'all'},
+  {k:'compte.approuve',l:'Mon compte approuvé',r:'all'}
+];
+function pushLs(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;}
+function pushSupported(){return !!(('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window)&&window.firebase&&firebase.messaging&&firebase.messaging.isSupported&&firebase.messaging.isSupported());}
+function pushDeviceId(){var d=pushLs('bg_device_id');if(!d){d=Math.random().toString(36).slice(2,10)+Date.now().toString(36);pushLs('bg_device_id',d);}return d;}
+function pushDocId(){return currentUser?currentUser.uid+'_'+pushDeviceId():'';}
+function pushOnKey(){return 'bg_push_on_'+(currentUser?currentUser.uid:'');}
+function pushIsOn(){return !!currentUser&&pushLs(pushOnKey())==='1'&&pushSupported()&&Notification.permission==='granted';}
+function pushPrefs(){var p={};try{p=JSON.parse(pushLs('bg_push_prefs_'+(currentUser?currentUser.uid:''))||'{}')||{};}catch(e){}return p;}
+function pushTypesForMe(){return PUSH_TYPES.filter(function(x){return x.r==='all'||(x.r==='admin'&&isAdmin)||(x.r==='boss'&&isBoss);});}
+async function pushToken(askPermission){
+  var key=(globalSettings||{}).fcmVapidKey;
+  if(!key)throw new Error('cle');
+  var reg=await navigator.serviceWorker.ready;
+  return firebase.messaging().getToken({vapidKey:key,serviceWorkerRegistration:reg});
+}
+async function pushUpsert(token){
+  var since=pushLs('bg_push_since')||String(Date.now());pushLs('bg_push_since',since);
+  await db.collection('appareils').doc(pushDocId()).set({uid:currentUser.uid,token:token,plateforme:/iPhone|iPad/.test(navigator.userAgent)?'ios':/Android/.test(navigator.userAgent)?'android':'web',creeAt:since,majAt:firebase.firestore.FieldValue.serverTimestamp(),prefs:pushPrefs()});
+}
+async function pushEnable(){
+  if(PUSH.busy)return;
+  if(!pushSupported()){showToast("Ce navigateur ne gère pas les notifications. Sur iPhone, ajoute d'abord l'appli à l'écran d'accueil.",'e');return;}
+  if(!navigator.onLine){showToast('Connexion nécessaire pour activer les notifications','e');return;}
+  if(!(globalSettings||{}).fcmVapidKey){showToast("Les notifications ne sont pas encore configurées (clé manquante). Demande au patron.",'e');return;}
+  PUSH.busy=true;
+  try{
+    var perm=Notification.permission==='granted'?'granted':await Notification.requestPermission();
+    if(perm!=='granted'){showToast('Notifications refusées dans le navigateur. Autorise-les dans les réglages du site.','e');return;}
+    var tok=await pushToken();
+    if(!tok)throw new Error('token');
+    await pushUpsert(tok);
+    pushLs(pushOnKey(),'1');
+    showToast('Notifications activées sur cet appareil','s');
+  }catch(e){showToast('Activation impossible : '+((e&&e.code)||(e&&e.message)||'erreur'),'e');}
+  finally{PUSH.busy=false;if(window._stSec==='notifications')uiSettings('notifications');}
+}
+async function pushForget(){
+  if(!currentUser)return;
+  try{await db.collection('appareils').doc(pushDocId()).delete();}catch(e){}
+  try{if(pushSupported())await firebase.messaging().deleteToken();}catch(e){}
+}
+async function pushDisable(){
+  pushLs(pushOnKey(),null);
+  await pushForget();
+  showToast('Notifications désactivées sur cet appareil','s');
+  if(window._stSec==='notifications')uiSettings('notifications');
+}
+async function pushToggle(k){
+  var p=pushPrefs();p[k]=p[k]===false;pushLs('bg_push_prefs_'+currentUser.uid,JSON.stringify(p));
+  try{await db.collection('appareils').doc(pushDocId()).update({prefs:p,majAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){showToast("Préférence gardée sur cet appareil, mais pas encore envoyée",'e');}
+  if(window._stSec==='notifications')uiSettings('notifications');
+}
+async function pushSync(){
+  if(!pushIsOn()||!navigator.onLine||!(globalSettings||{}).fcmVapidKey)return;
+  try{var tok=await pushToken();if(tok)await pushUpsert(tok);}catch(e){}
+}
+async function pushSaveConfig(){
+  if(!isBoss)return;
+  var key=(document.getElementById('push-vapid')||{}).value||'',seuil=parseInt((document.getElementById('push-seuil')||{}).value,10)||0;
+  key=key.trim();
+  if(key&&!/^[A-Za-z0-9_-]{60,120}$/.test(key)){showToast('Clé web push invalide (copie-la depuis la console Firebase)','e');return;}
+  try{await saveGlobalSettings({fcmVapidKey:key,seuilVenteImportante:Math.max(0,seuil)});showToast('Configuration enregistrée','s');uiSettings('notifications');}
+  catch(e){showToast("Enregistrement impossible",'e');}
+}
+function pushSettingsHtml(){
+  var sup=pushSupported(),perm=sup?Notification.permission:'unsupported',on=pushIsOn(),key=!!(globalSettings||{}).fcmVapidKey,gs=globalSettings||{},p=pushPrefs();
+  var st=!sup?"Non disponible sur ce navigateur"+(/iPhone|iPad/.test(navigator.userAgent)?" — ajoute d'abord l'appli à l'écran d'accueil":""):
+    perm==='denied'?'Bloquées dans le navigateur (autorise-les dans les réglages du site)':
+    on?'Activées sur cet appareil':!key?"Pas encore configurées par le patron":'Désactivées sur cet appareil';
+  var h=stHead('Notifications',"Même quand l'appli est fermée")+
+  '<section class="ui-card ui-in" style="--i:0"><h2>Cet appareil</h2><p class="ui-muted">'+esc(st)+'</p>'+
+    (on?'<button type="button" class="ui-btn ui-btn-ghost ui-press" onclick="pushDisable()">Désactiver</button>'
+       :'<button type="button" class="ui-btn ui-btn-primary ui-press" onclick="pushEnable()"'+((!sup||perm==='denied')?' disabled style="opacity:.5"':'')+'>Activer les notifications</button>')+'</section>';
+  if(on)h+='<section class="ui-card ui-in" style="--i:1"><h2>Ce que je reçois</h2>'+pushTypesForMe().map(function(x){
+    var v=p[x.k]!==false;return '<label class="ui-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span>'+esc(x.l)+'</span><input type="checkbox" '+(v?'checked ':'')+'onchange="pushToggle(\''+x.k+'\')"/></label>';}).join('')+
+    '<p class="ui-note">Les montants, coûts et bénéfices ne sont jamais envoyés, sauf les ventes importantes réservées au patron.</p></section>';
+  if(isBoss)h+='<section class="ui-card ui-in" style="--i:2"><h2>Configuration (patron)</h2>'+
+    uiField('Clé web push (VAPID)','<input type="text" id="push-vapid" value="'+esc(gs.fcmVapidKey||'')+'" placeholder="Console Firebase › Cloud Messaging › Certificats web push" autocomplete="off"/>')+
+    uiField('Seuil « vente importante » (F CFA, 0 = désactivé)','<input type="number" id="push-seuil" min="0" inputmode="numeric" value="'+(parseInt(gs.seuilVenteImportante,10)||0)+'"/>')+
+    '<p class="ui-note">Les envois partent d\'un serveur Firebase (Cloud Functions) qui doit être déployé : tant qu\'il ne l\'est pas, aucun message n\'arrive.</p>'+
+    '<button type="button" class="ui-btn ui-btn-primary ui-press" onclick="pushSaveConfig()">'+t('save')+'</button></section>';
+  return h;
+}
+/* Ouverture au clic : #open=commande:ID | facture:ID | produit:ID | compte:ID */
+function pushParse(u){var m=/[#&]open=([a-z]+):([A-Za-z0-9_-]+)/.exec(String(u||''));return m?{kind:m[1],id:m[2]}:null;}
+function pushOpen(u){
+  var o=pushParse(u);if(!o)return;
+  if(!currentUser||!userProfile){PUSH.pending=o;return;}
+  PUSH.pending=null;
+  try{
+    if(o.kind==='commande'&&typeof viewCmd==='function'){activeTab='commandes';v2Nav('commandes');viewCmd(o.id);}
+    else if(o.kind==='facture'&&typeof viewFacture==='function'){activeTab='factures';v2Nav('factures');viewFacture(o.id);}
+    else if(o.kind==='produit')goTab('produits');
+    else if(o.kind==='compte'&&isBoss)goTab('equipe');
+  }catch(e){}
+  try{if(location.hash)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+}
+function pushOpenPending(){if(PUSH.pending)pushOpen('#open='+PUSH.pending.kind+':'+PUSH.pending.id);}
+(function(){
+  PUSH.pending=pushParse(location.hash);
+  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.type==='bg-open')pushOpen(e.data.url);});
+})();
 </script></body></html>
