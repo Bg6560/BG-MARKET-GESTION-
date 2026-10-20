@@ -8,7 +8,7 @@ import {
 
 const PATRON = 'patron-uid';
 const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8')
-  .replaceAll('PATRON_UID_A_REMPLACER', PATRON);
+  .replaceAll('SpFDcRyLzCb49xfVC6XHFNZHeLZ2', PATRON);
 
 let env;
 before(async () => {
@@ -531,5 +531,21 @@ describe('Mouvements de stock, catalogue fournisseurs, appareils (notifications)
     await ko(setDoc(doc(as('suspendu'), 'appareils', 'suspendu_t'), d('suspendu')));
     await ko(updateDoc(doc(as('empB'), 'appareils', 'empA_tel1'), { token: 'vol' }));
     await ok(deleteDoc(doc(as('empA'), 'appareils', 'empA_tel1')));
+  });
+});
+
+describe('Identification du patron par UID (règles finales)', () => {
+  it('un compte qui utilise l\'e-mail du patron mais un autre UID n\'a aucun droit de patron', async () => {
+    const faux = env.authenticatedContext('imposteur', { email: 'bgmarket99@gmail.com', email_verified: true }).firestore();
+    await ko(getDoc(doc(faux, 'users', 'empA')));
+    await ko(getDocs(collection(faux, 'factures_couts')));
+    await ko(updateDoc(doc(faux, 'users', 'empA'), { statut: 'suspendu' }));
+    await ko(updateDoc(doc(faux, 'app_config', 'settings'), { bizName: 'Piraté' }));
+  });
+  it('le vrai UID du patron garde tous ses droits, même sans profil', async () => {
+    const p = as(PATRON);
+    await ok(getDoc(doc(p, 'users', 'empA')));
+    await ok(getDocs(collection(p, 'factures_couts')));
+    await ok(updateDoc(doc(p, 'app_config', 'settings'), { bizName: 'BG-MARKET' }));
   });
 });

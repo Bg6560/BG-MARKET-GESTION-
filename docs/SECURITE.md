@@ -1,7 +1,7 @@
 # Sécurité Firestore : règles cibles
 
-`firestore.rules` contient les règles **cibles**. Elles ne sont **pas publiées** et ne sont pas
-compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en production).
+`firestore.rules` contient les règles **finales** (UID du patron inscrit). Elles ne sont **pas publiées** ; elles vont
+avec le nouveau code de `index.html` (voir l'ordre de mise en production).
 
 ## Ce que les règles garantissent (testé sur l'émulateur)
 
@@ -9,7 +9,7 @@ compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en pr
   Un profil sans champ `statut` (ancien compte) est traité comme actif pendant la transition.
 - Un compte se crée en `en_attente`, jamais administrateur, sans droits, avec son propre email et uid.
   Seul le patron change `statut`, `role` et `perms`.
-- Le patron est identifié par son UID (`PATRON_UID_A_REMPLACER` dans `firestore.rules`, à remplacer avant publication).
+- Le patron est identifié par son UID Firebase (inscrit dans `firestore.rules`), plus par son e-mail : un autre compte utilisant la même adresse n'a aucun droit de patron (testé).
 - Clients, commandes, factures, précommandes, SAV : l'employé lit et crée seulement les siens (`uid`).
   Le patron et l'administrateur lisent tout. Un employé ne modifie ni ne supprime les clients.
 - Fournisseurs : patron et administrateur seulement.

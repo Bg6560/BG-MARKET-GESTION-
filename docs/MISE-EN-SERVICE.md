@@ -16,13 +16,13 @@ Chaque étape marquée ✋ demande l'accord explicite du patron.
 ## 1. Ordre de mise en production
 | # | Étape | Accord |
 |---|---|---|
-| 1 | Remplacer `PATRON_UID_A_REMPLACER` dans une **copie** de `firestore.rules` par l'UID du patron (console Authentication). Ne jamais publier le fichier du dépôt tel quel. | ✋ |
-| 2 | Vérifier dans le « Simulateur de règles » de la console que les **règles actuellement publiées** acceptent l'écriture dans `commandes_couts`, `factures_couts`, `produits_prive`, `commandes_fourn`, `catalogue_fournisseurs`, `mouvements_stock`. *Non vérifiable ici : les règles publiées ne sont pas dans le dépôt.* Si l'une est refusée, l'étape 3 doit se faire avec l'étape 6 (voir « Variante »). | ✋ |
-| 3 | Publier le **nouveau code** (`index.html` + `sw.js` ensemble ; le numéro de cache de `sw.js` a changé, ce qui force la mise à jour des appareils). | ✋ |
+| 1 | ✅ Fait : `firestore.rules` contient l'UID du patron (`SpFDcRyLzCb49xfVC6XHFNZHeLZ2`) ; le fichier du dépôt est le fichier à publier. | |
+| 2 | ✅ Vérifié sur les règles actuellement publiées : leur règle générale (« toutes les autres données ») accepte les nouvelles collections, donc le nouveau code fonctionne avec elles. **Une exception** : l'inscription d'un nouveau compte échoue tant que les anciennes règles sont en place (elles exigent un compte « actif », le nouveau code le crée « en attente »). Ne pas inscrire de nouvel employé entre les étapes 3 et 7. | |
+| 3 | Publier le **nouveau code** sur GitHub Pages : fusion de la branche de travail dans `main` (`index.html` + `sw.js` ensemble ; le numéro de cache de `sw.js` a changé, ce qui force la mise à jour des appareils). | ✋ |
 | 4 | Laisser les appareils se synchroniser : badge **Synchronisé** partout (aucune écriture en attente ni en échec). | |
 | 5 | Nouvelle sauvegarde (étape 0.1), puis **simulation** de la migration des coûts : `node tools/migration-couts.mjs --project <id> --auth`. Lire le rapport (propriétaires manquants, comptes sans profil, champs financiers publics restants). | |
 | 6 | **Copie** des coûts historiques : `... --backup sauvegardes/avant-couts --apply --confirm <id>`. Copie seulement : rien n'est modifié ni supprimé. | ✋ |
-| 7 | Publier les **règles** (copie de l'étape 1) après les tests de la section 3. | ✋ |
+| 7 | Publier les **règles** : console Firebase › Firestore › Règles › remplacer tout le texte par le contenu de `firestore.rules` › Publier. À faire le jour même de l'étape 6 : avec les anciennes règles, tout compte connecté peut encore lire les coûts. | ✋ |
 | 8 | Vérification de la section 4 (5 minutes, un compte par rôle). | |
 | 9 | Plus tard, quelques jours sans incident : retrait des anciens champs financiers des documents publics **et** purge du cache local des appareils (voir `SECURITE.md`). Outil non écrit : il se prépare à part, avec nouvel accord. | ✋ |
 | 10 | Notifications push (facultatif, plus tard) : `docs/NOTIFICATIONS.md` (forfait Blaze). | ✋ |

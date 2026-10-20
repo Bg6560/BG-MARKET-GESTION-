@@ -1,14 +1,13 @@
 rules_version = '2';
-// BG-MARKET Gestion : règles Firestore CIBLES (non publiées).
-// Ne pas publier avant que le code de l'application écrive les coûts dans les
-// collections *_couts / *_prive / commandes_fourn et crée les comptes en « en_attente »
-// (voir docs/SECURITE.md). Remplacer PATRON_UID_A_REMPLACER par l'UID Firebase du patron.
+// BG-MARKET Gestion : règles Firestore FINALES (prêtes, non publiées).
+// À publier seulement APRÈS la mise en ligne du nouveau code (GitHub Pages) : voir docs/MISE-EN-SERVICE.md.
+// Le patron est identifié par son UID Firebase (et non plus par son adresse e-mail).
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // ---------- Identité et rôles ----------
     function connecte() { return request.auth != null; }
-    function patron() { return connecte() && request.auth.uid == 'PATRON_UID_A_REMPLACER'; }
+    function patron() { return connecte() && request.auth.uid == 'SpFDcRyLzCb49xfVC6XHFNZHeLZ2'; }
     function profilPath(uid) { return /databases/$(database)/documents/users/$(uid); }
     function aProfil() { return exists(profilPath(request.auth.uid)); }
     function monProfil() { return get(profilPath(request.auth.uid)).data; }

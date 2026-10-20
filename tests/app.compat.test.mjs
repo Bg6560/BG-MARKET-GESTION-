@@ -25,8 +25,10 @@ describe('Le code n\'utilise que des collections prévues par les règles', () =
     assert.doesNotMatch(rules, /match \/\{[a-zA-Z]+=\*\*\}/);
     assert.doesNotMatch(rules, /allow (read|write)(, \w+)*: if true/);
   });
-  it('les règles cibles ne sont pas publiables par erreur : l\'UID du patron est encore à remplacer', () => {
-    assert.match(rules, /PATRON_UID_A_REMPLACER/);
+  it('le patron est identifié par son UID réel, une seule fois, et plus par son e-mail', () => {
+    assert.doesNotMatch(rules, /PATRON_UID_A_REMPLACER/);
+    assert.equal((rules.match(/SpFDcRyLzCb49xfVC6XHFNZHeLZ2/g) || []).length, 1);
+    assert.doesNotMatch(rules, /token\.email ==/);
   });
 });
 

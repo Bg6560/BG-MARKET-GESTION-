@@ -26,7 +26,7 @@ export async function clearAll() {
 
 /* Charge les règles du dépôt (UID du patron injecté) et renvoie l'environnement de test (écritures sans règles pour le semis) */
 export async function loadRules(patronUid) {
-  const rules = readFileSync(new URL('firestore.rules', root), 'utf8').replaceAll('PATRON_UID_A_REMPLACER', patronUid);
+  const rules = readFileSync(new URL('firestore.rules', root), 'utf8').replaceAll('SpFDcRyLzCb49xfVC6XHFNZHeLZ2', patronUid);
   return initializeTestEnvironment({ projectId: PROJECT, firestore: { rules, host: '127.0.0.1', port: 8080 } });
 }
 
