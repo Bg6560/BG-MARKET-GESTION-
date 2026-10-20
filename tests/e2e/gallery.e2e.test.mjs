@@ -41,6 +41,19 @@ before(async () => {
     await setDoc(doc(db, 'clients', 'k2'), { nom: 'Client démo B', tel: '0100000002', uid: U.patron, ts: at(0, 3) });
     await setDoc(doc(db, 'precommandes', 'r1'), { uid: U.emp, vendeur: 'Vendeur Démo', client: 'Client démo C', tel: '0100000003', produit: 'iPhone 15 Pro', prixTotal: 650000, acompte: 200000, versements: [], statut: 'acompte', ts: at(0, 2) });
     await setDoc(doc(db, 'sav', 's1'), { uid: U.emp, vendeur: 'Vendeur Démo', client: 'Client démo D', tel: '0100000004', produit: 'Tecno Spark 20', panne: 'Écran cassé', statut: 'en_reparation', ts: at(0, 2) });
+    // ventes du jour et de la veille, plusieurs marques, un second employé, clients récents
+    await setDoc(doc(db, 'users', 'emp2'), { uid: 'emp2', email: 'emp2@test.local', nom: 'Vendeuse Deux', role: 'employe', statut: 'actif' });
+    const today = (h) => Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), h));
+    const yday = Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 15));
+    const jour = [['j1', U.emp, 'Vendeur Démo', today(9), 'Samsung Galaxy A15 128GB', 2, 100000, 36000], ['j2', 'emp2', 'Vendeuse Deux', today(10), 'Tecno Spark 20 128GB', 1, 80000, 12000], ['j3', U.patron, 'Patron Démo', today(Math.min(23, now.getHours())), 'Honor X8 128GB', 1, 150000, 25000], ['y1', 'emp2', 'Vendeuse Deux', yday, 'Xiaomi Redmi 13C 256GB', 3, 85000, 30000]];
+    for (const [id, uid, v, ts, name, q, pu, prof] of jour) {
+      await setDoc(doc(db, 'factures', id), { uid, vendeur: v, num: 'FAC-' + id, client: 'Client ' + id, total: q * pu, ts, validation: 'validee', statut: 'payee', products: [{ name, qty: q, price: pu, pid: name.startsWith('Samsung') ? 'p1' : '' }] });
+      await setDoc(doc(db, 'factures_couts', id), { uid, ts, cost: q * pu - prof, profit: prof, costs: [q * pu - prof] });
+    }
+    await setDoc(doc(db, 'clients', 'k3'), { nom: 'Client du jour', tel: '0100000033', uid: U.emp, ts: today(9) });
+    await setDoc(doc(db, 'commandes', 'c3'), { uid: 'emp2', vendeur: 'Vendeuse Deux', num: 'CMD-203', client: 'Client du jour', produit: 'Honor X8', produits: [{ name: 'Honor X8 128GB', qty: 1, prix: 150000 }], total: 150000, statut: 'en_attente', ts: today(8) });
+    // photo de produit fictive (dégradé généré, pas une vraie photo)
+    await setDoc(doc(db, 'produits', 'p1'), { marque: 'Samsung', modele: 'Galaxy A15', stockage: '128 GB', ram: '4 GB', prixVente: 100000, quantite: 1, photo: 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset="1" stop-color="#00d4c8"/></linearGradient></defs><rect width="80" height="80" fill="url(#g)"/><rect x="26" y="10" width="28" height="60" rx="6" fill="#0b1220" stroke="#9fe" stroke-width="2"/></svg>').toString('base64') });
     await setDoc(doc(db, 'fournisseurs', 'F1'), { nom: 'Fournisseur Démo', whatsapp: '0100000009', ville: 'Abidjan', specialite: 'Samsung' });
     await setDoc(doc(db, 'catalogue_fournisseurs', 'F1_a15'), { fournisseurId: 'F1', fournisseurNom: 'Fournisseur Démo', nom: 'Samsung A15 128GB', prixAchat: 82000, devise: 'FCFA', majAt: at(0, 3) });
   });
@@ -67,9 +80,13 @@ const VUES = [
   ['reglages', "goTab('parametres')"], ['reglages-notifs', "uiSettings('notifications')"], ['menu-creer', "goTab('dashboard');setTimeout(function(){v2Toggle('create')},400)"], ['menu-plus', "goTab('dashboard');setTimeout(function(){v2Toggle('more')},400)"],
 ];
 async function tour(page, prefix, vues, check) {
+  const vp0 = page.viewportSize();
   for (const [nom, js] of vues) {
+    await page.setViewportSize(nom === 'dashboard' ? { width: vp0.width, height: vp0.width > 600 ? 2300 : 3400 } : vp0);
     await page.evaluate((c) => { window.scrollTo(0, 0); (0, eval)(c); }, js);
-    await page.waitForTimeout(nom === 'dashboard' ? 1800 : 1200);
+    const t0 = Date.now();
+    if (nom === 'dashboard') { await page.waitForFunction(() => document.querySelector('.dsk-hello') && !document.querySelector('#main-content .dsk-skel'), null, { timeout: 20000 }); }
+    await page.waitForTimeout(nom === 'dashboard' ? 1500 : 1200);
     const ov = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     check.push([nom, ov]);
     await page.screenshot({ path: SHOT(prefix + '-' + nom) });

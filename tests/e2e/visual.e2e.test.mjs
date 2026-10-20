@@ -102,4 +102,27 @@ describe('Interface : rendu et graphique', () => {
     await page.screenshot({ path: SHOT('v4-dashboard-employe-mobile-sombre') });
     await context.close();
   });
+
+  it('photo de produit : choisie, réduite, enregistrée, affichée dans la fiche et le tableau de bord', async () => {
+    const { page, context, errors } = await session(EMAILS.patron, { width: 1440, height: 1300 }, 'dark');
+    await page.evaluate(() => openNvProd());
+    await page.waitForSelector('#pr-photo-inp', { state: 'attached' });
+    // image fictive générée (carré coloré), pas une photo réelle
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGNgYGD4z8DAwMDAAAAJAAH+0q9GAAAAAElFTkSuQmCC', 'base64');
+    await page.setInputFiles('#pr-photo-inp', { name: 'produit.png', mimeType: 'image/png', buffer: png });
+    await page.waitForFunction(() => window.PRD_PHOTO && window.PRD_PHOTO.startsWith('data:image/jpeg'));
+    await page.fill('#pr-marque', 'Marque démo');
+    await page.fill('#pr-modele', 'Modèle photo');
+    await page.fill('#pr-vente', '120000');
+    await page.evaluate(() => saveProd(''));
+    await page.waitForTimeout(1500);
+    let d = null;
+    await env.withSecurityRulesDisabled(async (ctx) => { const { getDocs, collection } = await import('firebase/firestore'); d = (await getDocs(collection(ctx.firestore(), 'produits'))).docs.map((x) => ({ id: x.id, ...x.data() })).find((x) => x.modele === 'Modèle photo'); });
+    assert.ok(d && /^data:image\/jpeg;base64,/.test(d.photo), 'photo enregistrée');
+    assert.ok(d.photo.length < 60000, 'vignette légère');
+    await page.evaluate((id) => viewProd(id), d.id);
+    await page.waitForSelector('.pr-hero .pr-photo-img');
+    assert.deepEqual(errors, []);
+    await context.close();
+  });
 });
