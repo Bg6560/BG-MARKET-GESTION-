@@ -183,16 +183,26 @@ describe('Écritures : aucun coût dans les documents publics', () => {
       assert.equal(app.includes(`db.collection('${col}').add(`), false, col);
     }
   });
-  it('updateStockAfterSale ne s\'arrête pas sur un produit déjà à zéro', async () => {
-    const updates = [];
+  it('stockAfterSale : décrémentation relative plafonnée au stock, mouvement enregistré, produit déjà à zéro sans erreur', async () => {
+    const { db, log } = fakeDb();
     const prods = [{ id: 'p1', nom: 'Phone Alpha', quantite: 0 }, { id: 'p2', nom: 'Phone Bravo', quantite: 5 }];
+    const real = db.collection.bind(db);
+    db.collection = (n) => (n === 'produits' ? { get: async () => ({ docs: prods.map((p) => ({ id: p.id, data: () => p })) }), doc: (id) => ({ id, path: 'produits/' + id }) } : real(n));
     const ctx = vm.createContext({
-      console, cleanName: (s) => s,
-      db: { collection: () => ({ get: async () => ({ docs: prods.map((p) => ({ id: p.id, data: () => p })) }), doc: (id) => ({ update: async (d) => { updates.push([id, d]); } }) }) },
+      console, db, cleanName: (s) => s, prodName: (p) => p.nom || p.modele, currentUser: { uid: 'empA' }, allProduits: [],
+      firebase: { firestore: { FieldValue: { serverTimestamp: () => TS, increment: (n) => ({ inc: n }) } } },
     });
-    run(ctx, extractFn('updateStockAfterSale'));
-    await run(ctx, "updateStockAfterSale([{name:'Phone Alpha',qty:1},{name:'Phone Bravo',qty:2}])");
-    assert.equal(JSON.stringify(updates), JSON.stringify([['p2', { quantite: 3 }]]));
+    run(ctx, extractFn('stockMatch') + '\n' + extractFn('stockAfterSale'));
+    await run(ctx, "stockAfterSale([{name:'Phone Alpha',qty:1},{name:'Phone Bravo',qty:2},{name:'Phone Bravo',qty:9,pid:'p2'}],'F1','empA')");
+    const ops = log.batches[0];
+    const maj = ops.filter((o) => o.op === 'update');
+    assert.equal(JSON.stringify(maj.map((o) => [o.path, o.data.quantite && o.data.quantite.inc])), JSON.stringify([['produits/p2', -2], ['produits/p2', -3]]));
+    const mv = ops.filter((o) => o.path.startsWith('mouvements_stock/'));
+    assert.equal(mv.length, 3);
+    assert.equal(mv[0].data.insuffisant, true, 'produit à zéro : vente signalée, stock non touché');
+    assert.equal(mv[0].data.delta, 0);
+    assert.equal(mv[2].data.demande, 9);
+    assert.equal(mv.every((m) => m.data.factureId === 'F1' && m.data.uid === 'empA'), true);
   });
 });
 

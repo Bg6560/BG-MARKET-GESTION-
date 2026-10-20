@@ -483,3 +483,53 @@ describe('Écritures exactement telles que le code de l\'application les envoie 
     await ok(b.commit());
   });
 });
+
+describe('Mouvements de stock, catalogue fournisseurs, appareils (notifications)', () => {
+  const mv = (uid, delta) => ({ produitId: 'p1', produit: 'Phone Test', delta, demande: Math.abs(delta), insuffisant: false, motif: 'vente', factureId: 'F1', uid, vendeurUid: uid, ts: serverTimestamp() });
+  it('mouvements : l\'employé n\'enregistre que ses sorties, lecture admin, jamais de modification', async () => {
+    await ok(setDoc(doc(as('empA'), 'mouvements_stock', 'm1'), mv('empA', -1)));
+    await ko(setDoc(doc(as('empA'), 'mouvements_stock', 'm2'), mv('empA', 5)));
+    await ko(setDoc(doc(as('empA'), 'mouvements_stock', 'm3'), mv('empB', -1)));
+    await ko(setDoc(doc(as('empA'), 'mouvements_stock', 'm4'), { ...mv('empA', -1), extra: 1 }));
+    await ko(getDoc(doc(as('empA'), 'mouvements_stock', 'm1')));
+    await ok(getDoc(doc(as('admin1'), 'mouvements_stock', 'm1')));
+    await ok(setDoc(doc(as('admin1'), 'mouvements_stock', 'm5'), { produitId: 'p1', delta: 4, motif: 'ajustement', uid: 'admin1', ts: serverTimestamp() }));
+    await ko(updateDoc(doc(as(PATRON), 'mouvements_stock', 'm1'), { delta: 0 }));
+    await ko(deleteDoc(doc(as(PATRON), 'mouvements_stock', 'm1')));
+  });
+  it('stock : lot « diminution du stock + mouvement » tel qu\'envoyé par l\'application (employé)', async () => {
+    const db = as('empA');
+    const { increment } = await import('firebase/firestore');
+    const b = writeBatch(db);
+    b.update(doc(db, 'produits', 'p1'), { quantite: increment(-2) });
+    b.set(doc(db, 'mouvements_stock', 'm9'), mv('empA', -2));
+    await ok(b.commit());
+    const b2 = writeBatch(db);
+    b2.update(doc(db, 'produits', 'p1'), { quantite: increment(-50) }); // sous zéro : refusé, sans bloquer les ventes (lot séparé)
+    await ko(b2.commit());
+  });
+  it('catalogue fournisseurs : droit « couts » seulement', async () => {
+    const e = { fournisseurId: 'f1', modele: 'Phone Test', prixAchat: 80000, majAt: serverTimestamp() };
+    await ok(setDoc(doc(as('admin1'), 'catalogue_fournisseurs', 'c1'), e));
+    await ok(getDoc(doc(as(PATRON), 'catalogue_fournisseurs', 'c1')));
+    await ko(getDoc(doc(as('admin2'), 'catalogue_fournisseurs', 'c1')));
+    await ko(setDoc(doc(as('admin2'), 'catalogue_fournisseurs', 'c2'), e));
+    await ko(getDoc(doc(as('empA'), 'catalogue_fournisseurs', 'c1')));
+    await ko(setDoc(doc(as('empA'), 'catalogue_fournisseurs', 'c3'), e));
+    await ko(setDoc(doc(as('admin1'), 'catalogue_fournisseurs', 'c4'), { ...e, prixAchat: -5 }));
+    await ko(setDoc(doc(as('admin1'), 'catalogue_fournisseurs', 'c5'), { ...e, fournisseurId: '' }));
+  });
+  it('appareils : un jeton par appareil, à son nom, visible de lui seul', async () => {
+    const d = (uid) => ({ uid, token: 'jeton-fictif-123', plateforme: 'web', creeAt: serverTimestamp(), majAt: serverTimestamp() });
+    await ok(setDoc(doc(as('empA'), 'appareils', 'empA_tel1'), d('empA')));
+    await ok(updateDoc(doc(as('empA'), 'appareils', 'empA_tel1'), { token: 'jeton-renouvele', majAt: serverTimestamp() }));
+    await ko(setDoc(doc(as('empA'), 'appareils', 'empB_tel1'), d('empA')));
+    await ko(setDoc(doc(as('empA'), 'appareils', 'empA_tel2'), d('empB')));
+    await ko(setDoc(doc(as('empA'), 'appareils', 'empA_tel3'), { ...d('empA'), role: 'patron' }));
+    await ko(getDoc(doc(as('empB'), 'appareils', 'empA_tel1')));
+    await ok(getDoc(doc(as('empA'), 'appareils', 'empA_tel1')));
+    await ko(setDoc(doc(as('suspendu'), 'appareils', 'suspendu_t'), d('suspendu')));
+    await ko(updateDoc(doc(as('empB'), 'appareils', 'empA_tel1'), { token: 'vol' }));
+    await ok(deleteDoc(doc(as('empA'), 'appareils', 'empA_tel1')));
+  });
+});

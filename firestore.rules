@@ -193,6 +193,38 @@ service cloud.firestore {
       allow delete: if droit('suppr', false);
     }
 
+    // ---------- Mouvements de stock (journal non modifiable) ----------
+    match /mouvements_stock/{id} {
+      allow read: if admin();
+      // un employé n'enregistre que ses propres sorties de stock (ventes) ; l'administrateur aussi les ajustements
+      allow create: if admin()
+        || (actif() && jeSuisAuteur()
+            && request.resource.data.get('delta', 1) is int && request.resource.data.get('delta', 1) <= 0
+            && request.resource.data.get('ts', null) == request.time
+            && request.resource.data.keys().hasOnly(['produitId', 'produit', 'delta', 'demande', 'insuffisant', 'motif',
+                                                     'factureId', 'uid', 'vendeurUid', 'ts']));
+      allow update, delete: if false;
+    }
+
+    // ---------- Catalogue des prix fournisseurs (prix d'achat : droit « couts ») ----------
+    match /catalogue_fournisseurs/{id} {
+      allow read, delete: if droit('couts', true);
+      allow create, update: if droit('couts', true)
+        && request.resource.data.get('prixAchat', -1) is number && request.resource.data.get('prixAchat', -1) >= 0
+        && request.resource.data.get('fournisseurId', '') is string && request.resource.data.get('fournisseurId', '') != '';
+    }
+
+    // ---------- Appareils des notifications (jetons FCM) : chacun gère les siens ----------
+    match /appareils/{id} {
+      allow read, delete: if connecte() && (resource.data.get('uid', '') == request.auth.uid || patron());
+      allow create: if actif() && jeSuisAuteur() && id.matches(request.auth.uid + '_.+')
+        && request.resource.data.get('token', 1) is string && request.resource.data.token.size() <= 4096
+        && request.resource.data.keys().hasOnly(['uid', 'token', 'plateforme', 'creeAt', 'majAt', 'prefs']);
+      allow update: if actif() && proprietaire() && jeSuisAuteur()
+        && request.resource.data.get('token', 1) is string && request.resource.data.token.size() <= 4096
+        && request.resource.data.keys().hasOnly(['uid', 'token', 'plateforme', 'creeAt', 'majAt', 'prefs']);
+    }
+
     // Toute autre collection : refusée (aucune règle fourre-tout).
   }
 }

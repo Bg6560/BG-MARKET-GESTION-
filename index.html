@@ -1054,6 +1054,25 @@ body.v2-sheet-create #v2SheetCreate,body.v2-sheet-more #v2SheetMore,body.v2-shee
 .rl-what{margin-top:4px;font-weight:700}
 .rl-det{color:var(--muted);font-size:13.5px;margin-top:2px}
 </style>
+<style id="sync-v3">
+.sync-badge.sync-pend{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.sync-badge.sync-fail{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.sync-badge[role=button]{cursor:pointer}
+#sync-panel{position:fixed;inset:0;z-index:900;display:flex;align-items:flex-end;justify-content:center}
+#sync-panel .sp-bg{position:absolute;inset:0;background:rgba(6,27,52,.45)}
+#sync-panel .sp-box{position:relative;width:100%;max-width:520px;max-height:82vh;overflow:auto;background:var(--surface);color:var(--text);border-radius:22px 22px 0 0;padding:18px;border:1px solid var(--line)}
+@media (min-width:700px){#sync-panel{align-items:center}#sync-panel .sp-box{border-radius:22px}}
+.sp-top{display:flex;align-items:center;justify-content:space-between;font-size:16px}
+.sp-top button{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer}
+.sp-state{font-size:13px;font-weight:700;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--ok-soft);color:var(--ok)}
+.sp-state.sp-pending,.sp-state.sp-offline{background:var(--warn-soft);color:var(--warn)}.sp-state.sp-failed{background:var(--danger-soft);color:var(--danger)}
+.sp-conf{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px}.sp-conf p{margin:6px 0 0}
+.sp-it{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.sp-it span{display:block;color:var(--muted);font-size:12px}.sp-it.sp-failed span{color:var(--danger)}
+.sp-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.sp-acts button{border:1px solid var(--line-strong);background:none;color:var(--text);font:700 12px var(--font);border-radius:9px;padding:6px 10px;cursor:pointer}
+.sp-empty,.sp-note{color:var(--muted);font-size:12px}
+</style>
 <style id="desktop-v3">
 /* ===== V3 : interface ordinateur (≥1100 px) et tableaux de bord par rôle ===== */
 #dsk-nav,.dsk-only{display:none}
@@ -1372,7 +1391,221 @@ try{
     console.warn('Persistance hors-ligne non activee:',err.code||err);
   });
 }catch(err){console.warn('Persistance hors-ligne non supportee sur ce navigateur:',err);}
-window.addEventListener('online',()=>{setSyncBadge(!!currentUser);showToast('Connexion retablie - synchronisation en cours','s');});
+
+/* ===================== SYNCHRONISATION : chaque écriture est suivie jusqu'à la confirmation du serveur ===================== */
+/* Principe : Firestore garde les écritures hors ligne dans sa file locale et les envoie au retour du réseau.
+   Ici on suit chacune d'elles : « en attente » tant que le serveur n'a pas confirmé, « synchronisée » seulement après confirmation,
+   « échec » si le serveur la refuse (les données sont conservées pour réessayer, sans doublon : mêmes identifiants de documents). */
+var SYNC={seq:0,items:new Map(),lastEarlyAt:0,store:'bg_outbox_v1',quiet:['users','journal','appareils'],panelOpen:false};
+var SYNC_EARLY_MS=4000;
+var SYNC_FV=new WeakMap();
+(function(){
+  var FV=firebase.firestore.FieldValue,st=FV.serverTimestamp,inc=FV.increment;
+  FV.serverTimestamp=function(){var v=st.apply(FV,arguments);try{SYNC_FV.set(v,{t:'ts'});}catch(e){}return v;};
+  FV.increment=function(n){var v=inc.call(FV,n);try{SYNC_FV.set(v,{t:'inc',n:n});}catch(e){}return v;};
+})();
+function syncSer(v){
+  if(v===null||v===undefined)return null;
+  var d=SYNC_FV.get(v);if(d)return {__fv:d.t,n:d.n};
+  if(v instanceof Date)return {__date:v.getTime()};
+  if(typeof v==='object'&&typeof v.toMillis==='function'&&typeof v.seconds==='number')return {__tsm:v.toMillis()};
+  if(Array.isArray(v))return v.map(syncSer);
+  if(typeof v==='object'){if(v.constructor&&v.constructor!==Object)return null;var o={};Object.keys(v).forEach(function(k){if(v[k]!==undefined)o[k]=syncSer(v[k]);});return o;}
+  return v;
+}
+function syncRev(v){
+  if(v===null||v===undefined)return v;
+  if(Array.isArray(v))return v.map(syncRev);
+  if(typeof v==='object'){
+    if(v.__fv==='ts')return firebase.firestore.FieldValue.serverTimestamp();
+    if(v.__fv==='inc')return firebase.firestore.FieldValue.increment(v.n);
+    if('__date' in v)return new Date(v.__date);
+    if('__tsm' in v)return firebase.firestore.Timestamp.fromMillis(v.__tsm);
+    var o={};Object.keys(v).forEach(function(k){o[k]=syncRev(v[k]);});return o;
+  }
+  return v;
+}
+function syncOp(m,path,a){
+  var o={op:m,path:path};
+  if(m!=='delete'){o.data=syncSer(a[1]);if(typeof a[1]==='string')o.bad=true;}
+  if(m==='set'){o.opts=a[2]?syncSer(a[2]):null;o.create=!(a[2]&&a[2].merge);}
+  return o;
+}
+var SYNC_NAMES={commandes:'Commande',factures:'Facture',clients:'Client',produits:'Produit',precommandes:'Précommande',sav:'SAV',mouvements_stock:'Mouvement de stock',fournisseurs:'Fournisseur',catalogue_fournisseurs:'Prix fournisseur',app_config:'Réglages',commandes_couts:'Coûts',factures_couts:'Coûts',produits_prive:'Coûts',commandes_fourn:'Fournisseur'};
+var SYNC_MAIN=['commandes','factures','clients','produits','precommandes','sav','fournisseurs','catalogue_fournisseurs','app_config','mouvements_stock'];
+function syncLabel(ops){
+  var o=ops.find(function(x){return SYNC_MAIN.indexOf(x.path.split('/')[0])>=0;})||ops[0],col=o.path.split('/')[0],d=o.data||{};
+  var what=d.num||d.nom||d.client||d.modele||d.produit||'';
+  return (SYNC_NAMES[col]||col)+(what?' '+what:'')+(o.op==='delete'?' (suppression)':(o.create?'':' (modification)'));
+}
+function syncErr(e){
+  var c=(e&&e.code)||'';
+  if(c==='permission-denied')return 'Refusé par le serveur (droits insuffisants, compte suspendu ou document déjà validé).';
+  if(c==='unavailable')return 'Serveur injoignable.';
+  return (e&&e.message)||'Erreur inconnue';
+}
+function syncPersist(){
+  try{var arr=[];SYNC.items.forEach(function(i){arr.push({id:i.id,label:i.label,state:i.state,at:i.at,err:i.err||'',ops:i.ops});});localStorage.setItem(SYNC.store,JSON.stringify(arr.slice(-300)));}catch(e){}
+}
+function syncTrack(ops,real){
+  var quiet=!ops.length||ops.every(function(o){return SYNC.quiet.indexOf((o.path||'').split('/')[0])>=0;});
+  if(quiet)return real;
+  var id=++SYNC.seq,it={id:id,label:syncLabel(ops),ops:ops,state:'pending',at:Date.now()};
+  SYNC.items.set(id,it);syncPersist();syncPaint();
+  var early=false,settled=false;
+  return new Promise(function(resolve,reject){
+    real.then(function(v){
+      settled=true;SYNC.items.delete(id);syncPersist();syncPaint();resolve(v);
+    },function(e){
+      settled=true;
+      if(!early){SYNC.items.delete(id);syncPersist();syncPaint();reject(e);} /* l'appelant a encore la main : il affiche l'erreur */
+      else{it.state='failed';it.err=syncErr(e);syncPersist();syncPaint();try{showToast('Échec de synchronisation : '+it.label,'e');}catch(x){}}
+    });
+    setTimeout(function(){if(settled)return;early=true;SYNC.lastEarlyAt=Date.now();resolve(undefined);},navigator.onLine===false?0:SYNC_EARLY_MS);
+  });
+}
+(function(){
+  var F=firebase.firestore,WB=F.WriteBatch&&F.WriteBatch.prototype,DR=F.DocumentReference&&F.DocumentReference.prototype,CR=F.CollectionReference&&F.CollectionReference.prototype;
+  if(!WB||!DR||!CR||WB.__synced)return;
+  WB.__synced=true;
+  ['set','update','delete'].forEach(function(m){
+    var o=WB[m];
+    WB[m]=function(ref){try{(this.__ops=this.__ops||[]).push(syncOp(m,ref.path,arguments));}catch(e){}return o.apply(this,arguments);};
+  });
+  var oc=WB.commit;
+  WB.commit=function(){var ops=this.__ops||[];this.__ops=[];return syncTrack(ops,oc.apply(this,arguments));};
+  ['set','update','delete'].forEach(function(m){
+    var o=DR[m];
+    DR[m]=function(){var ops=[];try{ops.push(syncOp(m,this.path,[this].concat(Array.prototype.slice.call(arguments))));}catch(e){}return syncTrack(ops,o.apply(this,arguments));};
+  });
+  CR.add=function(data){var ref=this.doc();return ref.set(data).then(function(){return ref;});};
+})();
+function syncState(){
+  var n=0,f=0;SYNC.items.forEach(function(i){if(i.state==='failed')f++;else n++;});
+  var off=navigator.onLine===false;
+  return {pending:n,failed:f,offline:off,state:f?'failed':(n?'pending':(off?'offline':'synced'))};
+}
+function syncConflicts(){
+  var out=[];
+  [[typeof allFacs!=='undefined'?allFacs:[],'Facture'],[typeof allCmds!=='undefined'?allCmds:[],'Commande']].forEach(function(p){
+    var seen={};(p[0]||[]).forEach(function(x){if(x.num)seen[x.num]=(seen[x.num]||0)+1;});
+    Object.keys(seen).forEach(function(k){if(seen[k]>1)out.push(p[1]+' n° '+k+' utilisé '+seen[k]+' fois (numéro en double : à corriger)');});
+  });
+  (typeof allProduits!=='undefined'?allProduits:[]).forEach(function(p){if((p.quantite||0)<0)out.push('Stock négatif : '+prodName(p));});
+  return out;
+}
+function syncPaint(){
+  var el=document.getElementById('sync-badge');
+  var s=syncState();
+  if(el){
+    var txt={synced:'Synchronisé',pending:'En attente ('+s.pending+')',offline:'Hors ligne',failed:'Échec ('+s.failed+')'}[s.state];
+    el.className='sync-badge '+{synced:'sync-ok',pending:'sync-pend',offline:'sync-off',failed:'sync-fail'}[s.state];
+    el.textContent=txt;el.title='Voir l\'état de la synchronisation';el.setAttribute('role','button');el.tabIndex=0;el.onclick=syncOpenPanel;
+    el.onkeydown=function(e){if(e.key==='Enter')syncOpenPanel();};
+  }
+  if(SYNC.panelOpen)syncRenderPanel();
+}
+function setSyncBadge(){syncPaint();}
+function syncClosePanel(){SYNC.panelOpen=false;var p=document.getElementById('sync-panel');if(p)p.remove();}
+function syncOpenPanel(){SYNC.panelOpen=true;syncRenderPanel();}
+function syncRenderPanel(){
+  var p=document.getElementById('sync-panel');
+  if(!p){p=document.createElement('div');p.id='sync-panel';p.setAttribute('role','dialog');p.setAttribute('aria-modal','true');p.setAttribute('aria-label','État de la synchronisation');document.body.appendChild(p);}
+  var s=syncState(),items=[];SYNC.items.forEach(function(i){items.push(i);});
+  var conf=syncConflicts();
+  var head={synced:'Tout est synchronisé avec le serveur.',pending:s.pending+' opération'+(s.pending>1?'s':'')+' en attente de confirmation par le serveur.',offline:'Hors connexion : tes modifications sont gardées sur cet appareil et partiront au retour d\'Internet.',failed:s.failed+' opération'+(s.failed>1?'s':'')+' refusée'+(s.failed>1?'s':'')+' par le serveur.'}[s.state];
+  p.innerHTML='<div class="sp-bg" onclick="syncClosePanel()"></div><div class="sp-box"><div class="sp-top"><b>Synchronisation</b><button type="button" onclick="syncClosePanel()" aria-label="Fermer">✕</button></div>'+
+    '<p class="sp-state sp-'+s.state+'">'+esc(head)+'</p>'+
+    (conf.length?'<div class="sp-conf"><b>À vérifier</b>'+conf.map(function(c){return '<p>⚠ '+esc(c)+'</p>';}).join('')+'</div>':'')+
+    (items.length?'<div class="sp-list">'+items.sort(function(a,b){return b.at-a.at;}).map(function(i){
+      return '<div class="sp-it sp-'+i.state+'"><div><b>'+esc(i.label)+'</b><span>'+(i.state==='failed'?esc(i.err||'Échec'):'En attente depuis '+new Date(i.at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}))+'</span></div>'+
+        (i.state==='failed'?'<div class="sp-acts"><button type="button" onclick="syncRetry('+i.id+')">Réessayer</button><button type="button" onclick="syncCopy('+i.id+')">Copier</button><button type="button" onclick="syncDrop('+i.id+')">Abandonner</button></div>':'')+'</div>';}).join('')+'</div>':'<p class="sp-empty">Aucune opération en attente.</p>')+
+    '<p class="sp-note">Une opération n\'est annoncée « synchronisée » qu\'après confirmation du serveur. Les données refusées restent ici tant que tu ne les abandonnes pas.</p></div>';
+}
+function syncRetry(id){
+  var it=SYNC.items.get(id);if(!it)return;
+  var b=db.batch();
+  it.ops.forEach(function(o){
+    var ref=db.doc(o.path);
+    if(o.bad)return;
+    if(o.op==='set'){if(o.opts)b.set(ref,syncRev(o.data),syncRev(o.opts));else b.set(ref,syncRev(o.data));}
+    else if(o.op==='update')b.update(ref,syncRev(o.data));
+    else b.delete(ref);
+  });
+  SYNC.items.delete(id);syncPersist();
+  b.commit().catch(function(){});
+  syncPaint();
+}
+function syncCopy(id){var it=SYNC.items.get(id);if(!it)return;var txt=JSON.stringify({label:it.label,ops:it.ops},null,1);try{navigator.clipboard.writeText(txt);showToast('Données copiées','s');}catch(e){showToast('Copie impossible','e');}}
+function syncDrop(id){var it=SYNC.items.get(id);if(!it)return;if(!confirm('Abandonner cette opération ? Les données ne seront pas envoyées.'))return;SYNC.items.delete(id);syncPersist();syncPaint();}
+/* Au démarrage : reprise des opérations de la session précédente (confirmées seulement après vérification sur le serveur) */
+async function syncRestore(){
+  var saved=[];try{saved=JSON.parse(localStorage.getItem(SYNC.store)||'[]');}catch(e){}
+  if(!saved.length)return;
+  saved.forEach(function(x){if(!SYNC.items.has(x.id)&&x.ops){SYNC.seq=Math.max(SYNC.seq,x.id);SYNC.items.set(x.id,{id:x.id,label:x.label,ops:x.ops,state:x.state,at:x.at,err:x.err,restored:true});}});
+  syncPaint();syncResolveRestored();
+}
+var SYNC_RESOLVING=false;
+async function syncResolveRestored(){
+  if(SYNC_RESOLVING)return;
+  var list=[];SYNC.items.forEach(function(i){if(i.restored&&i.state==='pending')list.push(i);});
+  if(!list.length||navigator.onLine===false)return;
+  SYNC_RESOLVING=true;
+  var ok=0;
+  try{
+    for(var k=0;k<list.length;k++){
+      var it=list[k],creates=it.ops.filter(function(o){return o.create&&!o.bad;}),verdict=null;
+      for(var tries=0;tries<15&&!verdict;tries++){
+        /* 1) le serveur a-t-il déjà confirmé ? (lecture directe sur le serveur, jamais le cache) */
+        var all=true;
+        for(var j=0;j<creates.length;j++){var s=await db.doc(creates[j].path).get({source:'server'});if(!s.exists){all=false;break;}}
+        if(creates.length&&all){verdict='ok';break;}
+        /* 2) file d'écritures vidée ? sans document sur le serveur pour une création : le serveur l'a refusée */
+        var emptied=true;
+        try{await Promise.race([db.waitForPendingWrites(),new Promise(function(_,r){setTimeout(function(){r(new Error('t'));},4000);})]);}catch(e){emptied=false;}
+        if(emptied){
+          if(!creates.length){verdict='ok';break;}
+          var again=true;
+          for(var j2=0;j2<creates.length;j2++){var s2=await db.doc(creates[j2].path).get({source:'server'});if(!s2.exists){again=false;break;}}
+          verdict=again?'ok':'ko';
+        }
+      }
+      if(verdict==='ok'){SYNC.items.delete(it.id);ok++;}
+      else if(verdict==='ko'){it.state='failed';it.err='Le serveur n\'a pas enregistré cette opération.';}
+    }
+  }catch(e){/* réseau instable : on réessaiera au prochain retour de connexion */}
+  SYNC_RESOLVING=false;
+  syncPersist();syncPaint();
+  if(ok)showToast(ok+' opération'+(ok>1?'s':'')+' de la session précédente confirmée'+(ok>1?'s':'')+' par le serveur','s');
+}
+window.addEventListener('online',function(){syncPaint();setTimeout(syncResolveRestored,1500);});
+window.addEventListener('offline',syncPaint);
+/* Stock : décrémentation relative (increment) et journal des mouvements, dans un lot séparé de la facture
+   (un refus de stock ne doit jamais empêcher d'enregistrer une vente) */
+function stockMatch(prods,sp){
+  if(sp.pid){var m=prods.find(function(p){return p.id===sp.pid;});if(m)return m;}
+  var spN=cleanName(sp.name||'').toLowerCase().substring(0,10);
+  if(spN.length<3)return null;
+  return prods.find(function(p){var n=(p.nom||p.modele||'').toLowerCase();return n.includes(spN)||spN.includes(n.substring(0,8));})||null;
+}
+async function stockAfterSale(lines,facId,sellerUid){
+  if(!lines||!lines.length)return;
+  try{
+    var prods=(typeof allProduits!=='undefined'&&allProduits&&allProduits.length)?allProduits:(await db.collection('produits').get()).docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    var b=db.batch(),n=0;
+    lines.forEach(function(sp){
+      if(!sp.name||!sp.qty)return;
+      var m=stockMatch(prods,sp);if(!m)return;
+      var q=m.quantite||0,want=sp.qty||1,dec=Math.min(want,Math.max(0,q));
+      if(dec>0)b.update(db.collection('produits').doc(m.id),{quantite:firebase.firestore.FieldValue.increment(-dec)});
+      b.set(db.collection('mouvements_stock').doc(),{produitId:m.id,produit:prodName(m),delta:-dec,demande:want,insuffisant:dec<want,motif:'vente',factureId:facId||'',uid:currentUser.uid,vendeurUid:sellerUid||currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});
+      m.quantite=q-dec;n++;
+    });
+    if(n)await b.commit();
+  }catch(e){console.warn('Stock err:',e);}
+}
+
+window.addEventListener('online',()=>{syncPaint();showToast('Connexion rétablie : synchronisation en cours','i');});
 window.addEventListener('offline',()=>{setSyncBadge(false);showToast('Hors ligne : tu peux continuer a travailler, ca se synchronisera au retour du reseau','i');});
 let toastTimer=null,settingsListener=null,notifListener=null;
 let currentInvoice=null,products=[],garVal='',selectedTemplate=1,invNumR=1;
@@ -1380,7 +1613,7 @@ let supplierCatalog=[],parsedItems=[],supplierMargin=12;
 let allCmds=[],cmdStatusFilter='',expOn=false,payMode='';
 let allClients=[],allProduits=[],allSAV=[];
 let currentTheme=document.documentElement.getAttribute('data-theme')||localStorage.getItem('bg_theme')||'dark';
-function showToast(msg,type){const el=document.getElementById('toast-msg');el.textContent=msg;el.className='toast-msg t-'+(type||'i');const t=document.getElementById('toast');t.style.transform='translateX(-50%) translateY(0)';t.style.opacity='1';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},3200);}
+function showToast(msg,type){if(type==='s'&&Date.now()-SYNC.lastEarlyAt<2500)msg+=' (en attente de synchronisation)';const el=document.getElementById('toast-msg');el.textContent=msg;el.className='toast-msg t-'+(type||'i');const t=document.getElementById('toast');t.style.transform='translateX(-50%) translateY(0)';t.style.opacity='1';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},3200);}
 function showOv(t){document.getElementById('ov-txt').textContent=t||'Chargement...';document.getElementById('ov-load').style.display='flex';}
 function hideOv(){document.getElementById('ov-load').style.display='none';}
 function fF(n){return(Math.round(n)||0).toLocaleString('fr-FR')+' F';}
@@ -1484,7 +1717,7 @@ auth.onAuthStateChanged(async user=>{
       hideOv();
       document.getElementById('login-page').style.display='none';
       document.getElementById('app-page').style.display='flex';
-      updateNavUser();setSyncBadge(true);updatePresence();
+      updateNavUser();syncPaint();syncRestore();updatePresence();
       setInterval(updatePresence,60000);
       splashDone(function(){goTab('dashboard');});
     }else{
@@ -1532,7 +1765,6 @@ function updateNavUser(){
   if(navHist) navHist.style.display='flex';
   try{dskNavBuild();}catch(e){}
 }
-function setSyncBadge(on){const el=document.getElementById('sync-badge');el.className='sync-badge '+(on?'sync-ok':'sync-off');el.textContent=on?'Synchronise':'Hors ligne';}
 async function updatePresence(){if(!currentUser)return;try{await db.collection('users').doc(currentUser.uid).update({isOnline:true,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),lastSeenStr:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});}catch(e){}}
 async function setOffline(){if(!currentUser)return;try{await db.collection('users').doc(currentUser.uid).update({isOnline:false,lastSeen:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){}}
 window.addEventListener('beforeunload',()=>setOffline());
@@ -2032,7 +2264,7 @@ function getCardStyle(statut){
 
 
 var cmdProducts=[];
-function newCmdProduct(){return{id:Date.now()+Math.floor(Math.random()*1000),name:'',stockage:'--',ram:'--',couleur:'',qty:1,prix:0,cost:0,catCost:0};}
+function newCmdProduct(){return{id:Date.now()+Math.floor(Math.random()*1000),pid:'',name:'',stockage:'--',ram:'--',couleur:'',qty:1,prix:0,cost:0,catCost:0};}
 
 
 
@@ -2095,7 +2327,7 @@ async function saveCmd(){
   }
   var liv=parseFloat((document.getElementById('fc-liv')||{}).value)||0;
   var expf=expOn?(parseFloat((document.getElementById('fc-expf')||{}).value)||0):0;
-  var produits=prods.map(function(p){return{name:p.name.trim(),stockage:(p.stockage&&p.stockage!=='--')?p.stockage:'',ram:(p.ram&&p.ram!=='--')?p.ram:'',couleur:(p.couleur||'').trim(),qty:p.qty||1,prix:p.prix,cost:p.cost||0};});
+  var produits=prods.map(function(p){return{pid:p.pid||'',name:p.name.trim(),stockage:(p.stockage&&p.stockage!=='--')?p.stockage:'',ram:(p.ram&&p.ram!=='--')?p.ram:'',couleur:(p.couleur||'').trim(),qty:p.qty||1,prix:p.prix,cost:p.cost||0};});
   var sous=produits.reduce(function(a,p){return a+p.prix*p.qty;},0);
   var cout=produits.reduce(function(a,p){return a+p.cost*p.qty;},0);
   var profit=produits.reduce(function(a,p){return a+(p.cost>0?(p.prix-p.cost)*p.qty:0);},0);
@@ -2187,23 +2419,6 @@ let etatCmd='neuf';
 /* (ancienne fonction retirée) */
 /* (ancienne fonction retirée) */
 /* (ancienne fonction retirée) */
-async function updateStockAfterSale(soldProducts){
-  if(!soldProducts||!soldProducts.length)return;
-  try{
-    const snap=await db.collection('produits').get();
-    const prods=snap.docs.map(d=>({id:d.id,...d.data()}));
-    for(const sp of soldProducts){
-      if(!sp.name||!sp.qty)continue;
-      const spN=cleanName(sp.name).toLowerCase().substring(0,10);
-      const match=prods.find(p=>((p.nom||p.modele||'')).toLowerCase().includes(spN)||spN.includes(((p.nom||p.modele||'')).toLowerCase().substring(0,8)));
-      if(match){
-        const newQ=Math.max(0,(match.quantite||0)-(sp.qty||1));
-        if(newQ===(match.quantite||0))continue;
-        await db.collection('produits').doc(match.id).update({quantite:newQ});
-      }
-    }
-  }catch(e){console.warn('Stock err:',e);}
-}
 /* (ancienne fonction retirée) */
 
 /* (ancienne fonction retirée) */
@@ -3803,7 +4018,7 @@ function printFacture(){
    FORMULAIRE : NOUVELLE FACTURE / MODIFIER
    ===================================================================== */
 var facDraft=null;
-function facNewLine(){return {id:Date.now()+Math.floor(Math.random()*100000),name:'',qty:1,price:0,cost:0};}
+function facNewLine(){return {id:Date.now()+Math.floor(Math.random()*100000),pid:'',name:'',qty:1,price:0,cost:0};}
 function facBlankDraft(){
   return {id:null,cmdId:null,cmdNum:'',banner:'',etat:'neuf',lines:[facNewLine()],statut:'en_attente',client:'',tel:'',addr:'',paiement:'',notes:'',tvaR:0,liv:0,gar:globalSettings.garantieDefaut||'',date:facToday(),num:facNum(),validation:null,saving:false};
 }
@@ -3811,7 +4026,7 @@ function facDraftFromCmd(c,cmdId){
   var d=facBlankDraft();
   d.cmdId=cmdId;d.cmdNum=c.num||'';d.etat=c.etat||'neuf';
   d.client=c.client||'';d.tel=c.tel||'';d.addr=c.adresse||'';
-  d.lines=(Array.isArray(c.produits)&&c.produits.length)?c.produits.map(function(p){var l=facNewLine();l.name=facLineName(p);l.qty=p.qty||1;l.price=p.prix||0;l.cost=p.cost||0;return l;})
+  d.lines=(Array.isArray(c.produits)&&c.produits.length)?c.produits.map(function(p){var l=facNewLine();l.name=facLineName(p);l.pid=p.pid||'';l.qty=p.qty||1;l.price=p.prix||0;l.cost=p.cost||0;return l;})
     :[(function(){var l=facNewLine();l.name=cleanName(c.produit||'');l.price=c.prix||0;l.cost=c.coutCatalogue||0;return l;})()];
   d.liv=(c.livraison||0)+(c.expOn?(c.expFrais||0):0);
   d.paiement=c.paiement||'';
@@ -3963,7 +4178,7 @@ async function facSave(){
   var data={
     num:num,date:uiVal('fn-date')||facToday(),statut:d.statut==='payee'?'payee':'en_attente',
     client:client,tel:uiVal('fn-tel'),addr:uiVal('fn-addr'),
-    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price};}),
+    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price,pid:l.pid||''};}),
     sub:r.sub,tvaR:tvaR,tva:r.tva,livraison:liv,total:r.total,
     notes:uiVal('fn-notes'),garantie:uiVal('fn-gar'),paiement:d.paiement||'',etatTel:d.etat||'neuf',
     biz:facBizSnapshot()
@@ -3997,7 +4212,7 @@ async function facSave(){
       }
       catch(e2){if(d.cmdId){try{await db.collection('commandes').doc(d.cmdId).update({facturee:false});}catch(e3){}}throw e2;}
       if(num===facNum()){invNumR=(invNumR||1)+1;try{await db.collection('app_config').doc('settings').set({invNumR:invNumR},{merge:true});}catch(e4){}}
-      updateStockAfterSale(data.products);
+      stockAfterSale(data.products,ref.id,data.uid);
       hideOv();showToast(pend?t('fac.savedWait'):t('fac.saved'),'s');
       facDraft=null;viewFacture(ref.id);
     }
@@ -4060,7 +4275,7 @@ async function facAutoFromCmd(cmdId){
   var r=facCompute(lines,0,d.liv);
   var data={
     num:num,date:facToday(),statut:'payee',client:c.client||'',tel:c.tel||'',addr:c.adresse||'',
-    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price};}),
+    products:lines.map(function(l){return {name:cleanName(l.name),qty:l.qty||1,price:l.price,pid:l.pid||''};}),
     sub:r.sub,tvaR:0,tva:0,livraison:d.liv,total:r.total,
     notes:'',garantie:globalSettings.garantieDefaut||'',paiement:c.paiement||'',etatTel:c.etat||'neuf',
     biz:facBizSnapshot(),
@@ -4080,7 +4295,7 @@ async function facAutoFromCmd(cmdId){
   catch(e){try{await ref.update({facturee:false});}catch(e2){}throw e;}
   invNumR=(invNumR||1)+1;
   try{await db.collection('app_config').doc('settings').set({invNumR:invNumR},{merge:true});}catch(e3){}
-  updateStockAfterSale(data.products);
+  stockAfterSale(data.products,added.id,data.uid);
   return {id:added.id,num:num};
 }
 
@@ -5289,7 +5504,11 @@ function prodStep(d){var el=document.getElementById('adj-stock');if(!el)return;e
 async function updateStock(id){
   if(!isAdmin)return;
   var q=Math.max(0,parseInt(uiVal('adj-stock'),10)||0);
-  try{await db.collection('produits').doc(id).update({quantite:q});showToast(t('pr.stockSaved'),'s');viewProd(id);}
+  try{
+    var old=(allProduits||[]).find(function(x){return x.id===id;}),oq=old?(old.quantite||0):null,sb=db.batch();
+    sb.update(db.collection('produits').doc(id),{quantite:q});
+    if(oq!==null&&oq!==q)sb.set(db.collection('mouvements_stock').doc(),{produitId:id,produit:old?prodName(old):'',delta:q-oq,motif:'ajustement',uid:currentUser.uid,ts:firebase.firestore.FieldValue.serverTimestamp()});
+    await sb.commit();if(old)old.quantite=q;showToast(t('pr.stockSaved'),'s');viewProd(id);}
   catch(e){showToast(t('pr.err.act')+e.message,'e');}
 }
 async function deleteProd(id){
