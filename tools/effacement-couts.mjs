@@ -7,7 +7,7 @@
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { effacer } from './lib/migration.mjs';
+import { effacer } from './lib/effacement.mjs';
 
 const args = process.argv.slice(2);
 const opt = (n) => { const i = args.indexOf('--' + n); return i >= 0 ? args[i + 1] : undefined; };

@@ -1400,7 +1400,7 @@ try{
 /* Principe : Firestore garde les écritures hors ligne dans sa file locale et les envoie au retour du réseau.
    Ici on suit chacune d'elles : « en attente » tant que le serveur n'a pas confirmé, « synchronisée » seulement après confirmation,
    « échec » si le serveur la refuse (les données sont conservées pour réessayer, sans doublon : mêmes identifiants de documents). */
-var SYNC={seq:0,items:new Map(),lastEarlyAt:0,store:'bg_outbox_v1',quiet:['users','journal','appareils'],panelOpen:false};
+var SYNC={seq:0,items:new Map(),lastEarlyAt:0,store:'bg_outbox_v1',quiet:['users','journal','appareils','imports_fournisseurs'],panelOpen:false};
 var SYNC_EARLY_MS=4000;
 var SYNC_FV=new WeakMap();
 (function(){
@@ -6642,21 +6642,47 @@ function cfOpenImport(fid){
     '<input type="file" id="cf-file" accept=".csv,.txt,text/plain,text/csv" onchange="cfReadFile(this)" style="margin-top:8px"/>'+
     '<button type="button" class="ui-btn ui-btn-primary ui-press" style="margin-top:12px" onclick="cfAnalyze()">Analyser</button></section>'+
     '<div id="cf-preview">'+cfHistHtml()+'</div></div>';
+  cfHistFetch();
 }
 function cfReadFile(inp){
   var f=inp.files&&inp.files[0];if(!f)return;
   if(f.size>2000000){showToast('Fichier trop volumineux (2 Mo maximum)','e');return;}
   var r=new FileReader();r.onload=function(){var t=document.getElementById('cf-txt');if(t){t.value=String(r.result||'');cfAnalyze();}};r.onerror=function(){showToast('Lecture du fichier impossible','e');};r.readAsText(f);
 }
-/* Historique local des analyses (texte + résumé), pour vérification ultérieure : 10 dernières, sur cet appareil */
+/* Historique des analyses (texte + résumé), pour vérification ultérieure : les 10 dernières par fournisseur.
+   Sur le serveur (imports_fournisseurs : chacun les siennes, le patron toutes) ; copie locale si le serveur est indisponible. */
+var CF_HIST_MAX=10;
 function cfHistLoad(){try{return JSON.parse(localStorage.getItem('bg_cf_imports')||'[]')||[];}catch(e){return [];}}
-function cfHistSave(entry){try{var h=cfHistLoad().filter(function(x){return x.at!==entry.at;});h.unshift(entry);localStorage.setItem('bg_cf_imports',JSON.stringify(h.slice(0,10)));}catch(e){}}
-function cfHistHtml(){
-  var h=cfHistLoad().filter(function(x){return x.fid===CF.fid;});if(!h.length)return '';
-  return '<section class="ui-card"><h2>Analyses récentes <span class="ui-count">'+h.length+'</span></h2><div class="ui-lines">'+h.map(function(x,i){
-    return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(new Date(x.at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}))+(x.enregistre?' · enregistrée':' · non enregistrée')+'</b><span>'+esc(x.resume||'')+'</span></span><button type="button" class="cf-mini ui-press" onclick="cfHistReload('+i+')">Revoir</button></div>';}).join('')+'</div></section>';
+function cfHistLocal(entry){try{var h=cfHistLoad().filter(function(x){return x.at!==entry.at;});h.unshift(entry);localStorage.setItem('bg_cf_imports',JSON.stringify(h.slice(0,CF_HIST_MAX)));}catch(e){}}
+function cfHistSave(entry){
+  cfHistLocal(entry);
+  if(!currentUser||!can('couts'))return;
+  var ref=db.collection('imports_fournisseurs').doc(currentUser.uid+'_'+entry.at);
+  var p=entry.enregistre?ref.update({enregistre:true}):ref.set({fournisseurId:entry.fid,fournisseurNom:CF.fnom||'',uid:currentUser.uid,auteur:(userProfile&&userProfile.nom)||currentUser.email||'',at:entry.at,creeAt:firebase.firestore.FieldValue.serverTimestamp(),texte:String(entry.texte||'').slice(0,50000),resume:entry.resume||'',enregistre:false});
+  p.then(function(){cfHistFetch();}).catch(function(){});
 }
-function cfHistReload(i){var h=cfHistLoad().filter(function(x){return x.fid===CF.fid;})[i];if(!h)return;var t=document.getElementById('cf-txt');if(t){t.value=h.texte||'';cfAnalyze();t.scrollIntoView({behavior:'smooth'});}}
+function cfHistList(){
+  var loc=cfHistLoad().filter(function(x){return x.fid===CF.fid;}),srv=CF.hist&&CF.hist.fid===CF.fid?CF.hist.list:[],seen={},out=[];
+  srv.concat(loc).forEach(function(x){if(seen[x.at])return;seen[x.at]=1;out.push(x);});
+  return out.sort(function(a,b){return b.at-a.at;}).slice(0,CF_HIST_MAX);
+}
+async function cfHistFetch(){
+  if(!currentUser||!can('couts')||!CF.fid)return;
+  try{
+    var q=db.collection('imports_fournisseurs').where('fournisseurId','==',CF.fid);
+    if(!isBoss)q=q.where('uid','==',currentUser.uid);
+    var snap=await q.get();
+    CF.hist={fid:CF.fid,list:snap.docs.map(function(d){var x=d.data();return {fid:x.fournisseurId,at:x.at,texte:x.texte,resume:x.resume,enregistre:!!x.enregistre,uid:x.uid,auteur:x.auteur};})};
+  }catch(e){return;}
+  var el=document.getElementById('cf-hist');if(el)el.outerHTML=cfHistHtml();
+}
+function cfHistHtml(){
+  var h=cfHistList();if(!h.length)return '<div id="cf-hist"></div>';
+  return '<section class="ui-card" id="cf-hist"><h2>Analyses récentes <span class="ui-count">'+h.length+'</span></h2><div class="ui-lines">'+h.map(function(x,i){
+    var qui=isBoss&&x.uid&&currentUser&&x.uid!==currentUser.uid&&x.auteur?' · '+x.auteur:'';
+    return '<div class="ui-line"><span class="ui-line-main"><b>'+esc(new Date(x.at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}))+(x.enregistre?' · enregistrée':' · non enregistrée')+esc(qui)+'</b><span>'+esc(x.resume||'')+'</span></span><button type="button" class="cf-mini ui-press" onclick="cfHistReload('+i+')">Revoir</button></div>';}).join('')+'</div></section>';
+}
+function cfHistReload(i){var h=cfHistList()[i];if(!h)return;var t=document.getElementById('cf-txt');if(t){t.value=h.texte||'';cfAnalyze();t.scrollIntoView({behavior:'smooth'});}}
 function cfResume(plan,an){return plan.creer.length+' nouveaux, '+plan.modifier.length+' modifiés, '+plan.confirmer.length+' inchangés, '+(an.aVerifier.length+plan.conflits.length)+' à vérifier, '+an.sansPrix.length+' sans prix';}
 async function cfAnalyze(){
   var pv=document.getElementById('cf-preview');if(!pv)return;

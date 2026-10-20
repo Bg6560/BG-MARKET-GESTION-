@@ -171,6 +171,12 @@ describe('Catalogue fournisseur', () => {
     await s.page.evaluate(() => cfSaveImport());
     await s.page.waitForFunction(() => document.querySelector('#cf-body') && /Honor 5A|Motorola/.test(document.querySelector('#cf-body').textContent), null, { timeout: 15000 });
     const apres = (await catalogue()).filter((d) => d.fournisseurId === 'F2' && d.source === 'import');
+    let hist = []; await env.withSecurityRulesDisabled(async (ctx) => { hist = (await getDocs(collection(ctx.firestore(), 'imports_fournisseurs'))).docs.map((d) => ({ id: d.id, ...d.data() })); });
+    const h = hist.filter((x) => x.fournisseurId === 'F2');
+    assert.equal(h.length, 1, 'analyse conservée sur le serveur');
+    assert.equal(h[0].enregistre, true);
+    assert.match(h[0].texte, /KAZI NEUFS/);
+    assert.ok(h[0].id.startsWith(U.patron + '_'));
     assert.equal(apres.length, 5);
     assert.equal(apres.some((d) => /Honor/.test(d.nom)), false, 'produit décoché : non enregistré');
     const moto = apres.find((d) => /Motorola/.test(d.nom));

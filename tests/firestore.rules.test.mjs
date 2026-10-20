@@ -549,3 +549,29 @@ describe('Identification du patron par UID (règles finales)', () => {
     await ok(updateDoc(doc(p, 'app_config', 'settings'), { bizName: 'BG-MARKET' }));
   });
 });
+
+describe('Historique des analyses de catalogues (imports_fournisseurs)', () => {
+  const d = (uid, extra = {}) => ({ fournisseurId: 'F1', fournisseurNom: 'F', uid, auteur: uid, at: 1, creeAt: serverTimestamp(), texte: 'A14 128gb….50.000', resume: '1 nouveau', enregistre: false, ...extra });
+  it('administrateur avec « coûts » : crée et relit les siennes ; marque « enregistrée » ; rien d\'autre', async () => {
+    const a = as('admin1');
+    await ok(setDoc(doc(a, 'imports_fournisseurs', 'admin1_1'), d('admin1')));
+    await ok(getDoc(doc(a, 'imports_fournisseurs', 'admin1_1')));
+    await ok(getDocs(query(collection(a, 'imports_fournisseurs'), where('fournisseurId', '==', 'F1'), where('uid', '==', 'admin1'))));
+    await ok(updateDoc(doc(a, 'imports_fournisseurs', 'admin1_1'), { enregistre: true }));
+    await ko(updateDoc(doc(a, 'imports_fournisseurs', 'admin1_1'), { texte: 'modifié' }));
+    await ko(deleteDoc(doc(a, 'imports_fournisseurs', 'admin1_1')));
+    await ko(setDoc(doc(a, 'imports_fournisseurs', 'empA_2'), d('admin1')), 'identifiant au nom d\'un autre');
+    await ko(setDoc(doc(a, 'imports_fournisseurs', 'admin1_3'), d('admin1', { enregistre: true })));
+    await ko(setDoc(doc(a, 'imports_fournisseurs', 'admin1_4'), d('admin1', { texte: 'x'.repeat(60001) })));
+    await ko(setDoc(doc(a, 'imports_fournisseurs', 'admin1_5'), d('admin1', { autre: 1 })));
+  });
+  it('le patron voit et peut supprimer toutes les analyses ; personne d\'autre ne lit celles d\'autrui', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'imports_fournisseurs', 'admin1_9'), { ...d('admin1'), creeAt: 1 }); });
+    await ok(getDocs(query(collection(as(PATRON), 'imports_fournisseurs'), where('fournisseurId', '==', 'F1'))));
+    await ko(getDoc(doc(as('admin2'), 'imports_fournisseurs', 'admin1_9')), 'administrateur sans « coûts »');
+    await ko(getDoc(doc(as('empA'), 'imports_fournisseurs', 'admin1_9')));
+    await ko(setDoc(doc(as('empA'), 'imports_fournisseurs', 'empA_1'), d('empA')), 'employé : pas d\'accès aux prix d\'achat');
+    await ko(setDoc(doc(as('admin2'), 'imports_fournisseurs', 'admin2_1'), d('admin2')));
+    await ok(deleteDoc(doc(as(PATRON), 'imports_fournisseurs', 'admin1_9')));
+  });
+});

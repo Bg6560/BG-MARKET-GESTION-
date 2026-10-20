@@ -213,6 +213,21 @@ service cloud.firestore {
         && request.resource.data.get('fournisseurId', '') is string && request.resource.data.get('fournisseurId', '') != '';
     }
 
+    // ---------- Historique des analyses de catalogues (contient des prix d'achat : droit « couts ») ----------
+    // Chacun crée et relit ses propres analyses ; le patron les voit toutes. Rien n'est modifiable, sauf « enregistrée ».
+    match /imports_fournisseurs/{id} {
+      allow read: if patron() || (droit('couts', true) && resource.data.get('uid', '') == request.auth.uid);
+      allow create: if droit('couts', true) && jeSuisAuteur() && id.matches(request.auth.uid + '_[0-9]+')
+        && request.resource.data.keys().hasOnly(['fournisseurId', 'fournisseurNom', 'uid', 'auteur', 'at', 'creeAt',
+                                                  'texte', 'resume', 'enregistre'])
+        && request.resource.data.get('fournisseurId', '') is string && request.resource.data.get('fournisseurId', '') != ''
+        && request.resource.data.get('texte', '') is string && request.resource.data.get('texte', '').size() <= 60000
+        && request.resource.data.get('enregistre', false) == false;
+      allow update: if droit('couts', true) && proprietaire()
+        && champsModifies().hasOnly(['enregistre']) && request.resource.data.enregistre == true;
+      allow delete: if patron();
+    }
+
     // ---------- Appareils des notifications (jetons FCM) : chacun gère les siens ----------
     match /appareils/{id} {
       allow read, delete: if connecte() && (resource.data.get('uid', '') == request.auth.uid || patron());

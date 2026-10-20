@@ -6,7 +6,8 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { effacer, run, legacyFields } from '../tools/lib/migration.mjs';
+import { run, legacyFields } from '../tools/lib/migration.mjs';
+import { effacer } from '../tools/lib/effacement.mjs';
 
 assert.ok(process.env.FIRESTORE_EMULATOR_HOST, 'à lancer par npm run test:rules');
 const db = getFirestore(initializeApp({ projectId: 'demo-bgmarket' }, 'effacement-test'));
