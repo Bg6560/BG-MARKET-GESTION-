@@ -168,3 +168,67 @@ describe('Comparaison et marge estimée', () => {
     assert.equal(f('cfAgeTxt', 0, now), 'date inconnue');
   });
 });
+
+/* ---------- Recherche de produits dans les formulaires ---------- */
+const ctx2 = vm.createContext({ Date });
+vm.runInContext(brands + ['cfNorm', 'ordpLabel', 'ordpSearch', 'ordpStockText'].map(extractFn).join('\n'), ctx2);
+const g = (name, ...a) => vm.runInContext(name, ctx2)(...a);
+const P = [
+  { id: 'a', marque: 'Samsung', modele: 'Galaxy A15', stockage: '128 GB', ram: '4 GB', prixVente: 100000, quantite: 3 },
+  { id: 'b', marque: 'Samsung', modele: 'Galaxy A15', stockage: '256 GB', ram: '8 GB', prixVente: 120000, quantite: 0 },
+  { id: 'c', marque: 'Samsung', modele: 'Galaxy A16', stockage: '128 GB', prixVente: 110000, quantite: 5 },
+  { id: 'd', marque: 'Tecno', modele: 'Spark 20', stockage: '128 GB', prixVente: 80000, quantite: 1 },
+  { id: 'e', marque: 'Apple', modele: 'iPhone 13', stockage: '128 GB', prixVente: 450000, quantite: 2 },
+];
+const ids = (q, max) => J(g('ordpSearch', P, q, max)).map((p) => p.id);
+describe('Recherche dans le formulaire de commande', () => {
+  it('trouve pendant la saisie, avec ou sans marque, majuscules et accents indifférents', () => {
+    assert.deepEqual(ids('a15').sort(), ['a', 'b']);
+    assert.deepEqual(ids('GALAXY a1').sort(), ['a', 'b', 'c']);
+    assert.deepEqual(ids('samsung a15 128').sort(), ['a']);
+    assert.deepEqual(ids('iphone'), ['e']);
+    assert.deepEqual(ids('spa'), ['d']);
+  });
+  it('capacité : « 256 » trouve le 256 Go', () => {
+    assert.deepEqual(ids('a15 256'), ['b']);
+  });
+  it('en stock avant rupture à pertinence égale ; mot exact avant mot partiel', () => {
+    assert.deepEqual(ids('a15'), ['a', 'b']);
+    assert.equal(ids('a1')[0] === undefined, false);
+    assert.equal(ids('galaxy a15')[0], 'a');
+  });
+  it('aucun résultat plutôt qu\'un mauvais produit', () => {
+    assert.deepEqual(ids('xyz'), []);
+    assert.deepEqual(ids('a15 512'), []);
+    assert.deepEqual(ids(''), []);
+    assert.deepEqual(ids('   '), []);
+  });
+  it('nombre de résultats limité', () => {
+    assert.equal(ids('galaxy', 2).length, 2);
+  });
+  it('libellé : marque non répétée, capacité seulement pour la facture', () => {
+    assert.equal(g('ordpLabel', { marque: 'Samsung', modele: 'Samsung Galaxy A15', stockage: '128 GB' }), 'Samsung Galaxy A15');
+    assert.equal(g('ordpLabel', P[0], true), 'Samsung Galaxy A15 128 GB');
+    assert.equal(g('ordpLabel', P[0]), 'Samsung Galaxy A15');
+  });
+});
+describe('Stock affiché : les règles ne changent pas', () => {
+  it('commande : rupture permise (à commander), jamais bloquée', () => {
+    assert.deepEqual(J(g('ordpStockText', 'cmd', { quantite: 0 }, 1, 2)), { niveau: 'rupture', txt: 'Hors stock : à commander chez le fournisseur' });
+    assert.equal(g('ordpStockText', 'cmd', { quantite: 3 }, 5, 2).niveau, 'insuffisant');
+    assert.match(g('ordpStockText', 'cmd', { quantite: 3 }, 5, 2).txt, /3 disponibles pour 5 demandés/);
+  });
+  it('facture : seul le stock disponible sera déduit', () => {
+    assert.match(g('ordpStockText', 'fac', { quantite: 0 }, 1, 2).txt, /ne changera pas le stock/);
+    assert.match(g('ordpStockText', 'fac', { quantite: 2 }, 4, 2).txt, /seulement 2 seront déduits/);
+  });
+  it('stock suffisant, bas ou normal', () => {
+    assert.equal(g('ordpStockText', 'cmd', { quantite: 10 }, 1, 2).niveau, 'ok');
+    assert.equal(g('ordpStockText', 'cmd', { quantite: 2 }, 1, 2).niveau, 'bas');
+  });
+  it('une commande ne déduit jamais le stock ; seule la facture le fait', () => {
+    const saveCmd = extractFn('saveCmd');
+    assert.doesNotMatch(saveCmd, /stockAfterSale|increment\(/);
+    assert.match(app, /stockAfterSale\(data\.products,ref\.id,data\.uid\)/);
+  });
+});

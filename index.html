@@ -2275,7 +2275,7 @@ function updCmdProd(id,field,val){
   var p=cmdProducts.find(function(x){return x.id===id;});if(!p)return;
   if(field==='qty')p.qty=Math.max(1,parseInt(val)||1);
   else if(field==='prix'||field==='cost')p[field]=parseFloat(val)||0;
-  else p[field]=val;
+  else{p[field]=val;if(field==='name'&&p.pid&&val!==p._lbl){p.pid='';ordpPaintAll();}}
 }
 function cleanModelName(s){
   return (s||'').replace(/\|/g,' ')
@@ -2290,7 +2290,7 @@ function normCap(n,u){u=(u||'').toLowerCase();return n+((u==='to'||u==='tb')?'TB
 
 function pickCmdProduct(pid,i){
   var p=cmdProducts.find(function(x){return x.id===pid;});var c=supplierCatalog[i];if(!p||!c)return;
-  p.name=cleanProdName(c.name);p.prix=c.sell||0;p.catCost=c.cost||0;
+  p.pid='';p.name=cleanProdName(c.name);p.prix=c.sell||0;p.catCost=c.cost||0;
   p.cost=etatCmd==='quasi-neuf'?0:(c.cost||0);
   var m=(c.name||'').match(/(\d+)\s*(go|gb|to|tb)\s*\/\s*(\d+)\s*(go|gb)/i);
   if(m){p.stockage=normCap(m[1],m[2]);p.ram=m[3]+'GB';}
@@ -2804,7 +2804,7 @@ function renderCmdProduitsView(list){
 
 function openNvCmd(){
   expOn=false;payMode='';etatCmd='neuf';
-  cmdProducts=[newCmdProduct()];
+  cmdProducts=[newCmdProduct()];ordpLoad(true);
   var pays=['A la livraison','Orange Money','MTN Money','Wave','Moov Money'];
   var mc=document.getElementById('main-content');
   mc.innerHTML='<div class="ui-page">'+
@@ -2852,8 +2852,8 @@ function renderCmdProducts(){
     if(p.ram&&ram.indexOf(p.ram)<0)ram.push(p.ram);
     return '<div class="ui-sub ui-in" style="--i:'+idx+'">'+
       '<div class="ui-sub-head"><b>Téléphone '+(idx+1)+'</b>'+(cmdProducts.length>1?'<button type="button" class="ui-icon-btn ui-press" onclick="removeCmdProduct('+p.id+')" aria-label="Retirer ce téléphone">'+UI_ICO.x+'</button>':'')+'</div>'+
-      uiField('Modèle *','<input type="text" id="cprod-name-'+p.id+'" value="'+esc(p.name)+'" placeholder="Ex : iPhone 15 Pro Max" autocomplete="off" oninput="updCmdProd('+p.id+',\'name\',this.value);facSuggestCmd('+p.id+',this.value)"/>')+
-      '<div id="cprod-sg-'+p.id+'" class="ui-suggest" style="display:none"></div>'+
+      uiField('Modèle *','<input type="text" id="cprod-name-'+p.id+'" value="'+esc(p.name)+'" placeholder="Ex : iPhone 15 Pro Max" autocomplete="off" oninput="updCmdProd('+p.id+',\'name\',this.value);facSuggestCmd('+p.id+',this.value)" onkeydown="ordpEnter(event,\'cmd\','+p.id+')"/>')+
+      '<div id="cprod-sg-'+p.id+'" class="ui-suggest" style="display:none"></div>'+ordpInfoHtml('cmd',p)+
       '<div class="ui-grid2">'+
         uiField('Stockage','<select onchange="updCmdProd('+p.id+',\'stockage\',this.value)">'+opts(stk,p.stockage)+'</select>')+
         uiField('RAM','<select onchange="updCmdProd('+p.id+',\'ram\',this.value)">'+opts(ram,p.ram)+'</select>')+
@@ -2866,19 +2866,10 @@ function renderCmdProducts(){
   calcCmdTotal();
 }
 
-function facSuggestCmd(pid,val){
-  var sg=document.getElementById('cprod-sg-'+pid);if(!sg)return;
-  if(!val||val.length<2||!supplierCatalog.length){sg.style.display='none';return;}
-  var f=val.toLowerCase(),idxs=[];
-  supplierCatalog.forEach(function(c,i){if(idxs.length<6&&(c.name||'').toLowerCase().indexOf(f)>=0)idxs.push(i);});
-  if(!idxs.length){sg.style.display='none';return;}
-  sg.style.display='block';
-  sg.innerHTML=idxs.map(function(i){var c=supplierCatalog[i];
-    return '<button type="button" class="ui-suggest-item" onclick="pickCmdProduct('+pid+','+i+')"><span><b>'+esc(cleanProdName(c.name))+'</b><small>'+esc(c.name)+'</small></span><em>'+v2Money(c.sell)+'</em></button>';
-  }).join('');
-}
+function facSuggestCmd(pid,val){ordpSuggest('cmd',pid,val);}
 
 function calcCmdTotal(){
+  ordpPaintAll();
   var sub=0,ben=0,hasCost=false,missing=false;
   cmdProducts.forEach(function(p){
     var q=p.qty||1;sub+=(p.prix||0)*q;
@@ -4046,7 +4037,7 @@ function facDraftFromFac(f){
 }
 
 function openNvFac(draft){
-  facDraft=draft||facBlankDraft();
+  facDraft=draft||facBlankDraft();ordpLoad(true);
   var d=facDraft,edit=!!d.id;
   var pays=['A la livraison','Espèces','Orange Money','MTN Money','Wave','Moov Money'];
   var gars=['','7 jours','1 mois','3 mois','6 mois','12 mois'];
@@ -4089,8 +4080,8 @@ function facRenderLines(){
   el.innerHTML=facDraft.lines.map(function(l,idx){
     return '<div class="ui-sub ui-in" style="--i:'+idx+'">'+
       '<div class="ui-sub-head"><b>'+t('fac.item')+' '+(idx+1)+'</b>'+(facDraft.lines.length>1?'<button type="button" class="ui-icon-btn ui-press" onclick="facRemoveLine('+l.id+')" aria-label="'+facQ(t('fac.remove'))+'">'+UI_ICO.x+'</button>':'')+'</div>'+
-      uiField(t('fac.designation'),'<input type="text" id="fl-nm-'+l.id+'" value="'+facQ(l.name)+'" placeholder="Ex : Samsung Galaxy S24 Ultra 256 Go" autocomplete="off" oninput="facSetLine('+l.id+',\'name\',this.value);facSugg('+l.id+',this.value)"/>')+
-      '<div id="fl-sg-'+l.id+'" class="ui-suggest" style="display:none"></div>'+
+      uiField(t('fac.designation'),'<input type="text" id="fl-nm-'+l.id+'" value="'+facQ(l.name)+'" placeholder="Ex : Samsung Galaxy S24 Ultra 256 Go" autocomplete="off" oninput="facSetLine('+l.id+',\'name\',this.value);facSugg('+l.id+',this.value)" onkeydown="ordpEnter(event,\'fac\','+l.id+')"/>')+
+      '<div id="fl-sg-'+l.id+'" class="ui-suggest" style="display:none"></div>'+ordpInfoHtml('fac',l)+
       '<div class="ui-grid2">'+
         uiField(t('fac.qty'),'<input type="number" min="1" inputmode="numeric" value="'+(l.qty||1)+'" oninput="facSetLine('+l.id+',\'qty\',this.value)"/>')+
         uiField(t('fac.sell'),'<input type="number" inputmode="numeric" id="fl-pr-'+l.id+'" value="'+(l.price||'')+'" placeholder="0" oninput="facSetLine('+l.id+',\'price\',this.value)"/>')+
@@ -4105,22 +4096,14 @@ function facRemoveLine(id){if(!facDraft)return;facDraft.lines=facDraft.lines.fil
 function facSetLine(id,f,v){
   if(!facDraft)return;var l=facDraft.lines.find(function(x){return x.id===id;});if(!l)return;
   l[f]=(f==='qty'||f==='price'||f==='cost')?(parseFloat(v)||0):v;
+  if(f==='name'&&l.pid&&v!==l._lbl)l.pid='';
   facCalc();
 }
-function facSugg(pid,val){
-  var sg=document.getElementById('fl-sg-'+pid);if(!sg)return;
-  if(!val||val.length<2||!supplierCatalog.length){sg.style.display='none';return;}
-  var f=val.toLowerCase(),idxs=[];
-  supplierCatalog.forEach(function(c,i){if(idxs.length<6&&(c.name||'').toLowerCase().indexOf(f)>=0)idxs.push(i);});
-  if(!idxs.length){sg.style.display='none';return;}
-  sg.style.display='block';
-  sg.innerHTML=idxs.map(function(i){var c=supplierCatalog[i];
-    return '<button type="button" class="ui-suggest-item" onclick="facPick('+pid+','+i+')"><span><b>'+esc(cleanProdName(c.name))+'</b><small>'+esc(c.name)+'</small></span><em>'+v2Money(c.sell)+'</em></button>';}).join('');
-}
+function facSugg(pid,val){ordpSuggest('fac',pid,val);}
 function facPick(pid,idx){
   var c=supplierCatalog[idx];if(!c||!facDraft)return;
   var l=facDraft.lines.find(function(x){return x.id===pid;});if(!l)return;
-  l.name=cleanName(c.name);l.price=c.sell||0;l.cost=(facDraft.etat==='quasi-neuf')?0:(c.cost||0);
+  l.pid='';l.name=cleanName(c.name);l.price=c.sell||0;l.cost=(facDraft.etat==='quasi-neuf')?0:(c.cost||0);
   facRenderLines();
   if(facDraft.etat==='quasi-neuf')showToast(t('fac.quasiNote'),'i');
 }
@@ -4144,6 +4127,7 @@ function facSetStatut(el){
 }
 function facCalc(){
   if(!facDraft)return;
+  ordpPaintAll();
   var tvaR=parseFloat((document.getElementById('fn-tva')||{}).value)||0;
   var liv=parseFloat((document.getElementById('fn-liv')||{}).value)||0;
   var r=facCompute(facDraft.lines,tvaR,liv);
@@ -6227,7 +6211,7 @@ async function renderDashboard(){
   var role=isBoss?'Patron':(isAdmin?'Administrateur':'Employé');
   mc.innerHTML='<div class="ui-page">'+dskGreeting(role)+'<div class="dsk-grid dsk-kpis"><div class="dsk-skel"></div><div class="dsk-skel"></div><div class="dsk-skel"></div><div class="dsk-skel"></div></div></div>';
   var D=await dskLoad();
-  if(activeTab!=='dashboard')return;
+  if(activeTab!=='dashboard'||!mc.querySelector('.dsk-skel'))return; /* un formulaire ouvert entre-temps ne doit pas être écrasé */
   var now=new Date(),mS=new Date(now.getFullYear(),now.getMonth(),1),pS=new Date(now.getFullYear(),now.getMonth()-1,1);
   var validFacs=(D.facs||[]).filter(dskFacValid);
   var ca=validFacs.filter(function(f){return dskInMonth(facDate(f),mS);}).reduce(function(a,f){return a+(f.total||0);},0);
@@ -6661,5 +6645,105 @@ function cfRenderCompare(){
   var keepQ=document.activeElement&&document.activeElement.id==='cf-q';
   el.innerHTML=html;
   if(keepQ){var qi=document.getElementById('cf-q');if(qi){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length);}}
+}
+
+/* ===== Recherche de téléphones enregistrés (formulaires de commande et de facture) =====
+   Les produits du stock sont proposés pendant la saisie ; le choix enregistre l'identifiant du produit (pid) :
+   la facture déduit alors le bon produit du stock, sans deviner d'après le nom. Une commande ne touche jamais au stock. */
+var ORDP={list:[],p:null,at:0,ready:false};
+function ordpLoad(force){
+  if(ORDP.p&&!force&&Date.now()-ORDP.at<300000)return ORDP.p;
+  ORDP.at=Date.now();
+  ORDP.p=db.collection('produits').get().then(function(snap){
+    ORDP.list=snap.docs.map(function(d){var x=d.data();return {id:d.id,marque:x.marque||'',modele:x.modele||x.nom||'',stockage:x.stockage||'',ram:x.ram||'',prixVente:+x.prixVente||0,quantite:+x.quantite||0};});
+    ORDP.ready=true;return ORDP.list;
+  }).catch(function(){ORDP.at=0;return ORDP.list;});
+  return ORDP.p;
+}
+function ordpLabel(p,withStorage){
+  var m=p.modele||'',b=p.marque||'';
+  var base=(b&&m.toLowerCase().indexOf(b.toLowerCase())!==0?b+' ':'')+m;
+  return (base+(withStorage&&p.stockage?' '+p.stockage:'')).replace(/\s+/g,' ').trim();
+}
+/* Chaque mot tapé doit être le début d'un mot du produit (« a15 128 » trouve « Galaxy A15 128 GB »). Mot exact avant mot partiel, en stock avant rupture. */
+function ordpSearch(list,q,max){
+  var qt=cfNorm(q).split(' ').filter(Boolean);if(!qt.length)return [];
+  var out=[];
+  (list||[]).forEach(function(p){
+    var toks=cfNorm([p.marque,p.modele,p.stockage,p.ram].join(' ')).split(' '),sc=0;
+    for(var i=0;i<qt.length;i++){
+      var best=0;
+      for(var j=0;j<toks.length;j++){if(toks[j]===qt[i]){best=2;break;}if(toks[j].indexOf(qt[i])===0)best=1;}
+      if(!best)return;sc+=best;
+    }
+    out.push({p:p,sc:sc});
+  });
+  out.sort(function(a,b){return (b.sc-a.sc)||((b.p.quantite>0)-(a.p.quantite>0))||ordpLabel(a.p,true).localeCompare(ordpLabel(b.p,true),'fr');});
+  return out.slice(0,max||8).map(function(x){return x.p;});
+}
+/* Texte d'avertissement de stock. commande : rupture permise (on commande chez le fournisseur) ; facture : seul le stock disponible est déduit. */
+function ordpStockText(kind,p,qty,seuil){
+  var q=p.quantite||0,want=qty||1;
+  if(q<=0)return {niveau:'rupture',txt:kind==='fac'?'Hors stock : cette vente ne changera pas le stock':'Hors stock : à commander chez le fournisseur'};
+  if(q<want)return {niveau:'insuffisant',txt:kind==='fac'?'Stock insuffisant : seulement '+q+' seront déduits du stock':'Stock insuffisant : '+q+' disponible'+(q>1?'s':'')+' pour '+want+' demandés'};
+  return {niveau:q<=(seuil||0)?'bas':'ok',txt:'En stock : '+q+(q<=(seuil||0)?' · stock bas':'')};
+}
+function ordpItem(kind,id){return kind==='cmd'?cmdProducts.find(function(x){return x.id===id;}):(facDraft&&facDraft.lines.find(function(x){return x.id===id;}));}
+function ordpInfoHtml(kind,it){return '<div class="ui-hint ordp-info" data-ordp="'+kind+'" data-id="'+it.id+'"></div>';}
+function ordpPaintAll(){
+  var seuil=parseInt((globalSettings||{}).stockAlerte,10);if(isNaN(seuil))seuil=2;
+  document.querySelectorAll('.ordp-info').forEach(function(el){
+    var kind=el.getAttribute('data-ordp'),it=ordpItem(kind,Number(el.getAttribute('data-id')));
+    var pr=it&&it.pid?ORDP.list.find(function(x){return x.id===it.pid;}):null;
+    if(!pr){el.textContent='';return;}
+    var s=ordpStockText(kind,pr,it.qty,seuil);
+    el.textContent=s.txt+' · '+ordpLabel(pr,true);
+    el.style.color=s.niveau==='ok'?'var(--ok)':(s.niveau==='bas'?'var(--muted)':'var(--danger)');
+  });
+}
+function ordpSuggest(kind,id,val){
+  var sg=document.getElementById((kind==='cmd'?'cprod-sg-':'fl-sg-')+id);if(!sg)return;
+  if(!val||val.trim().length<2){sg.style.display='none';return;}
+  var seuil=parseInt((globalSettings||{}).stockAlerte,10);if(isNaN(seuil))seuil=2;
+  var res=ordpSearch(ORDP.list,val,8),html='';
+  res.forEach(function(p){
+    var s=ordpStockText(kind,p,1,seuil),badge=s.niveau==='rupture'?'Rupture':(p.quantite+' en stock');
+    html+='<button type="button" class="ui-suggest-item" onclick="ordpPick(\''+kind+'\','+id+',\''+p.id+'\')"><span><b>'+esc(ordpLabel(p))+'</b><small>'+esc([p.stockage,p.ram?p.ram+' RAM':''].filter(Boolean).join(' · '))+' · '+badge+'</small></span><em>'+(p.prixVente?v2Money(p.prixVente):'—')+'</em></button>';
+  });
+  /* catalogue fournisseur (patron/admin, ancien outil) : proposé en complément, sans lien avec le stock */
+  var f=val.toLowerCase();
+  if(res.length<8&&supplierCatalog&&supplierCatalog.length){
+    supplierCatalog.forEach(function(c,i){if(res.length+(html.match(/data-cat/g)||[]).length<8&&(c.name||'').toLowerCase().indexOf(f)>=0)
+      html+='<button type="button" data-cat class="ui-suggest-item" onclick="'+(kind==='cmd'?'pickCmdProduct('+id+','+i+')':'facPick('+id+','+i+')')+'"><span><b>'+esc(cleanProdName(c.name))+'</b><small>Catalogue fournisseur</small></span><em>'+v2Money(c.sell)+'</em></button>';});
+  }
+  if(!html){sg.innerHTML='<div class="ui-suggest-item" style="cursor:default"><span><small>'+(ORDP.ready&&ORDP.list.length?'Aucun produit enregistré ne correspond : saisis le modèle à la main.':(ORDP.ready?'Aucun produit enregistré.':'Chargement des produits…'))+'</small></span></div>';sg.style.display='block';return;}
+  sg.innerHTML=html;sg.style.display='block';
+}
+function ordpEnter(ev,kind,id){
+  if(ev.key!=='Enter')return;
+  var sg=document.getElementById((kind==='cmd'?'cprod-sg-':'fl-sg-')+id),b=sg&&sg.querySelector('.ui-suggest-item[onclick]');
+  if(b){ev.preventDefault();b.click();}
+}
+function ordpPick(kind,id,prodId){
+  var pr=ORDP.list.find(function(x){return x.id===prodId;}),it=ordpItem(kind,id);if(!pr||!it)return;
+  var label=ordpLabel(pr,kind==='fac');
+  it.pid=pr.id;it._lbl=label;it.name=label;
+  if(kind==='cmd'){
+    var s=/(\d+)\s*(go|gb|to|tb)/i.exec(pr.stockage||'');if(s)it.stockage=normCap(s[1],s[2]);
+    var r=/(\d+)\s*(go|gb)/i.exec(pr.ram||'');if(r)it.ram=r[1]+'GB';
+    if(pr.prixVente)it.prix=pr.prixVente;
+    it.cost=0;it.catCost=0;
+    renderCmdProducts();
+  }else{
+    if(pr.prixVente)it.price=pr.prixVente;
+    it.cost=0;
+    facRenderLines();
+  }
+  /* prix d'achat : seulement pour qui a le droit « couts » (document privé du produit) */
+  if(can('couts'))db.collection('produits_prive').doc(pr.id).get().then(function(d){
+    var c=d.exists?(+d.data().prixAchat||0):0;if(!c||it.pid!==pr.id)return;
+    if(kind==='cmd'){it.catCost=c;it.cost=etatCmd==='quasi-neuf'?0:c;renderCmdProducts();}
+    else{it.cost=(facDraft&&facDraft.etat==='quasi-neuf')?0:c;facRenderLines();}
+  }).catch(function(){});
 }
 </script></body></html>
