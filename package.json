@@ -5,12 +5,14 @@
   "description": "Règles Firestore et tests de BG-MARKET Gestion",
   "scripts": {
     "test:app": "node --test \"tests/app.*.test.mjs\"",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test --test-concurrency=1 \"tests/firestore.*.test.mjs\" \"tests/migration.*.test.mjs\"\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-bgmarket \"node --test --test-concurrency=1 \"tests/firestore.*.test.mjs\" \"tests/migration.*.test.mjs\"\"",
+    "test:e2e": "firebase emulators:exec --only firestore,auth --project demo-bgmarket \"node --test --test-concurrency=1 \\\"tests/e2e/*.e2e.test.mjs\\\"\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
     "firebase": "^13.0.0",
     "firebase-admin": "^14.5.0",
-    "firebase-tools": "^14.0.0"
+    "firebase-tools": "^14.0.0",
+    "playwright-core": "^1.64.1"
   }
 }
