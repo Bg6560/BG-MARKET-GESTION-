@@ -32,15 +32,9 @@ compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en pr
 - Les clients et documents **sans `uid`** restent invisibles pour les employés ; seuls le patron et l'administrateur les voient,
   et seul le patron peut leur attribuer un propriétaire.
 
-## Ordre de mise en production (rien n'est fait pour l'instant)
+## Ordre de mise en production
 
-1. Remplacer `PATRON_UID_A_REMPLACER` (Firebase Console, Authentication, colonne « UID »).
-2. Publier d'abord le nouveau code de l'application avec les anciennes règles : écriture des coûts dans les collections privées,
-   création des comptes en `en_attente`, requêtes de clients filtrées par `uid`, formulaire sans fournisseur pour les employés.
-3. Faire synchroniser tous les appareils en ligne (file d'écritures vide).
-4. Copier les coûts historiques dans les collections privées (copie seulement).
-5. Publier ces règles, après les tests ci-dessous. Garder l'ancienne version pour un retour arrière immédiat.
-6. Plus tard, avec accord explicite : retirer les anciens champs de coûts des documents publics.
+Voir `docs/MISE-EN-SERVICE.md` (ordre, sauvegarde, retour arrière, tests). Rien n'est fait pour l'instant.
 
 ## Ce que fait désormais l'application (Lots 2A et 2B)
 
@@ -51,7 +45,7 @@ compatibles avec la version actuelle de `index.html` (voir l'ordre de mise en pr
 - À la lecture, chaque document est « hydraté » (`coutsCmd`, `coutsFac`, `coutsProd`) : sans le droit `couts`, tout coût
   est retiré, même dans un ancien document. L'employé ne voit plus ses propres bénéfices.
 - Les anciens documents gardent leurs champs de coût **tant que la migration n'est pas faite** : ils restent lisibles
-  par les employés côté serveur jusqu'à ce nettoyage (étape 6 ci-dessus). Ce nettoyage doit aller avec une purge du cache local des appareils.
+  par les employés côté serveur jusqu'à ce nettoyage (étape 9 de `MISE-EN-SERVICE.md`). Ce nettoyage doit aller avec une purge du cache local des appareils.
 - Un employé qui modifie sa facture en attente ne modifie pas ses coûts (il ne peut pas les relire).
 
 ## Outil de copie des coûts historiques (`tools/migration-couts.mjs`)

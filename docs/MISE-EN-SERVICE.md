@@ -30,10 +30,13 @@ Chaque étape marquée ✋ demande l'accord explicite du patron.
 **Variante** si l'étape 2 échoue : choisir une plage horaire calme, sauvegarde faite, publier code (3) et règles (7) à quelques minutes d'intervalle, puis vérifier (8). Les écritures en attente sur les appareils partent après la publication.
 
 ## 2. Retour arrière
+**Ordre impératif : les règles d'abord, le code ensuite.** L'ancien code écrit les coûts dans les documents publics, ce que les nouvelles règles refusent : remettre l'ancien code avec les nouvelles règles bloquerait les ventes.
 - **Règles** : console › Règles › historique (ou coller le fichier de l'étape 0.3) › Publier. Effet immédiat.
-- **Code** : republier l'ancienne version de `index.html` et `sw.js` (étape 0.4) en **augmentant** le numéro de cache de `sw.js` pour que les appareils reprennent l'ancienne version.
+- **Code** : republier l'ancienne version de `index.html` et `sw.js` (étape 0.4 ; sur `main` le cache est `bgm-gestion-v4`). Tout changement du fichier `sw.js` suffit à faire reprendre l'ancienne version aux appareils ; la nouvelle (v7) charge la page réseau d'abord, donc le retour est pris au prochain chargement en ligne. Les écritures en attente restent dans le cache Firestore de l'appareil et partent quand même ; seul le panneau « En attente » disparaît avec l'ancien code.
 - **Données** : la migration n'a rien modifié ni supprimé ; les collections privées ajoutées peuvent rester. Une restauration depuis la sauvegarde n'est à envisager que si des données publiques ont été abîmées (aucune étape ci-dessus n'en écrit, sauf l'étape 9, qui n'est pas préparée).
 - Écritures hors ligne en attente : elles restent dans l'appareil (badge « En attente / Échec », panneau de reprise) ; ne pas vider le cache d'un appareil tant que son badge n'indique pas **Synchronisé**.
+
+**Quota de lectures** : avec le forfait gratuit (Spark), Firestore autorise 50 000 lectures par jour. La sauvegarde et la simulation lisent chacune tous les documents : sur une grosse base, les faire sur deux jours différents ou vérifier le nombre de documents avant. Une sauvegarde interrompue par le quota est incomplète : comparer `manifeste.json` à la console.
 
 ## 3. Tests avant publication
 Automatiques (émulateurs locaux, données fictives, rien d'envoyé à Firebase) :
