@@ -59,6 +59,23 @@ const plain = (v) => {
 export const PUBLIC = ['commandes', 'factures', 'produits', 'clients', 'precommandes', 'sav', 'users'];
 export const PRIVATE = ['commandes_couts', 'commandes_fourn', 'factures_couts', 'produits_prive'];
 
+/* Sauvegarde complète (lecture seule) : toutes les collections de l'application, un fichier JSON par collection.
+   Les jetons d'appareils (notifications) ne sont pas sauvegardés : ils se recréent à la connexion. */
+export const BACKUP_ALL = [...PUBLIC, ...PRIVATE, 'fournisseurs', 'app_config', 'journal', 'mouvements_stock', 'catalogue_fournisseurs'];
+export async function backupAll({ db, dir, log = () => {} }) {
+  if (!dir) throw new Error('Indiquer le dossier de sauvegarde.');
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const counts = {};
+  for (const c of BACKUP_ALL) {
+    const snap = await db.collection(c).get();
+    writeFileSync(join(dir, `${c}.json`), JSON.stringify(snap.docs.map((d) => ({ id: d.id, data: plain(d.data()) })), null, 1), { mode: 0o600 });
+    counts[c] = snap.size;
+    log(`sauvegardé ${c} : ${snap.size}`);
+  }
+  writeFileSync(join(dir, 'manifeste.json'), JSON.stringify({ date: new Date().toISOString(), collections: counts }, null, 2), { mode: 0o600 });
+  return counts;
+}
+
 /* ---------- Exécution ---------- */
 export async function run({ db, FieldValue, apply = false, backupDir = null, listAuthUids = null, log = () => {} }) {
   if (apply && !backupDir) throw new Error('« apply » exige une sauvegarde : indiquer le dossier de sauvegarde.');

@@ -161,3 +161,61 @@ describe('Hors ligne : modification refusée (conflit)', () => {
     await context.close();
   });
 });
+
+describe('Hors ligne : commande avec produit choisi, produit créé par le patron', () => {
+  it('commande d\'un employé sans réseau : une seule commande au retour, produit lié, stock inchangé, aucun coût public', async () => {
+    const { page, context } = await session();
+    let avant; await server(async (db) => { avant = (await getDoc(doc(db, 'produits', 'p1'))).data().quantite; });
+    await page.evaluate(() => openNvCmd());
+    await page.waitForSelector('[id^="cprod-name-"]');
+    await page.waitForFunction(() => ORDP.ready && ORDP.list.length > 0);
+    await context.setOffline(true);
+    await waitBadge(page, /Hors ligne/);
+    const id = await page.evaluate(() => cmdProducts[0].id);
+    await page.fill('#cprod-name-' + id, 'phone test');
+    await page.locator('#cprod-sg-' + id + ' .ui-suggest-item').first().click();
+    await page.fill('#fc-nom', 'Client Commande Hors Ligne');
+    await page.fill('#fc-tel', '0190000001');
+    await page.evaluate(() => saveCmd());
+    await waitBadge(page, /En attente \(\d\)/, 8000);
+    assert.equal(await page.evaluate(() => document.getElementById('ov-load').style.display), 'none');
+    assert.equal(await countDocs('commandes', (d) => d.client === 'Client Commande Hors Ligne'), 0, 'rien côté serveur avant le retour du réseau');
+    await context.setOffline(false);
+    await waitBadge(page, /^Synchronisé$/);
+    let cmds = [];
+    await server(async (db) => { cmds = (await getDocs(collection(db, 'commandes'))).docs.map((d) => d.data()).filter((d) => d.client === 'Client Commande Hors Ligne'); });
+    assert.equal(cmds.length, 1, 'exactement une commande');
+    assert.equal(cmds[0].produits[0].pid, 'p1');
+    assert.equal(cmds[0].produits[0].cost, undefined);
+    assert.equal(cmds[0].uid, U.empA);
+    let q; await server(async (db) => { q = (await getDoc(doc(db, 'produits', 'p1'))).data().quantite; });
+    assert.equal(q, avant, 'la commande ne touche pas au stock');
+    await context.close();
+  });
+
+  it('patron : produit créé sans réseau, prix d\'achat à part ; envoyé une seule fois', async () => {
+    const s = await openApp(browser);
+    await login(s.page, EMAILS.patron);
+    await s.page.waitForSelector('#main-content .dsk-hello', { timeout: 25000 });
+    await s.page.waitForFunction(() => !document.querySelector('#main-content .dsk-skel'), null, { timeout: 25000 });
+    const { page, context } = s;
+    await page.evaluate(() => openNvProd());
+    await page.waitForSelector('#pr-marque');
+    await context.setOffline(true);
+    await waitBadge(page, /Hors ligne/);
+    await page.fill('#pr-marque', 'Marque');
+    await page.fill('#pr-modele', 'Produit Hors Ligne');
+    await page.fill('#pr-vente', '90000');
+    await page.fill('#pr-achat', '70000');
+    await page.fill('#pr-qte', '4');
+    await page.evaluate(() => saveProd(''));
+    await waitBadge(page, /En attente \(\d\)/, 8000);
+    assert.equal(await countDocs('produits', (d) => d.modele === 'Produit Hors Ligne'), 0);
+    await context.setOffline(false);
+    await waitBadge(page, /^Synchronisé$/);
+    let pid = null, prive = null;
+    await server(async (db) => { const s2 = (await getDocs(collection(db, 'produits'))).docs.filter((d) => d.data().modele === 'Produit Hors Ligne'); assert.equal(s2.length, 1); pid = s2[0].id; assert.equal(s2[0].data().prixAchat, undefined); prive = (await getDoc(doc(db, 'produits_prive', pid))).data(); });
+    assert.equal(prive.prixAchat, 70000);
+    await context.close();
+  });
+});

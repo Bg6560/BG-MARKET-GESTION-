@@ -73,12 +73,38 @@ GOOGLE_APPLICATION_CREDENTIALS=compte-de-service.json node tools/migration-couts
   sans profil, champs financiers encore présents dans les documents publics).
 - Rejouable sans risque : une seconde exécution ne crée rien.
 
+## Anciens champs financiers encore présents dans les documents publics (liste exacte)
+
+Vus par `legacyFields` de l'outil de migration ; ils restent lisibles par tout compte actif tant que l'étape 9 de
+`MISE-EN-SERVICE.md` (retrait + purge du cache) n'est pas faite :
+
+| Collection | Champs |
+|---|---|
+| `commandes` | `coutCatalogue`, `profit`, `beneficeCmd`, `fournisseurId`, `fournisseurNom`, `fournisseurWa`, `produits[].cost` |
+| `factures` | `cost`, `profit`, `products[].cost` |
+| `produits` | `prixAchat` |
+
+La simulation de l'outil donne le nombre de documents concernés (`champsFinanciersPublics`). Autres endroits : le cache local des
+appareils (mêmes données) et la liste locale `bg_cat` (prix d'achat de l'ancien catalogue, appareils patron/administrateur).
+
+## Collections ajoutées après les Lots 2 et 3
+
+| Collection | Contenu | Accès (règles) |
+|---|---|---|
+| `mouvements_stock` | une ligne par mouvement de stock (non modifiable) | création : utilisateur actif, à son nom ; lecture : patron/administrateur |
+| `catalogue_fournisseurs` | prix d'achat par fournisseur et par modèle | droit « coûts » uniquement (lecture et écriture) |
+| `appareils` | jeton de notification d'un appareil | son propriétaire (et le patron en lecture) |
+| `notifications_log`, `notifications_envoyees` | doublons / essai à blanc des notifications | **serveur seulement** (aucune règle : refusé aux clients) |
+
 ## Lancer les tests
 
 ```
 npm install
-npm run test:app     # code de l'application, sans réseau
-npm run test:rules   # règles Firestore + outil de migration, sur l'émulateur (données fictives)
+npm run test:app     # code de l'application, compatibilité code/règles, secrets, service worker (sans réseau)
+npm run test:rules   # règles Firestore, migration, sauvegarde, notifications, sur l'émulateur (données fictives)
+npm run test:e2e     # navigateur réel (Chromium) + émulateurs : rôles, hors ligne, notifications, fournisseurs, recherche
 ```
+
+Procédure complète de mise en service, sauvegarde et retour arrière : `docs/MISE-EN-SERVICE.md`. Hors ligne : `docs/HORS-LIGNE.md`. Notifications : `docs/NOTIFICATIONS.md`.
 
 Les tests utilisent l'émulateur Firestore (Java requis) avec des comptes et données fictifs, sans toucher à la production.
