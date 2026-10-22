@@ -1712,7 +1712,7 @@ html,body{overflow-x:hidden}
 .dsk-top small{grid-column:4!important;white-space:nowrap;font-size:12.5px!important}
 .dsk-top em{grid-column:5!important;grid-row:auto!important}
 .dsk-thumb{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:var(--muted);background:var(--surface-2) center/cover no-repeat;border:1px solid var(--glass-line);overflow:hidden}
-.dsk-thumb svg{width:18px;height:30px}
+.dsk-thumb svg{width:22px;height:22px}
 .dsk-thumb.has{background-size:cover}
 @media (max-width:600px){.dsk-top li{grid-template-columns:18px 38px minmax(0,1fr) auto!important}.dsk-top small{grid-column:3!important;grid-row:2}.dsk-top b{grid-row:1}.dsk-top em{grid-column:4!important;grid-row:1/3!important}}
 /* Activités */
@@ -1745,11 +1745,9 @@ html,body{overflow-x:hidden}
   .dsk-me>div{flex:1;min-width:0}.dsk-me b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsk-me span{font-size:12.5px;color:var(--muted)}
   .dsk-me-go{font-size:18px;opacity:.7}
 }
-.pr-photo{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .pr-photo-img{flex:none;width:92px;height:92px;border-radius:20px;display:grid;place-items:center;background:var(--surface-2) center/cover no-repeat;border:1px solid var(--glass-line);box-shadow:var(--sh-1);color:var(--muted);text-align:center}
-.pr-photo-img small{font-size:11px;padding:6px}
 .pr-hero .pr-photo-img{width:56px;height:56px;border-radius:16px}
-.pr-photo-act{flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px}
+.pr-kind{color:var(--turq-ink)}.pr-kind svg{width:28px;height:28px}
 
 /* --- corrections après relecture --- */
 .dsk-kpis4 .dsk-kpi .dsk-spark{top:18px!important;bottom:auto!important;right:18px;height:30px}
@@ -6148,7 +6146,7 @@ async function viewProd(id){
   var brand=prodBrand(p),s=prodState(p),q=p.quantite||0,i=0;
   var pill=s==='ok'?['p-done',t('pr.inStock')]:(s==='low'?['p-wait',t('pr.low')]:['p-cancel',t('pr.out')]);
   var h='<div class="ui-page"><div class="ui-head">'+lotBack('renderProduits()')+'<div class="ui-head-txt"><h1>'+esc(prodName(p))+'</h1><p class="ui-sub">'+esc(brand)+(prodSpec(p)?' · '+esc(prodSpec(p)):'')+'</p></div></div>';
-  h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><div class="pr-hero">'+(p.photo?'<span class="pr-photo-img" style="background-image:url(\''+p.photo+'\')" role="img" aria-label="Photo du produit"></span>':prodDot(brand).replace('class="h-dot"','class="h-dot big"'))+'<div><b>'+esc(prodName(p))+'</b><span>'+esc(brand)+'</span></div></div>'+
+  h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><div class="pr-hero">'+prodKindBox(p,'pr-photo-img pr-kind')+'<div><b>'+esc(prodName(p))+'</b><span>'+esc(brand)+'</span></div></div>'+
      '<div class="ui-card-top" style="margin:14px 0 0"><span class="h-pill '+pill[0]+'">'+esc(pill[1])+'</span></div>'+
      '<div class="fo-stats" style="margin:14px 0 0"><div class="fo-stat"><b class="num">'+q+'</b><span>'+t('pr.stat.units')+'</span></div><div class="fo-stat"><b class="num fo-sell">'+v2Money(p.prixVente||0)+'</b><span>'+t('pr.sell')+'</span></div>'+
        (can('couts')?'<div class="fo-stat"><b class="num ui-pos">+'+v2Money((p.prixVente||0)-(p.prixAchat||0))+'</b><span>'+t('pr.margin')+'</span></div>':'<div class="fo-stat"><b>'+esc(p.stockage?prodCap(p.stockage):'—')+'</b><span>'+t('pr.storage')+'</span></div>')+'</div></section>';
@@ -6198,7 +6196,6 @@ function openNvProd(data){
     '<section class="ui-card"><h2>'+t('pr.identity')+'</h2>'+
       uiField(t('pr.brand'),'<input type="text" id="pr-marque" list="pr-brands" value="'+facQ(data?(data.marque&&!/^catalogue$/i.test(data.marque)?data.marque:prodBrand(data)):'')+'" placeholder="'+facQ(t('pr.brandPh'))+'" autocomplete="off"/><datalist id="pr-brands">'+known.map(function(b){return '<option value="'+facQ(b)+'"></option>';}).join('')+'</datalist>')+
       uiField(t('pr.model'),'<input type="text" id="pr-modele" value="'+facQ(data&&(data.modele||data.nom)||'')+'" placeholder="'+facQ(t('pr.modelPh'))+'" autocomplete="off"/>')+'</section>'+
-    prPhotoSection(data)+
     '<section class="ui-card"><h2>'+t('pr.specs')+'</h2><div class="ui-grid2">'+uiField(t('pr.storage'),'<select id="pr-stock">'+opt(stos,data&&data.stockage||'')+'</select>')+uiField(t('pr.ram'),'<select id="pr-ram">'+opt(rams,data&&data.ram||'')+'</select>')+'</div>'+
       uiField(t('pr.desc'),'<textarea id="pr-desc" placeholder="'+facQ(t('pr.descPh'))+'">'+esc(data&&data.description||'')+'</textarea>')+'</section>'+
     '<section class="ui-card"><h2>'+t('pr.prices')+'</h2><div class="ui-grid2">'+uiField(t('pr.buyF'),'<input type="number" id="pr-achat" value="'+(data&&data.prixAchat||'')+'" placeholder="0" inputmode="numeric" oninput="prodMargin()"/>','ui-field-intern'+(can('couts')?'':' rl-hide'))+
@@ -6221,7 +6218,6 @@ async function saveProd(id){
   var marque=uiVal('pr-marque'),modele=uiVal('pr-modele');
   if(!marque||!modele){showToast(t('pr.err.req'),'e');return;}
   var data={marque:marque,modele:modele,stockage:uiVal('pr-stock'),ram:uiVal('pr-ram'),prixVente:parseFloat(uiVal('pr-vente'))||0,quantite:Math.max(0,parseInt(uiVal('pr-qte'),10)||0),description:uiVal('pr-desc')};
-  if(typeof PRD_PHOTO_CHANGED!=='undefined'&&PRD_PHOTO_CHANGED)data.photo=PRD_PHOTO||'';
   var btn=document.getElementById('pr-save');if(btn)btn.disabled=true;
   showOv('…');
   try{
@@ -7760,7 +7756,7 @@ function dskTopProduits(D,from,titre,find){
   dskSalesLines(D,from).forEach(function(l){var p=find(l),k=p?'id:'+p.id:(cfKey(l.name)||l.name.toLowerCase());var x=by[k]||(by[k]={name:p?[p.marque&&String(p.modele||'').toLowerCase().indexOf(String(p.marque).toLowerCase())<0?p.marque:'',p.modele||p.nom,p.stockage].filter(Boolean).join(' '):l.name,qty:0,amount:0,p:p});x.qty+=l.qty;x.amount+=l.amount;});
   var top=Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.amount-a.amount;}).slice(0,3);
   if(!top.length)return dskPanel(titre,'','<p class="dsk-empty">Aucune vente validée ce mois-ci.</p>',chip);
-  return dskPanel(titre,'','<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="dskPhG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4a66"/><stop offset="1" stop-color="#121a2a"/></linearGradient></defs></svg><ol class="dsk-top">'+top.map(function(x,i){return '<li'+(x.p?' onclick="viewProd(\''+x.p.id+'\')" class="go"':'')+'><span class="dsk-top-n">'+(i+1)+'</span>'+dskThumb(x.p)+'<b>'+esc(x.name)+'</b><small>'+x.qty+' unité'+(x.qty>1?'s':'')+'</small><em class="num">'+v2Money(x.amount)+'</em></li>';}).join('')+'</ol>',chip);
+  return dskPanel(titre,'','<ol class="dsk-top">'+top.map(function(x,i){return '<li'+(x.p?' onclick="viewProd(\''+x.p.id+'\')" class="go"':'')+'><span class="dsk-top-n">'+(i+1)+'</span>'+dskThumb(x.p)+'<b>'+esc(x.name)+'</b><small>'+x.qty+' unité'+(x.qty>1?'s':'')+'</small><em class="num">'+v2Money(x.amount)+'</em></li>';}).join('')+'</ol>',chip);
 }
 function dskActivites(D,titre){
   var ev=[];
@@ -7830,10 +7826,7 @@ function dskCategories(D,from,prevFrom,titre,find){
   }).join('')+'</div>',chip);
 }
 
-function dskThumb(p){
-  if(p&&p.photo)return '<span class="dsk-thumb has" style="background-image:url(\''+p.photo+'\')" role="img" aria-label="Photo du produit"></span>';
-  return '<span class="dsk-thumb" title="Image générique (aucune photo enregistrée pour ce produit)"><svg viewBox="0 0 24 40" aria-hidden="true"><rect x="2" y="1.5" width="20" height="37" rx="4.5" fill="url(#dskPhG)" stroke="currentColor" stroke-opacity=".5"/><rect x="4.5" y="5" width="15" height="28" rx="1.8" fill="currentColor" fill-opacity=".18"/><rect x="9.5" y="3" width="5" height="1" rx=".5" fill="currentColor" fill-opacity=".6"/></svg></span>';
-}
+function dskThumb(p){return prodKindBox(p,'dsk-thumb');}
 
 function dskDayKpis(D,validFacs,mine){
   var now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),y0=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()-1);
@@ -7874,20 +7867,6 @@ function dskPerfPanel(validFacs,cmdMonth,users,mS){
 }
 
 /* Photo du produit (vignette légère dans la fiche produit, facultative) */
-function prPhotoSection(data){
-  window.PRD_PHOTO=(data&&data.photo)||'';window.PRD_PHOTO_CHANGED=false;
-  return '<section class="ui-card"><h2>Photo du produit</h2><div class="pr-photo"><span class="pr-photo-img" id="pr-photo-prev"'+(window.PRD_PHOTO?' style="background-image:url(\''+window.PRD_PHOTO+'\')"':'')+'>'+(window.PRD_PHOTO?'':'<small>Aucune photo</small>')+'</span>'+
-    '<div class="pr-photo-act"><input type="file" id="pr-photo-inp" accept="image/*" hidden onchange="prPhotoPick(this)"/>'+
-    '<button type="button" class="ui-btn ui-btn-turq ui-press" onclick="document.getElementById(\'pr-photo-inp\').click()">Choisir une photo</button>'+
-    '<button type="button" class="ui-btn ui-btn-ghost ui-press" onclick="prPhotoClear()">Retirer</button>'+
-    '<p class="ui-note">Petite vignette affichée dans le tableau de bord et la fiche. Sans photo, une silhouette générique est utilisée.</p></div></div></section>';
-}
-function prPhotoPaint(){var el=document.getElementById('pr-photo-prev');if(!el)return;el.style.backgroundImage=window.PRD_PHOTO?'url(\''+window.PRD_PHOTO+'\')':'';el.innerHTML=window.PRD_PHOTO?'':'<small>Aucune photo</small>';}
-function prPhotoPick(inp){
-  var f=inp.files&&inp.files[0];if(!f)return;
-  uiResizeImage(f,200,true,function(b64){if(!b64){showToast('Image illisible','e');return;}window.PRD_PHOTO=b64;window.PRD_PHOTO_CHANGED=true;prPhotoPaint();});
-}
-function prPhotoClear(){window.PRD_PHOTO='';window.PRD_PHOTO_CHANGED=true;prPhotoPaint();}
 
 /* ===== Notifications internes (sans serveur, sans frais) =====
    Calculées sur cet appareil à partir des données que le compte a déjà le droit de lire : ce sont les règles Firestore
@@ -8044,5 +8023,27 @@ function ntfSettingsHtml(){
   '<section class="ui-card ui-in" style="--i:1"><h2>Sur le téléphone, appli fermée</h2><p class="ui-muted">Non disponibles pour le moment. Elles demandent un serveur Firebase (forfait Blaze, payant), qui n\'est pas activé. Les alertes arrivent dès que l\'application est ouverte.</p></section>';
   if(PUSH_SERVER)h+=pushSettingsHtml().replace(/^[\s\S]*?(<section)/,'$1');
   return h;
+}
+
+/* Icône générique selon le type de produit. L'ajout de photos de produits a été retiré ;
+   les photos déjà enregistrées restent dans les données (rien n'est effacé) mais ne sont plus affichées. */
+var PRD_KINDS={
+  phone:['Téléphone','<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/>'],
+  tablette:['Tablette','<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M11 18h2"/>'],
+  montre:['Montre','<rect x="7" y="7" width="10" height="10" rx="3"/><path d="M9 7l1-4h4l1 4M9 17l1 4h4l1-4"/>'],
+  audio:['Audio','<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/>'],
+  accessoire:['Accessoire','<path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v5"/>']
+};
+function prodKind(p){
+  var t=' '+[p&&p.marque,p&&p.modele,p&&p.nom].filter(Boolean).join(' ').toLowerCase()+' ';
+  if(/ipad|tablette?\b|tablet\b|galaxy tab|\btab [as]\d|matepad|redmi pad|\bpad \d/.test(t))return 'tablette';
+  if(/watch|montre/.test(t))return 'montre';
+  if(/airpods?|\bbuds|[ée]couteur|casque|enceinte|headset/.test(t))return 'audio';
+  if(/chargeur|c[âa]ble|coque|adaptateur|power ?bank|batterie externe|protection|verre tremp/.test(t))return 'accessoire';
+  return 'phone';
+}
+function prodKindBox(p,cls){
+  var k=PRD_KINDS[prodKind(p)];
+  return '<span class="'+cls+'" role="img" aria-label="'+k[0]+' (icône générique)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+k[1]+'</svg></span>';
 }
 </script></body></html>

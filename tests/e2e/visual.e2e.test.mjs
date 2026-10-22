@@ -103,26 +103,30 @@ describe('Interface : rendu et graphique', () => {
     await context.close();
   });
 
-  it('photo de produit : choisie, réduite, enregistrée, affichée dans la fiche et le tableau de bord', async () => {
+  it('produits : plus d\'ajout de photo ; une photo déjà enregistrée est conservée ; icône générique affichée', async () => {
     const { page, context, errors } = await session(EMAILS.patron, { width: 1440, height: 1300 }, 'dark');
+    const { doc, setDoc, getDoc } = await import('firebase/firestore');
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'produits', 'ph1'), { marque: 'Marque démo', modele: 'Modèle avec photo', prixVente: 120000, quantite: 4, photo: 'data:image/jpeg;base64,AAAA' }));
     await page.evaluate(() => openNvProd());
-    await page.waitForSelector('#pr-photo-inp', { state: 'attached' });
-    // image fictive générée (carré coloré), pas une photo réelle
-    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGNgYGD4z8DAwMDAAAAJAAH+0q9GAAAAAElFTkSuQmCC', 'base64');
-    await page.setInputFiles('#pr-photo-inp', { name: 'produit.png', mimeType: 'image/png', buffer: png });
-    await page.waitForFunction(() => window.PRD_PHOTO && window.PRD_PHOTO.startsWith('data:image/jpeg'));
-    await page.fill('#pr-marque', 'Marque démo');
-    await page.fill('#pr-modele', 'Modèle photo');
-    await page.fill('#pr-vente', '120000');
-    await page.evaluate(() => saveProd(''));
+    await page.waitForSelector('#pr-modele');
+    assert.equal(await page.locator('#pr-photo-inp').count(), 0, 'aucun champ photo dans le formulaire');
+    assert.doesNotMatch(await page.locator('#main-content').textContent(), /Photo du produit|Choisir une photo/);
+    /* modifier un produit qui a déjà une photo : la photo reste dans les données */
+    await page.evaluate(() => viewProd('ph1'));
+    await page.waitForSelector('.pr-hero .pr-kind svg');
+    assert.equal(await page.locator('.pr-hero [style*="background-image"]').count(), 0, 'la photo n\'est plus chargée');
+    assert.match(await page.locator('.pr-hero .pr-kind').getAttribute('aria-label'), /Téléphone/);
+    await page.evaluate(() => editProd('ph1'));
+    await page.waitForSelector('#pr-modele');
+    await page.fill('#pr-vente', '125000');
+    await page.evaluate(() => saveProd('ph1'));
     await page.waitForTimeout(1500);
     let d = null;
-    await env.withSecurityRulesDisabled(async (ctx) => { const { getDocs, collection } = await import('firebase/firestore'); d = (await getDocs(collection(ctx.firestore(), 'produits'))).docs.map((x) => ({ id: x.id, ...x.data() })).find((x) => x.modele === 'Modèle photo'); });
-    assert.ok(d && /^data:image\/jpeg;base64,/.test(d.photo), 'photo enregistrée');
-    assert.ok(d.photo.length < 60000, 'vignette légère');
-    await page.evaluate((id) => viewProd(id), d.id);
-    await page.waitForSelector('.pr-hero .pr-photo-img');
+    await env.withSecurityRulesDisabled(async (ctx) => { d = (await getDoc(doc(ctx.firestore(), 'produits', 'ph1'))).data(); });
+    assert.equal(d.prixVente, 125000);
+    assert.equal(d.photo, 'data:image/jpeg;base64,AAAA', 'photo existante conservée');
     assert.deepEqual(errors, []);
     await context.close();
   });
+
 });
