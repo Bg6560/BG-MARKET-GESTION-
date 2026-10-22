@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "cinetic": {
+      "source": "Leonxlnx/cinetic",
+      "ref": "v1.1.0",
+      "sourceType": "github",
+      "skillPath": "skills/cinetic/SKILL.md",
+      "computedHash": "963c985987ee175e2b8b24ba3f18e8953275928972fd2acc64ac8322f5a9ff6e"
+    }
+  }
+}
