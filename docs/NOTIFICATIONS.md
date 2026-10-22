@@ -1,43 +1,41 @@
-# Notifications push — état et mise en service
+# Notifications — état actuel
 
-## Ce qui est prêt (code et tests)
-| Élément | Fichier | Testé |
+## En service : notifications internes (gratuit, sans serveur)
+Elles fonctionnent avec l'architecture actuelle (GitHub Pages + Firestore), sans forfait payant et sans nouvelle règle Firestore.
+
+| Alerte | Qui la voit | Source (écoute en temps réel) |
 |---|---|---|
-| Qui reçoit quoi, contenu des messages | `functions/lib/notify.js` | oui (unitaire) |
-| Envoi, doublons (`notifications_log`), jetons périmés, essai à blanc | `functions/lib/dispatch.js` | oui (émulateur Firestore + faux FCM) |
-| 7 déclencheurs Firestore | `functions/index.js` | chargement seulement |
-| Affichage et clic (Service Worker) | `sw.js` | oui (simulation du SW) |
-| Activation, jeton, préférences, retrait à la déconnexion, lien | `index.html` (module « Notifications push ») | oui (navigateur réel, jeton FCM remplacé) |
-| Règles de la collection `appareils` | `firestore.rules` | oui |
+| Commande à valider | patron + administrateurs | `commandes` où `statut == en_attente` |
+| Facture à valider | patron + administrateurs | `factures` où `validation == a_valider` |
+| Stock bas / rupture | patron + administrateurs | `produits` où `quantite <= seuil d'alerte` |
+| Compte à approuver | patron seul | `users` où `statut == en_attente` |
+| Ma commande validée / envoyée / livrée / annulée | l'employé concerné | ses `commandes` (`uid` = lui) |
+| Ma facture validée | l'employé concerné | ses `factures` (`uid` = lui) |
 
-## Ce qui n'est PAS vérifié (impossible sans service distant)
-- La livraison d'un vrai message par FCM jusqu'au téléphone/ordinateur, application fermée.
-- Le déploiement des fonctions et leur exécution réelle.
-Ces deux points ne se vérifient qu'après déploiement (étapes ci-dessous). Aucune notification simulée n'est affichée par l'application.
+- **Confidentialité** : chaque requête est limitée par les règles Firestore (un employé ne peut lire que ses propres documents). Aucun montant n'est affiché.
+- **Cloche** (en haut, ordinateur et téléphone) : compteur des notifications non lues ; le panneau montre « À voir » puis l'« Historique » (éléments traités).
+- **Clic** : ouvre la commande, la facture, la liste des produits en stock bas ou la fiche du compte.
+- **Doublons** : chaque alerte a une clé unique (`cmd:<id>`, `stk:<id>:low|out`, …) : recevoir la même donnée plusieurs fois ne crée rien de plus. Une alerte n'est annoncée (bandeau) que si elle arrive pendant l'utilisation ; au chargement, seule la cloche est mise à jour.
+- **Traité** : une commande validée, une facture validée, un stock réapprovisionné ou un compte approuvé passent dans l'historique. Une copie hors ligne n'est jamais utilisée pour classer « traité ».
+- **Stockage** : l'état « lu », les préférences et l'historique (30 jours, 150 éléments) sont gardés **sur l'appareil**, par compte. Rien n'est écrit dans Firestore.
+- **Réglages › Notifications** : choix des catégories, effacement de l'historique de l'appareil.
 
-## Messages envoyés
-| Événement | Destinataires | Contenu |
+### Limites (assumées)
+- Rien n'apparaît dans la barre de notifications du téléphone quand l'application est fermée : il faut l'ouvrir.
+- « Lu » n'est pas partagé entre deux appareils (le partager demanderait une nouvelle collection et une modification des règles).
+- Un produit dont la quantité n'est pas enregistrée comme nombre n'est pas surveillé.
+- Précommandes et SAV : pas d'alerte pour l'instant (visibles dans « À traiter » du tableau de bord).
+
+## En pause : notifications push du téléphone (application fermée)
+Le code est écrit et testé mais **non déployé**, faute de forfait Blaze (Cloud Functions). Dans l'application, `PUSH_SERVER=false` masque tout bouton d'activation.
+
+| Élément | Fichier | Réutilisé aujourd'hui ? |
 |---|---|---|
-| Nouvelle commande | patron + administrateurs actifs | n°, client, nb de téléphones, vendeur — **sans montant** |
-| Facture à valider | patron + administrateurs | n°, client, vendeur — **sans montant** |
-| Vente importante (≥ seuil) | **patron seul** | n°, client, **montant** |
-| Compte en attente | patron seul | nom |
-| Compte approuvé | l'intéressé | texte fixe |
-| Stock bas / rupture (au franchissement du seuil) | patron + administrateurs | modèle, quantité restante |
-| Statut de commande modifié | le vendeur | n°, client, statut — sans montant |
+| Choix des destinataires, contenu | `functions/lib/notify.js` | non (serveur) |
+| Envoi, anti-doublon `notifications_log`, jetons périmés | `functions/lib/dispatch.js` | non (serveur) |
+| 7 déclencheurs Firestore | `functions/index.js` | non (serveur) |
+| Affichage et clic | `sw.js` | prêt, inactif sans message |
+| Ouverture par lien `#open=type:id` | `index.html` (`pushOpen`) | **oui**, par la cloche |
+| Jeton, appareil, préférences (`appareils`) | `index.html` (`push*`) | non, masqué |
 
-Comptes en attente, en pause ou suspendus : jamais destinataires. Les destinataires sont calculés **côté serveur** depuis `users` (jamais depuis ce que l'appareil déclare). Chaque appareil peut couper chaque type (écran Réglages → Notifications).
-Doublons : le serveur refuse de rejouer un événement (`notifications_log`), et l'appareil remplace une notification de même `tag` au lieu d'en empiler une seconde.
-
-## À activer (dans cet ordre, avec ton accord à chaque étape)
-1. **Forfait Blaze** du projet Firebase (les Cloud Functions l'exigent ; usage très faible attendu mais la facturation doit être activée — décision du patron).
-2. **Clé web push (VAPID)** : console Firebase › Paramètres › Cloud Messaging › Certificats Web Push › générer. La coller dans l'appli : Réglages › Notifications › Configuration (patron). C'est une clé publique, pas un secret.
-3. **Région** : vérifier la région de la base Firestore et l'indiquer dans `functions/index.js` (`setGlobalOptions({region})`).
-4. **Essai à blanc** : `firebase deploy --only functions` avec `PATRON_UID=<uid du patron>` et `NOTIFY_DRY_RUN=1` : les fonctions écrivent ce qu'elles *auraient* envoyé sans rien envoyer. Vérifier, puis redéployer sans `NOTIFY_DRY_RUN`.
-5. **Règles Firestore** : publier `firestore.rules` (voir `docs/MISE-EN-SERVICE.md`) — la collection `appareils` en dépend.
-6. **Test réel** sur un téléphone et un ordinateur : activer dans Réglages › Notifications, créer une commande depuis un autre compte, fermer l'appli, vérifier la réception et le clic.
-
-## Limites connues
-- iPhone : les notifications web n'existent que si l'appli est ajoutée à l'écran d'accueil (iOS 16.4+).
-- Quand l'appli est ouverte au premier plan, la notification système s'affiche quand même (pas de tri premier plan/arrière-plan).
-- Le jeton d'un appareil expire parfois : il est renouvelé à chaque connexion, et supprimé côté serveur dès que FCM le déclare invalide.
+Pour l'activer plus tard (décision du patron) : forfait Blaze, clé web push (VAPID), région, essai à blanc, publication des règles, puis `PUSH_SERVER=true` — voir l'historique de ce fichier pour le détail.

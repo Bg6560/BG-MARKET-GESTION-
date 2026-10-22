@@ -1733,7 +1733,7 @@ html,body{overflow-x:hidden}
 .dsk-prof span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
 .dsk-prof b{font-size:14px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dsk-prof small{font-size:12px;color:var(--muted)}
 @media (min-width:1100px){#app-page .v2-top .uavatar{display:none!important}}
-@media (max-width:1099px){.dsk-bell,.dsk-prof{display:none!important}}
+@media (max-width:1099px){.dsk-prof{display:none!important}}
 /* Navigation latérale : liste continue, logo et sous-titre */
 @media (min-width:1100px){
   #dsk-nav .dsk-sec{display:none}
@@ -1810,6 +1810,35 @@ html,body{overflow-x:hidden}
   .dsk-kpis4 .dsk-kpi:has(.dsk-spark) .dsk-kpi-go{display:block!important}
   .dsk-kpis4 .dsk-kpi-ico{width:52px;height:52px}.dsk-kpis4 .dsk-kpi-ico svg{width:26px;height:26px}
 }
+</style>
+<style id="ntf-v1">
+/* Notifications internes : cloche visible sur tous les écrans, panneau (liste + historique) */
+@media (max-width:1099px){.dsk-bell{display:grid!important;width:40px;height:40px;border-radius:12px}.dsk-bell span{min-width:18px;height:18px;font-size:10px;line-height:18px}}
+.ntf-ov{position:fixed;inset:0;z-index:960;background:rgba(4,8,16,.32)}
+.ntf-ov[hidden]{display:none}
+.ntf-pan{position:absolute;top:72px;right:20px;width:min(400px,calc(100vw - 32px));max-height:min(72vh,600px);display:flex;flex-direction:column;border-radius:18px;
+  background:var(--glass-solid);border:1px solid var(--glass-line);box-shadow:var(--sh-2);color:var(--text);overflow:hidden;font-family:var(--font)}
+.ntf-hd{display:flex;align-items:center;gap:10px;padding:14px 14px 10px 18px;border-bottom:1px solid var(--line)}
+.ntf-hd b{font-size:16px;flex:1}
+.ntf-lnk{background:none;border:0;color:var(--turq-ink);font:700 13px var(--font);cursor:pointer;padding:8px 6px;border-radius:8px}
+.ntf-lnk:disabled{opacity:.45;cursor:default}
+.ntf-x{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--text);font-size:22px;line-height:1;cursor:pointer}
+.ntf-list{overflow-y:auto;overscroll-behavior:contain;padding:6px 8px 8px}
+.ntf-sec{font:800 11px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 10px 6px}
+.ntf-it{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:10px;border-radius:12px;border:0;background:none;color:var(--text);cursor:pointer;font-family:var(--font);position:relative}
+.ntf-it:hover,.ntf-it:focus-visible{background:var(--surface-2)}
+.ntf-it.new::after{content:"";position:absolute;top:16px;right:10px;width:8px;height:8px;border-radius:50%;background:#FF3B5C}
+.ntf-it.done{opacity:.62}
+.ntf-ic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);color:var(--turq-ink)}
+.ntf-ic svg{width:18px;height:18px}
+.ntf-it[data-c="stk"] .ntf-ic{color:#F5A524}.ntf-it[data-c="cpt"] .ntf-ic{color:#7C8CFF}.ntf-it[data-c="fac"] .ntf-ic{color:#3DD6C4}
+.ntf-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding-right:14px}
+.ntf-tx b{font-size:14px}.ntf-tx span{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.ntf-it small{flex:none;font-size:11px;color:var(--muted);padding-top:2px;margin-right:6px}
+.ntf-empty{padding:28px 12px;text-align:center;color:var(--muted);margin:0}
+.ntf-ft{border-top:1px solid var(--line);padding:6px 10px;text-align:center}
+@media (max-width:640px){.ntf-pan{top:auto;bottom:0;left:0;right:0;width:auto;max-height:82vh;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom)}}
+@media (prefers-reduced-motion:no-preference){.ntf-pan{animation:ntfIn .16s ease-out}@keyframes ntfIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
 <body>
@@ -2338,7 +2367,7 @@ async function doSignup(){
   }catch(e){setAuthMsg('s-err',authErrText(e));}
   finally{window._signupName=null;authBusy('btn-signup',false);}
 }
-function doLogout(){setOffline();try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}coutsStop();}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();var _so=function(){auth.signOut();};if(navigator.onLine)Promise.race([pushForget(),new Promise(function(r){setTimeout(r,2500);})]).then(_so,_so);else _so();}
+function doLogout(){setOffline();try{ntfStop();NTF.uid='';NTF.items={};dskBell(0);}catch(e){}try{if(rlJournalUnsub){rlJournalUnsub();rlJournalUnsub=null;}if(rlPendUnsub){rlPendUnsub();rlPendUnsub=null;}coutsStop();}catch(e){}rlJournalN=0;rlPendN=0;if(settingsListener)settingsListener();if(notifListener)notifListener();var _so=function(){auth.signOut();};if(navigator.onLine)Promise.race([pushForget(),new Promise(function(r){setTimeout(r,2500);})]).then(_so,_so);else _so();}
 auth.onAuthStateChanged(async user=>{
   try{
     if(user){
@@ -2349,7 +2378,7 @@ auth.onAuthStateChanged(async user=>{
         loadUserProfile(user).then(()=>loadGlobalSettings()),
         new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout Firebase - verifie ta connexion')),10000))
       ]);
-      startNotifListener();startJournalListener();coutsStart();
+      try{ntfStart();}catch(e){}startNotifListener();startJournalListener();coutsStart();
       hideOv();
       document.getElementById('login-page').style.display='none';
       document.getElementById('app-page').style.display='flex';
@@ -2404,7 +2433,7 @@ function updateNavUser(){
 async function updatePresence(){if(!currentUser)return;try{await db.collection('users').doc(currentUser.uid).update({isOnline:true,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),lastSeenStr:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});}catch(e){}}
 async function setOffline(){if(!currentUser)return;try{await db.collection('users').doc(currentUser.uid).update({isOnline:false,lastSeen:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){}}
 window.addEventListener('beforeunload',()=>setOffline());
-function startNotifListener(){if(!isAdmin||!currentUser)return;if(notifListener)notifListener();notifListener=db.collection('commandes').where('statut','==','en_attente').onSnapshot(snap=>{const count=snap.size;const badge=document.getElementById('cmd-badge');if(badge){badge.style.display=count>0?'flex':'none';badge.textContent=count;}v2Badge(count);try{dskBadge('commandes',count);}catch(e){}});}
+function startNotifListener(){if(!isAdmin||!currentUser)return;if(notifListener)notifListener();notifListener=db.collection('commandes').where('statut','==','en_attente').onSnapshot(snap=>{const count=snap.size;const badge=document.getElementById('cmd-badge');if(badge){badge.style.display=count>0?'flex':'none';badge.textContent=count;}v2Badge(count);try{dskBadge('commandes',count);}catch(e){}try{ntfFeed('cmd',snap,ntfCmdItem);}catch(e){}});}
 function clearNotifBadge(){v2Badge(0);const badge=document.getElementById('cmd-badge');if(badge)badge.style.display='none';}
 
 // ===== V2 : coque de l'application =====
@@ -3698,7 +3727,7 @@ function renderParametres(){
     stRow(ST_ICO.user,'c-turq',t('st.profile'),'',"uiSettings('profil')",t('st.profileSub'))+
     stRow(ST_ICO.palette,'c-violet',t('st.look'),stThemeLabel(),"uiSettings('apparence')")+
     stRow(ST_ICO.globe,'c-blue',t('st.lang'),uiLang==='en'?'English':'Français',"uiSettings('langue')")+
-    stRow(ST_ICO.info,'c-warn','Notifications',pushIsOn()?'Activées':'',"uiSettings('notifications')","Commandes, factures, stock")+'</div>';
+    stRow(ST_ICO.info,'c-warn','Notifications','Dans l\'appli',"uiSettings('notifications')","Commandes, factures, stock")+'</div>';
   if(isAdmin&&!isBoss&&can('reglages')){
     h+='<div class="st-label">'+t('rl.work')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
       stRow(ST_ICO.chart,'c-turq',t('st.sales'),(gs.margeDefaut||supplierMargin||12)+' %',"uiSettings('ventes')")+
@@ -3838,7 +3867,7 @@ function uiSettings(sec){
       '<p class="ui-muted" style="margin-top:10px">Technologie pour tous</p></section>'+
     '<section class="ui-card ui-in" style="--i:1">'+uiKV('Boutique',esc(gs.bizName||'BG-MARKET'))+uiKV('Téléphone',esc(gs.bizPhone||'05 65 60 36 89'))+uiKV('Adresse',esc(gs.bizAddr||'Yopougon, Abidjan'))+uiKV('Connecté en tant que',esc((currentUser&&currentUser.email)||''))+'</section>';
   }
-  else if(sec==='notifications'){h+=pushSettingsHtml();}
+  else if(sec==='notifications'){h+=ntfSettingsHtml();}
   else {renderParametres();return;}
   h+='</div>';mc.innerHTML=h;window.scrollTo(0,0);
 }
@@ -6413,7 +6442,7 @@ function rlLive(d){
   var was=isAdmin;
   userProfile=Object.assign({},userProfile,d);
   rlApply();
-  try{loadLocalCatalog();coutsStart();}catch(e){}
+  try{loadLocalCatalog();coutsStart();ntfStart();}catch(e){}
   try{updateNavUser();v2Nav(activeTab);}catch(e){}
   showToast(was!==isAdmin?t(isAdmin?'rl.nowAdmin':'rl.noLongerAdmin'):t('rl.permsChanged'),'s');
   try{goTab(was!==isAdmin?'dashboard':activeTab);}catch(e){}
@@ -6460,7 +6489,7 @@ function startJournalListener(){
     rlPendInit=false;
     rlPendUnsub=db.collection('users').where('statut','==','en_attente').onSnapshot(function(s){
       var n=(s&&(s.size!=null?s.size:(s.docs||[]).length))||0;
-      if(rlPendInit&&n>rlPendN)showToast('Nouveau compte à approuver','i');
+      try{ntfFeed('cpt',s,ntfUsrItem);}catch(e){}
       rlPendInit=true;rlPendN=n;rlDotsPaint();
       if(activeTab==='parametres'&&!window._stSec){try{renderParametres();}catch(e){}}
     },function(){});
@@ -6658,9 +6687,9 @@ function dskTopInit(){
     document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){var q=document.getElementById('dsk-q');if(q&&q.offsetParent){e.preventDefault();q.focus();q.select();}}});
   }
   if(!document.getElementById('dsk-bell')){
-    var b=document.createElement('button');b.type='button';b.id='dsk-bell';b.className='dsk-bell dsk-only';b.setAttribute('aria-label','À traiter');
+    var b=document.createElement('button');b.type='button';b.id='dsk-bell';b.className='dsk-bell';b.setAttribute('aria-label','Notifications');b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-expanded','false');
     b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span id="dsk-bell-n" hidden></span>';
-    b.onclick=function(){var go=function(){var t=document.getElementById('dsk-todo');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.classList.add('flash');setTimeout(function(){t.classList.remove('flash');},1200);}};if(activeTab!=='dashboard'){goTab('dashboard');setTimeout(go,1500);}else go();};
+    b.onclick=function(){ntfToggle();};
     var av=bar.querySelector('.uavatar');bar.insertBefore(b,av||null);
   }
   if(!document.getElementById('dsk-prof')&&userProfile){
@@ -6904,6 +6933,8 @@ async function renderDashboard(){
    Le navigateur s'abonne, l'appareil est enregistré dans appareils/{uid}_{idAppareil}, le serveur (functions/) envoie.
    Rien n'est affiché ici qui ne vienne d'un vrai message push : pas de fausse notification. */
 var PUSH={pending:null,busy:false};
+/* Envoi par serveur (Cloud Functions) : non déployé, faute de forfait Blaze. Tant que c'est false, aucun bouton d'activation n'est proposé. */
+var PUSH_SERVER=false;
 var PUSH_TYPES=[
   {k:'commande.creee',l:'Nouvelles commandes',r:'admin'},
   {k:'facture.a_valider',l:'Factures à valider',r:'admin'},
@@ -6932,7 +6963,7 @@ async function pushUpsert(token){
   await db.collection('appareils').doc(pushDocId()).set({uid:currentUser.uid,token:token,plateforme:/iPhone|iPad/.test(navigator.userAgent)?'ios':/Android/.test(navigator.userAgent)?'android':'web',creeAt:since,majAt:firebase.firestore.FieldValue.serverTimestamp(),prefs:pushPrefs()});
 }
 async function pushEnable(){
-  if(PUSH.busy)return;
+  if(PUSH.busy||!PUSH_SERVER)return;
   if(!pushSupported()){showToast("Ce navigateur ne gère pas les notifications. Sur iPhone, ajoute d'abord l'appli à l'écran d'accueil.",'e');return;}
   if(!navigator.onLine){showToast('Connexion nécessaire pour activer les notifications','e');return;}
   if(!(globalSettings||{}).fcmVapidKey){showToast("Les notifications ne sont pas encore configurées (clé manquante). Demande au patron.",'e');return;}
@@ -6965,7 +6996,7 @@ async function pushToggle(k){
   if(window._stSec==='notifications')uiSettings('notifications');
 }
 async function pushSync(){
-  if(!pushIsOn()||!navigator.onLine||!(globalSettings||{}).fcmVapidKey)return;
+  if(!PUSH_SERVER||!pushIsOn()||!navigator.onLine||!(globalSettings||{}).fcmVapidKey)return;
   try{var tok=await pushToken();if(tok)await pushUpsert(tok);}catch(e){}
 }
 async function pushSaveConfig(){
@@ -7004,8 +7035,8 @@ function pushOpen(u){
   try{
     if(o.kind==='commande'&&typeof viewCmd==='function'){activeTab='commandes';v2Nav('commandes');viewCmd(o.id);}
     else if(o.kind==='facture'&&typeof viewFacture==='function'){activeTab='factures';v2Nav('factures');viewFacture(o.id);}
-    else if(o.kind==='produit')goTab('produits');
-    else if(o.kind==='compte'&&isBoss)goTab('equipe');
+    else if(o.kind==='produit'){goTab('produits');setTimeout(function(){try{setProdFilter('__low');}catch(e){}},400);}
+    else if(o.kind==='compte'&&isBoss){goTab('equipe');setTimeout(function(){try{uiMember(o.id);}catch(e){}},300);}
   }catch(e){}
   try{if(location.hash)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
 }
@@ -7763,7 +7794,6 @@ function dskDayKpis(D,validFacs,mine){
 }
 
 function dskTodo(items){
-  var n=items.reduce(function(a,x){return a+(x[1]||0);},0);dskBell(n);
   return '<div class="dsk-todo" id="dsk-todo" aria-label="À traiter"><span class="dsk-todo-l">À traiter</span>'+items.map(function(x){return '<button type="button" class="dsk-todo-i'+(x[1]?' on '+(x[3]||''):'')+'" onclick="'+x[2]+'"><b class="num">'+x[1]+'</b>'+esc(x[0])+'</button>';}).join('')+'</div>';
 }
 
@@ -7795,4 +7825,161 @@ function prPhotoPick(inp){
   uiResizeImage(f,200,true,function(b64){if(!b64){showToast('Image illisible','e');return;}window.PRD_PHOTO=b64;window.PRD_PHOTO_CHANGED=true;prPhotoPaint();});
 }
 function prPhotoClear(){window.PRD_PHOTO='';window.PRD_PHOTO_CHANGED=true;prPhotoPaint();}
+
+/* ===== Notifications internes (sans serveur, sans frais) =====
+   Calculées sur cet appareil à partir des données que le compte a déjà le droit de lire : ce sont les règles Firestore
+   qui décident de ce qui arrive ici, pas un filtrage à l'écran. Aucun montant n'est affiché.
+   L'état « lu » et l'historique (30 jours) sont gardés sur l'appareil : rien n'est écrit dans Firestore.
+   Une même alerte a une clé unique (ex. cmd:ID) : elle n'est jamais créée ni annoncée deux fois. */
+var NTF={uid:'',items:{},st:{},unsubs:[],open:false,max:150,days:30};
+var NTF_CATS=[
+  {k:'cmd',l:'Commandes à valider',r:'admin'},
+  {k:'fac',l:'Factures à valider',r:'admin'},
+  {k:'stk',l:'Stock bas et ruptures',r:'admin'},
+  {k:'cpt',l:'Comptes à approuver',r:'boss'},
+  {k:'suivi',l:'Suivi de mes commandes et factures',r:'emp'}
+];
+var NTF_ICO={cmd:'cart',fac:'doc',stk:'alert',cpt:'users',suivi:'check'};
+function ntfKey(){return 'bg_ntf_'+NTF.uid;}
+function ntfLoad(uid){
+  NTF.uid=uid||'';NTF.items={};NTF.st={};
+  try{var o=JSON.parse(localStorage.getItem(ntfKey())||'null');if(o){NTF.items=o.items||{};NTF.st=o.st||{};}}catch(e){}
+}
+function ntfSave(){if(!NTF.uid)return;ntfPrune();try{localStorage.setItem(ntfKey(),JSON.stringify({items:NTF.items,st:NTF.st}));}catch(e){}}
+function ntfPrune(){
+  var lim=Date.now()-NTF.days*864e5,ks=Object.keys(NTF.items);
+  ks.forEach(function(k){var x=NTF.items[k];if(x.done&&x.done<lim)delete NTF.items[k];});
+  ks=Object.keys(NTF.items);
+  if(ks.length>NTF.max)ks.filter(function(k){return NTF.items[k].done;}).sort(function(a,b){return NTF.items[a].done-NTF.items[b].done;})
+    .slice(0,ks.length-NTF.max).forEach(function(k){delete NTF.items[k];});
+}
+function ntfCatsForMe(){return NTF_CATS.filter(function(c){return c.r==='boss'?isBoss:c.r==='admin'?isAdmin:!isAdmin;});}
+function ntfPrefs(){try{return JSON.parse(localStorage.getItem('bg_ntf_prefs_'+NTF.uid)||'{}')||{};}catch(e){return {};}}
+function ntfOn(cat){return ntfPrefs()[cat]!==false&&ntfCatsForMe().some(function(c){return c.k===cat;});}
+function ntfTogglePref(cat){var p=ntfPrefs();p[cat]=p[cat]===false;try{localStorage.setItem('bg_ntf_prefs_'+NTF.uid,JSON.stringify(p));}catch(e){}ntfPaint();if(window._stSec==='notifications')uiSettings('notifications');}
+function ntfList(){return Object.keys(NTF.items).map(function(k){return NTF.items[k];}).filter(function(x){return ntfOn(x.cat);});}
+function ntfUnread(){return ntfList().filter(function(x){return !x.seen&&!x.done;}).length;}
+/* Annonce discrète des nouveautés arrivées pendant l'utilisation (jamais au chargement : la cloche suffit) */
+function ntfAnnounce(news){
+  news=news.filter(function(x){return ntfOn(x.cat);});
+  if(!news.length)return;
+  if(news.length===1)showToast(news[0].t+' · '+news[0].s,'i');else showToast(news.length+' nouvelles notifications','i');
+}
+/* Source « à traiter » : la liste reçue est l'état actuel ; ce qui en sort est classé « traité ».
+   fromCache : copie locale peut-être incomplète, on n'en déduit rien de « traité ». */
+function ntfSync(src,list,initial,fromCache){
+  var now=Date.now(),seen={},news=[];
+  list.forEach(function(x){
+    seen[x.k]=1;var cur=NTF.items[x.k];
+    if(!cur||cur.done){
+      NTF.items[x.k]={k:x.k,src:src,cat:x.cat,t:x.t,s:x.s,go:x.go,ts:x.ts||now,at:now,seen:false,done:0};
+      if(!initial)news.push(NTF.items[x.k]);
+    }else{cur.t=x.t;cur.s=x.s;}
+  });
+  if(!fromCache)Object.keys(NTF.items).forEach(function(k){var x=NTF.items[k];if(x.src===src&&!x.done&&!seen[k]){x.done=now;x.seen=true;}});
+  ntfAnnounce(news);ntfSave();ntfPaint();
+}
+/* Source « suivi » : un changement d'état observé, comparé au dernier état connu sur cet appareil
+   (un document vu pour la première fois sert de point de départ, sans alerte) */
+function ntfTrack(src,docs,field,rule,initial){
+  var news=[];
+  docs.forEach(function(d){
+    var sk=src+':'+d.id,cur=d[field]||'',prev=NTF.st[sk];NTF.st[sk]=cur;
+    if(prev===undefined||prev===cur)return;
+    var ev=rule(d,prev,cur);if(!ev)return;
+    var k=src+':'+d.id+':'+cur;if(NTF.items[k])return;
+    NTF.items[k]={k:k,src:src,cat:'suivi',t:ev.t,s:ev.s,go:ev.go,ts:Date.now(),at:Date.now(),seen:false,done:0};
+    if(!initial)news.push(NTF.items[k]);
+  });
+  ntfAnnounce(news);ntfSave();ntfPaint();
+}
+var NTF_CMD_ST={validee:'Commande validée',envoyee:'Commande envoyée',livree:'Commande livrée',annulee:'Commande annulée'};
+function ntfCmdItem(c){return {k:'cmd:'+c.id,cat:'cmd',t:'Commande à valider',s:(uiName(c.client)||'Client')+' · '+(c.num||'')+(c.vendeur?' · par '+uiName(c.vendeur):''),go:'commande:'+c.id,ts:(v2ToDate(c.ts)||new Date()).getTime()};}
+function ntfFacItem(f){return {k:'fac:'+f.id,cat:'fac',t:'Facture à valider',s:(uiName(f.client)||'Client')+' · '+(f.num||'')+(f.vendeur?' · par '+uiName(f.vendeur):''),go:'facture:'+f.id,ts:(v2ToDate(f.ts)||new Date()).getTime()};}
+function ntfStkItem(p){var q=+p.quantite||0,out=q<=0;return {k:'stk:'+p.id+':'+(out?'out':'low'),cat:'stk',t:out?'Rupture de stock':'Stock bas',s:prodName(p)+(p.stockage?' '+prodCap(p.stockage):'')+' · '+(out?'plus aucune unité':q+' restant'+(q>1?'s':'')),go:'produit:'+p.id};}
+function ntfUsrItem(u){return {k:'cpt:'+u.id,cat:'cpt',t:'Compte à approuver',s:uiName(u.nom)||u.email||'Nouveau compte',go:'compte:'+u.id,ts:(v2ToDate(u.ts||u.createdAt)||new Date()).getTime()};}
+function ntfDocs(s){return ((s&&s.docs)||[]).map(function(d){return Object.assign({id:d.id},d.data());});}
+function ntfCache(s){return !!(s&&s.metadata&&s.metadata.fromCache);}
+/* Point d'entrée des écoutes déjà existantes (commandes en attente, comptes en attente) */
+var NTF_INIT={};
+function ntfFeed(src,s,mk,filter){
+  var docs=ntfDocs(s);if(filter)docs=docs.filter(filter);
+  var initial=!NTF_INIT[src];if(!ntfCache(s))NTF_INIT[src]=true; /* « initial » jusqu'à la première réponse du serveur : pas d'annonce au chargement */
+  ntfSync(src,docs.map(mk),initial,ntfCache(s));
+}
+function ntfListen(q,fn){try{NTF.unsubs.push(q.onSnapshot(fn,function(){}));}catch(e){}}
+function ntfStart(){
+  ntfStop();
+  if(!currentUser||!userProfile||userProfile.statut==='en_attente'||uiIsBlocked(userProfile.statut))return;
+  ntfLoad(currentUser.uid);NTF_INIT={};
+  if(isAdmin){
+    ntfListen(db.collection('factures').where('validation','==','a_valider'),function(s){ntfFeed('fac',s,ntfFacItem);});
+    ntfListen(db.collection('produits').where('quantite','<=',prodAlert()),function(s){ntfFeed('stk',s,ntfStkItem);});
+  }else{
+    var me=currentUser.uid,n0={c:true,f:true};
+    ntfListen(db.collection('commandes').where('uid','==',me),function(s){
+      ntfTrack('c',ntfDocs(s),'statut',function(c,prev,cur){return NTF_CMD_ST[cur]?{t:NTF_CMD_ST[cur],s:(uiName(c.client)||'Client')+' · '+(c.num||''),go:'commande:'+c.id}:null;},n0.c);if(!ntfCache(s))n0.c=false;
+    });
+    ntfListen(db.collection('factures').where('uid','==',me),function(s){
+      ntfTrack('f',ntfDocs(s),'validation',function(f,prev,cur){return prev==='a_valider'&&cur==='validee'?{t:'Facture validée',s:(uiName(f.client)||'Client')+' · '+(f.num||''),go:'facture:'+f.id}:null;},n0.f);if(!ntfCache(s))n0.f=false;
+    });
+  }
+  ntfPaint();
+}
+function ntfStop(){NTF.unsubs.forEach(function(u){try{u();}catch(e){}});NTF.unsubs=[];NTF_INIT={};ntfClose();}
+function ntfPaint(){try{dskBell(ntfUnread());}catch(e){}if(NTF.open)ntfRender();}
+function ntfAgo(ms){var m=Math.round((Date.now()-ms)/60000);if(m<1)return 'à l\'instant';if(m<60)return 'il y a '+m+' min';var h=Math.round(m/60);if(h<24)return 'il y a '+h+' h';var d=new Date(ms);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
+function ntfRow(x){
+  var ic=DSK_ICO[NTF_ICO[x.cat]]||DSK_ICO.check||'';
+  return '<button type="button" class="ntf-it'+(x.done?' done':(x.seen?'':' new'))+'" data-c="'+x.cat+'" onclick="ntfGo(\''+x.k.replace(/'/g,'')+'\')">'+
+    '<span class="ntf-ic" aria-hidden="true">'+ic+'</span><span class="ntf-tx"><b>'+esc(x.t)+'</b><span>'+esc(x.s||'')+'</span></span>'+
+    '<small>'+(x.done?'Traité':ntfAgo(x.at))+'</small></button>';
+}
+function ntfRender(){
+  var box=document.getElementById('ntf-list');if(!box)return;
+  var all=ntfList().sort(function(a,b){return b.at-a.at;}),act=all.filter(function(x){return !x.done;}),old=all.filter(function(x){return x.done;}).slice(0,30);
+  var n=ntfUnread(),h='';
+  if(!all.length)h='<p class="ntf-empty">Aucune notification pour le moment.</p>';
+  else{
+    if(act.length)h+='<div class="ntf-sec">À voir</div>'+act.map(ntfRow).join('');
+    if(old.length)h+='<div class="ntf-sec">Historique</div>'+old.map(ntfRow).join('');
+  }
+  box.innerHTML=h;
+  var ra=document.getElementById('ntf-readall');if(ra)ra.disabled=!n;
+}
+function ntfToggle(){NTF.open?ntfClose():ntfOpenPanel();}
+function ntfOpenPanel(){
+  var ov=document.getElementById('ntf-ov');
+  if(!ov){
+    ov=document.createElement('div');ov.id='ntf-ov';ov.className='ntf-ov';
+    ov.onclick=function(e){if(e.target===ov)ntfClose();};
+    ov.innerHTML='<section class="ntf-pan" role="dialog" aria-modal="true" aria-label="Notifications"><header class="ntf-hd"><b>Notifications</b>'+
+      '<button type="button" id="ntf-readall" class="ntf-lnk" onclick="ntfReadAll()">Tout marquer comme lu</button>'+
+      '<button type="button" class="ntf-x" onclick="ntfClose()" aria-label="Fermer">×</button></header><div class="ntf-list" id="ntf-list"></div>'+
+      '<footer class="ntf-ft"><button type="button" class="ntf-lnk" onclick="ntfClose();goTab(\'parametres\');setTimeout(function(){uiSettings(\'notifications\')},200)">Réglages des notifications</button></footer></section>';
+    document.body.appendChild(ov);
+  }
+  NTF.open=true;ov.hidden=false;ntfRender();
+  var b=document.getElementById('dsk-bell');if(b)b.setAttribute('aria-expanded','true');
+}
+function ntfClose(){NTF.open=false;var ov=document.getElementById('ntf-ov');if(ov)ov.hidden=true;var b=document.getElementById('dsk-bell');if(b)b.setAttribute('aria-expanded','false');}
+function ntfReadAll(){ntfList().forEach(function(x){x.seen=true;});ntfSave();ntfPaint();}
+function ntfGo(k){
+  var x=NTF.items[k];if(!x)return;
+  x.seen=true;ntfSave();ntfPaint();ntfClose();
+  if(x.go)pushOpen('#open='+x.go);
+}
+function ntfClearHistory(){Object.keys(NTF.items).forEach(function(k){if(NTF.items[k].done||NTF.items[k].seen&&NTF.items[k].cat==='suivi')delete NTF.items[k];});ntfSave();ntfPaint();showToast('Historique effacé sur cet appareil','s');if(window._stSec==='notifications')uiSettings('notifications');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&NTF.open)ntfClose();});
+function ntfSettingsHtml(){
+  var p=ntfPrefs(),cats=ntfCatsForMe();
+  var h=stHead('Notifications','Dans l\'application')+
+  '<section class="ui-card ui-in" style="--i:0"><h2>Dans l\'application</h2><p class="ui-muted">Actives. La cloche en haut de l\'écran compte ce qui est nouveau ; touche une notification pour ouvrir la commande, la facture, le produit ou le compte concerné.</p>'+
+    cats.map(function(c){var v=p[c.k]!==false;return '<label class="ui-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span>'+esc(c.l)+'</span><input type="checkbox" '+(v?'checked ':'')+'onchange="ntfTogglePref(\''+c.k+'\')"/></label>';}).join('')+
+    '<p class="ui-note">Aucun montant n\'est affiché. Chaque compte ne voit que ce que ses droits lui permettent de lire. L\'état « lu » et l\'historique (30 jours) sont gardés sur cet appareil.</p>'+
+    '<button type="button" class="ui-btn ui-btn-ghost ui-press" onclick="ntfClearHistory()">Effacer l\'historique de cet appareil</button></section>'+
+  '<section class="ui-card ui-in" style="--i:1"><h2>Sur le téléphone, appli fermée</h2><p class="ui-muted">Non disponibles pour le moment. Elles demandent un serveur Firebase (forfait Blaze, payant), qui n\'est pas activé. Les alertes arrivent dès que l\'application est ouverte.</p></section>';
+  if(PUSH_SERVER)h+=pushSettingsHtml().replace(/^[\s\S]*?(<section)/,'$1');
+  return h;
+}
 </script></body></html>
