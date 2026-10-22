@@ -1,0 +1,11 @@
+# Dépendances Python de Cinetic v1.1.0 (versions exactes, PyPI uniquement).
+numpy==2.5.4
+scipy==1.18.1
+soundfile==0.14.0
+pyloudnorm==0.2.0
+opencv-python==5.0.0.93
+librosa==1.0.0
+fonttools==4.67.0
+brotli==1.2.1
+uharfbuzz==0.56.4
+pillow==13.0.0
