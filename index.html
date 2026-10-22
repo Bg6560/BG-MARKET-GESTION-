@@ -1856,6 +1856,32 @@ html,body{overflow-x:hidden}
 @media (max-width:1099px){.dsk-nav-x{display:none}}
 @media (prefers-reduced-motion:reduce){#dsk-nav{transition:none!important}}
 </style>
+<style id="dash-v7">
+/* Tableau de bord compact : cartes moins hautes, espacements resserrés, étiquettes de période non cliquables */
+.dsk-page{--gap:14px}
+.dsk-hello h1{font-size:26px!important}
+.dsk-page .dsk-panel{padding:16px 18px!important}
+.dsk-page .dsk-panel h2{margin-bottom:8px}
+.dsk-kpis4 .dsk-kpi{min-height:92px!important;padding:14px 16px!important}
+.dsk-kpis4 .dsk-kpi-ico{width:46px;height:46px;border-radius:14px}
+.dsk-kpis4 .dsk-kpi-ico svg{width:24px;height:24px}
+.dsk-kpis4 .dsk-kpi-v{font-size:24px!important}
+.dsk-kpis4 .dsk-kpi .dsk-spark{height:34px;bottom:14px}
+.dsk-cat-col{height:84px}
+.dsk-chip{height:auto;padding:0;border:0;background:none;color:var(--muted);font-weight:600;cursor:default}
+.dsk-chip::after{display:none}
+.dsk-stk-sum{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 8px;font-size:13px;color:var(--muted)}
+.dsk-stk-sum b{color:var(--text)}
+@media (max-width:480px){.dsk-cat-n::before{display:none}.dsk-cats .dsk-cat-n>span{overflow-wrap:normal!important;word-break:keep-all}}
+@media (max-width:1099px){
+  .dsk-hello h1{font-size:22px!important}
+  .dsk-kpis4 .dsk-kpi{min-height:84px!important;padding:12px 14px!important}
+  .dsk-kpis4 .dsk-kpi-v,.dsk-kpis4>.dsk-kpi:first-child .dsk-kpi-v{font-size:20px!important}
+  .dsk-kpis4 .dsk-kpi-ico,.dsk-kpis4>.dsk-kpi:first-child .dsk-kpi-ico{width:38px;height:38px}.dsk-kpis4 .dsk-kpi-ico svg{width:20px;height:20px}
+  .dsk-kpis4 .dsk-kpi{gap:6px!important}
+  .dsk-page .dsk-panel{padding:14px!important}
+}
+</style>
 </head>
 <body>
 <div id="splash" role="img" aria-label="BG-MARKET, technologie pour tous">
@@ -6842,9 +6868,9 @@ function dskRing(pct,goal,label){
 function dskRingAnimate(pct){requestAnimationFrame(function(){requestAnimationFrame(function(){var p=document.getElementById('h-prog');if(p)p.style.strokeDashoffset=(339.3*(1-Math.min(pct,1))).toFixed(1);});});}
 function dskGreeting(role){
   var nom=String((userProfile&&userProfile.nom)||(currentUser&&currentUser.displayName)||'').trim().split(/\s+/)[0]||'';
-  var h=new Date().getHours(),j=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var h=new Date().getHours();
   var quick='<button type="button" class="p" onclick="v2Create(\'commande\')">Nouvelle commande</button><button type="button" onclick="v2Create(\'facture\')">Nouvelle facture</button><button type="button" onclick="v2Create(\'client\')">Nouveau client</button>'+(isAdmin?'<button type="button" onclick="v2Create(\'produit\')">Nouveau produit</button>':'');
-  return '<div class="dsk-hello"><div><h1>'+(h<18?'Bonjour':'Bonsoir')+(nom?', <span class="dsk-hello-n">'+esc(nom)+'</span>':'')+' <span class="dsk-wave" aria-hidden="true">👋</span><span class="dsk-role">'+role+'</span></h1><p>Voici un résumé de votre activité aujourd\'hui · '+j+'</p></div>'+
+  return '<div class="dsk-hello"><div><h1>'+(h<18?'Bonjour':'Bonsoir')+(nom?', <span class="dsk-hello-n">'+esc(nom)+'</span>':'')+' <span class="dsk-wave" aria-hidden="true">👋</span><span class="dsk-role">'+role+'</span></h1></div>'+
     '<div class="dsk-hello-r"><label class="dsk-range" title="Période du graphique"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span id="dsk-range-txt">'+dskRangeTxt(DSKC.period)+'</span>'+
     '<select aria-label="Période" onchange="dskcSet(\'period\',this.value)">'+[['7j','7 jours'],['30j','30 jours'],['6m','6 mois'],['12m','12 mois']].map(function(p){return '<option value="'+p[0]+'"'+(DSKC.period===p[0]?' selected':'')+'>'+p[1]+'</option>';}).join('')+'</select></label></div>'+
     '<div class="dsk-quick">'+quick+'</div></div>';
@@ -6888,8 +6914,9 @@ function dskOrderLi(c,btn){
 function dskStockPanel(D){
   var low=(D.prods||[]).filter(function(p){return prodState(p)!=='ok';}).sort(function(a,b){return (a.quantite||0)-(b.quantite||0);});
   var units=(D.prods||[]).reduce(function(a,p){return a+(p.quantite||0);},0);
-  var body=low.length?'<div class="dsk-list">'+low.slice(0,8).map(function(p){var o=prodState(p)==='out';return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(prodName(p))+'</b><span>'+esc(prodSpec(p)||'')+'</span></div>'+dskPill(o?'p-cancel':'p-wait',o?'Rupture':p.quantite+' restant'+(p.quantite>1?'s':''))+'</div>';}).join('')+'</div>':'<p class="dsk-empty">Aucune alerte de stock.</p>';
-  return {low:low.length,units:units,html:dskPanel('État du stock',units+' téléphone'+(units>1?'s':'')+' en stock · seuil d\'alerte '+prodAlert(),body,dskLink('Voir les produits',"goTab('produits')"))};
+  var nOut=low.filter(function(p){return prodState(p)==='out';}).length;
+  var body=low.length?'<p class="dsk-stk-sum"><span><b class="num">'+nOut+'</b> en rupture</span><span><b class="num">'+(low.length-nOut)+'</b> en stock bas</span>'+(low.length>5?'<span>5 premiers affichés</span>':'')+'</p><div class="dsk-list">'+low.slice(0,5).map(function(p){var o=prodState(p)==='out';return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(prodName(p))+'</b><span>'+esc(prodSpec(p)||'')+'</span></div>'+dskPill(o?'p-cancel':'p-wait',o?'Rupture':p.quantite+' restant'+(p.quantite>1?'s':''))+'</div>';}).join('')+'</div>':'<p class="dsk-empty">Aucune alerte de stock.</p>';
+  return {low:low.length,units:units,html:dskPanel('État du stock',units+' téléphone'+(units>1?'s':'')+' en stock · seuil d\'alerte '+prodAlert(),body,dskLink('Voir les produits',low.length?"goTab('produits');setTimeout(function(){setProdFilter('__low')},400)":"goTab('produits')"))};
 }
 function dskMonthRows(D){
   var now=new Date(),rows=[];
@@ -6927,21 +6954,21 @@ async function renderDashboard(){
     (ben!==null&&(isBoss||can('totaux'))?'<p class="dsk-goal-ben">Bénéfice du mois <b class="num '+(ben>=0?'ui-pos':'ui-neg')+'">'+(ben>=0?'+':'')+v2Money(ben)+'</b>'+(ca?' <small>'+Math.round(ben/ca*100)+' % de marge</small>':'')+'</p>':'')+
     (isBoss?'<button type="button" class="go" style="margin-top:8px;border:1px solid var(--line-strong);background:none;color:var(--text);font:700 12px var(--font);border-radius:10px;padding:6px 10px;cursor:pointer" onclick="v2OpenGoal()">'+(goal?'Modifier':'Définir')+'</button>':'')+'</div></div>';
   var facLi=function(f,btn){return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(uiName(f.client)||'Client')+' · '+esc(f.num||'')+'</b><span>par '+esc(uiName(f.vendeur)||'—')+(typeof f.total==='number'?' · '+v2Money(f.total):'')+'</span></div>'+(btn?'<button type="button" class="go ok" onclick="dskValFac(\''+f.id+'\')">Valider</button>':'')+'<button type="button" class="go" onclick="viewFacture(\''+f.id+'\')">Voir</button></div>';};
-  var listCmdWait=dskPanel('Commandes à valider','Les plus récentes d\'abord',cmdWait.length?'<div class="dsk-list">'+cmdWait.slice(0,6).map(function(c){return dskOrderLi(c,'<button type="button" class="go ok" onclick="dskValCmd(\''+c.id+'\')">Valider</button>');}).join('')+'</div>':'<p class="dsk-empty">Aucune commande en attente.</p>',dskLink('Tout voir',"v2OpenCmds('en_attente')"));
-  var listFacPend=dskPanel('Factures à valider','Créées par les employés',facPend.length?'<div class="dsk-list">'+facPend.slice(0,6).map(function(f){return facLi(f,true);}).join('')+'</div>':'<p class="dsk-empty">Aucune facture à valider.</p>',dskLink('Factures',"goTab('factures')"));
+  var listCmdWait=dskPanel('Commandes à valider','Les plus récentes d\'abord',cmdWait.length?'<div class="dsk-list">'+cmdWait.slice(0,4).map(function(c){return dskOrderLi(c,'<button type="button" class="go ok" onclick="dskValCmd(\''+c.id+'\')">Valider</button>');}).join('')+'</div>':'<p class="dsk-empty">Aucune commande en attente.</p>',dskLink('Tout voir',"v2OpenCmds('en_attente')"));
+  var listFacPend=dskPanel('Factures à valider','Créées par les employés',facPend.length?'<div class="dsk-list">'+facPend.slice(0,4).map(function(f){return facLi(f,true);}).join('')+'</div>':'<p class="dsk-empty">Aucune facture à valider.</p>',dskLink('Factures',"goTab('factures')"));
   if(isBoss){
     var users=D.users||[],pend=users.filter(function(u){return u.statut==='en_attente';});
     body=warn+dskDayKpis(D,validFacs,false)+
       dskTodo([['Commandes à valider',cmdWait.length,"v2OpenCmds('en_attente')",'o'],['Commandes à livrer',cmdShip.length,"v2OpenCmds()",'v'],['Factures à valider',facPend.length,"goTab('factures')",'o'],['Comptes en attente',pend.length,"goTab('equipe')",'b'],['Stock bas',st.low,"goTab('produits');setTimeout(function(){setProdFilter('__low')},400)",'y']])+
       dskInsights(D)+
       '<div class="dsk-grid dsk-cols dsk-row2">'+dskPanel('Performance des employés','Ce mois-ci, ventes facturées validées',dskPerfPanel(validFacs,cmdMonth,users,mS))+dskPanel('Objectif du mois','',ring)+'</div>'+
-      '<div class="dsk-grid dsk-cols3b">'+dskPanel('Comptes en attente','Nouveaux comptes à approuver',pend.length?'<div class="dsk-list">'+pend.slice(0,6).map(function(u){return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(u.nom||u.email)+'</b><span>'+esc(u.email||'')+'</span></div><button type="button" class="go ok" onclick="uiMember(\''+u.id+'\');activeTab=\'equipe\';v2Nav(\'equipe\')">Examiner</button></div>';}).join('')+'</div>':'<p class="dsk-empty">Aucun compte en attente.</p>',dskLink('Équipe',"goTab('equipe')"))+st.html+'</div>'+
+      '<div class="dsk-grid dsk-cols3b">'+dskPanel('Comptes en attente','Nouveaux comptes à approuver',pend.length?'<div class="dsk-list">'+pend.slice(0,4).map(function(u){return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(u.nom||u.email)+'</b><span>'+esc(u.email||'')+'</span></div><button type="button" class="go ok" onclick="uiMember(\''+u.id+'\');activeTab=\'equipe\';v2Nav(\'equipe\')">Examiner</button></div>';}).join('')+'</div>':'<p class="dsk-empty">Aucun compte en attente.</p>',dskLink('Équipe',"goTab('equipe')"))+st.html+'</div>'+
       '<div class="dsk-grid dsk-cols eq">'+listCmdWait+listFacPend+'</div>';
   }else if(isAdmin){
     var savN=(D.sav||[]).length,preN=(D.pres||[]).length;
     var todo=dskTodo([['Commandes en attente',cmdWait.length,"v2OpenCmds('en_attente')",'o'],['Commandes à livrer',cmdShip.length,"v2OpenCmds()",'v'],['Factures à valider',facPend.length,"goTab('factures')",'o'],['SAV prêts à rendre',savN,"goTab('sav')",'b'],['Précommandes en cours',preN,"goTab('precommandes')",'v'],['Stock bas',st.low,"goTab('produits');setTimeout(function(){setProdFilter('__low')},400)",'y']]);
-    var ops='<div class="dsk-grid dsk-cols eq">'+dskPanel('Commandes à traiter','En attente, validées ou envoyées',open.length?'<div class="dsk-list">'+open.sort(function(a,b){return dskSort2(a,b,'ts');}).slice(0,8).map(function(c){return dskOrderLi(c,c.statut==='en_attente'?'<button type="button" class="go ok" onclick="dskValCmd(\''+c.id+'\')">Valider</button>':'');}).join('')+'</div>':'<p class="dsk-empty">Rien à traiter.</p>',dskLink('Toutes les commandes',"goTab('commandes')"))+
-      dskPanel('Factures à valider','Créées par les employés',facPend.length?'<div class="dsk-list">'+facPend.slice(0,8).map(function(f){return facLi(f,true);}).join('')+'</div>':'<p class="dsk-empty">Aucune facture à valider.</p>',dskLink('Factures',"goTab('factures')"))+'</div>';
+    var ops='<div class="dsk-grid dsk-cols eq">'+dskPanel('Commandes à traiter','En attente, validées ou envoyées',open.length?'<div class="dsk-list">'+open.sort(function(a,b){return dskSort2(a,b,'ts');}).slice(0,5).map(function(c){return dskOrderLi(c,c.statut==='en_attente'?'<button type="button" class="go ok" onclick="dskValCmd(\''+c.id+'\')">Valider</button>':'');}).join('')+'</div>':'<p class="dsk-empty">Rien à traiter.</p>',dskLink('Toutes les commandes',"goTab('commandes')"))+
+      dskPanel('Factures à valider','Créées par les employés',facPend.length?'<div class="dsk-list">'+facPend.slice(0,5).map(function(f){return facLi(f,true);}).join('')+'</div>':'<p class="dsk-empty">Aucune facture à valider.</p>',dskLink('Factures',"goTab('factures')"))+'</div>';
     if(can('totaux'))body=warn+dskDayKpis(D,validFacs,false)+todo+dskInsights(D)+ops+'<div class="dsk-grid dsk-cols">'+st.html+dskPanel('Objectif du mois','',ring)+'</div>';
     else body=warn+'<div class="dsk-grid dsk-kpis dsk-kpis4">'+
       dskKpi('Commandes en attente',String(cmdWait.length),'à valider',{cls:cmdWait.length?'hot':'',go:"v2OpenCmds('en_attente')",ic:['check','o']})+
@@ -6957,7 +6984,7 @@ async function renderDashboard(){
     body=warn+dskDayKpis(D,validFacs,true)+
       dskTodo([['Mes commandes en cours',myOpen.length,"goTab('commandes')",'o'],['Factures en attente de validation',(D.facs||[]).filter(facPending).length,"goTab('factures')",'v'],['Précommandes en cours',preN2,"goTab('precommandes')",'v'],['SAV prêts à rendre',savN2,"goTab('sav')",'b'],['Mes clients',(D.clients||[]).length,"goTab('clients')",'']])+
       dskInsights(D)+
-      '<div class="dsk-grid dsk-cols dsk-row2">'+dskPanel('Mes commandes à traiter','En attente, validées ou envoyées',myOpen.length?'<div class="dsk-list">'+myOpen.slice(0,8).map(function(c){return dskOrderLi(c,'');}).join('')+'</div>':'<p class="dsk-empty">Rien à traiter. Bravo !</p>',dskLink('Mes commandes',"goTab('commandes')"))+dskPanel('Mon objectif','',ring)+'</div>'+
+      '<div class="dsk-grid dsk-cols dsk-row2">'+dskPanel('Mes commandes à traiter','En attente, validées ou envoyées',myOpen.length?'<div class="dsk-list">'+myOpen.slice(0,5).map(function(c){return dskOrderLi(c,'');}).join('')+'</div>':'<p class="dsk-empty">Rien à traiter. Bravo !</p>',dskLink('Mes commandes',"goTab('commandes')"))+dskPanel('Mon objectif','',ring)+'</div>'+
       '<div class="dsk-grid dsk-cols eq">'+dskPanel('Mes dernières ventes','Factures validées',myFacs.length?'<div class="dsk-list">'+myFacs.slice(0,6).map(function(f){return '<div class="dsk-li"><div class="dsk-li-main"><b>'+esc(uiName(f.client)||'Client')+'</b><span>'+esc(f.num||'')+'</span></div><b class="num">'+v2Money(f.total||0)+'</b><button type="button" class="go" onclick="viewFacture(\''+f.id+'\')">Voir</button></div>';}).join('')+'</div>':'<p class="dsk-empty">Aucune vente validée.</p>',dskLink('Mes factures',"goTab('factures')"))+'</div>';
   }
   mc.innerHTML='<div class="ui-page dsk-page">'+dskGreeting(role)+body+'</div>';
@@ -7731,7 +7758,7 @@ function dskRepartition(D,from,titre,find){
 function dskTopProduits(D,from,titre,find){
   var by={},chip='<span class="dsk-chip">Ce mois</span>';
   dskSalesLines(D,from).forEach(function(l){var p=find(l),k=p?'id:'+p.id:(cfKey(l.name)||l.name.toLowerCase());var x=by[k]||(by[k]={name:p?[p.marque&&String(p.modele||'').toLowerCase().indexOf(String(p.marque).toLowerCase())<0?p.marque:'',p.modele||p.nom,p.stockage].filter(Boolean).join(' '):l.name,qty:0,amount:0,p:p});x.qty+=l.qty;x.amount+=l.amount;});
-  var top=Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.amount-a.amount;}).slice(0,5);
+  var top=Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.amount-a.amount;}).slice(0,3);
   if(!top.length)return dskPanel(titre,'','<p class="dsk-empty">Aucune vente validée ce mois-ci.</p>',chip);
   return dskPanel(titre,'','<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="dskPhG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4a66"/><stop offset="1" stop-color="#121a2a"/></linearGradient></defs></svg><ol class="dsk-top">'+top.map(function(x,i){return '<li'+(x.p?' onclick="viewProd(\''+x.p.id+'\')" class="go"':'')+'><span class="dsk-top-n">'+(i+1)+'</span>'+dskThumb(x.p)+'<b>'+esc(x.name)+'</b><small>'+x.qty+' unité'+(x.qty>1?'s':'')+'</small><em class="num">'+v2Money(x.amount)+'</em></li>';}).join('')+'</ol>',chip);
 }
@@ -7742,7 +7769,7 @@ function dskActivites(D,titre){
   (D.clients||D.newCli||[]).forEach(function(c){var d=v2ToDate(c.ts);if(d)ev.push({d:d,t:'Nouveau client',s:uiName(c.nom)||'Client',v:'',c:'b',ico:'users',go:"viewClient('"+c.id+"')"});});
   ev.sort(function(a,b){return b.d-a.d;});
   var low=(D.prods||[]).filter(function(p){return prodState(p)!=='ok';}).slice(0,2).map(function(p){return {d:null,t:'Stock bas',s:prodName(p)+(p.stockage?' ('+p.stockage+')':''),v:(p.quantite||0)+' restant'+((p.quantite||0)>1?'s':''),c:'bad',ico:'alert',go:"viewProd('"+p.id+"')"};});
-  var list=ev.slice(0,6-low.length).concat(low),link=dskLink('Voir tout',"goTab('historique')");
+  var list=ev.slice(0,5-low.length).concat(low),link=dskLink('Voir tout',"goTab('historique')");
   if(!list.length)return dskPanel(titre,'','<p class="dsk-empty">Aucune activité récente.</p>',link);
   return dskPanel(titre,'',
     '<div class="dsk-act">'+list.map(function(e){return '<button type="button" class="dsk-act-i" onclick="'+e.go+'"><span class="dsk-act-ico '+(e.c||'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+DSK_KICO[e.ico]+'</svg></span><span class="dsk-act-m"><b>'+esc(e.t)+'</b><span>'+esc(e.s)+'</span><small>'+(e.d?dskAgo(e.d):'')+'</small></span><em class="'+(e.c||'')+'">'+(e.v?esc(e.v):'›')+'</em></button>';}).join('')+'</div>',link);
@@ -7800,7 +7827,7 @@ function dskCategories(D,from,prevFrom,titre,find){
     var v=cur.by[k],p=k==='Autres'?null:(prevBy[k]||0),col=DSK_PALETTE[i%DSK_PALETTE.length],ev='';
     if(p>0){var d=Math.round((v-p)/p*100);ev='<small class="'+(d>=0?'up':'down')+'">'+(d>=0?'↑ +':'↓ ')+d+' %</small>';}
     return '<div class="dsk-cat" style="--c:'+col+';--i:'+i+'"><div class="dsk-cat-col"><i style="height:'+Math.max(6,Math.round(v/mx*100))+'%"></i></div><span class="dsk-cat-n"><em>'+esc(k.charAt(0))+'</em><span>'+esc(k)+'</span></span><b class="num">'+dskcShort(v)+' F</b>'+(ev||'<small>&nbsp;</small>')+'</div>';
-  }).join('')+'</div><p class="dskc-note">Par marque, d\'après les lignes des factures validées. Évolution : comparée au mois précédent.</p>',chip);
+  }).join('')+'</div>',chip);
 }
 
 function dskThumb(p){

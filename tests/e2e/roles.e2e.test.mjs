@@ -75,6 +75,12 @@ describe('Tableaux de bord : un par rôle (ordinateur)', () => {
     assert.match(t, /Nouvelle Recrue/);
     assert.match(t, /État du stock/);
     assert.match(t, /Phone Test/, 'stock bas listé');
+    /* tableau de bord compact */
+    assert.doesNotMatch(t, /Voici un résumé|Par marque, d'après/);
+    assert.ok(await page.locator('.dsk-top li').count() <= 3, '3 meilleurs produits au plus');
+    assert.ok(await page.locator('.dsk-act-i').count() <= 5, '5 activités au plus');
+    assert.match(t, /en rupture/);
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('.dsk-chip')].every((c) => c.tagName === 'SPAN' && getComputedStyle(c).cursor !== 'pointer')), true, '« Ce mois » n\'a pas l\'air d\'un bouton');
     /* menu rétractable : masqué par défaut, s'ouvre par-dessus sans déplacer le contenu, se ferme (Échap, clic à côté, choix) */
     assert.equal(await page.locator('#dsk-nav').isVisible(), false);
     const x0 = (await page.locator('#main-content').boundingBox()).x;
