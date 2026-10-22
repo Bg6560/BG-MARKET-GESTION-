@@ -185,4 +185,22 @@ describe('Catalogue fournisseur', () => {
     assert.equal(moto.stockage, '128GB');
     await s.context.close();
   });
+
+  it('WhatsApp : la fiche fournisseur passe par WhatsApp Business (numéro conservé) ; réglage réservé aux gestionnaires', async () => {
+    const s = await session(EMAILS.patron);
+    await s.page.evaluate(() => { window.__wa = []; window.waSupplier = function (n, t) { window.__wa.push([n, t, waUrls(n, t).biz]); }; });
+    await fiche(s.page, 'F1');
+    await s.page.locator('#main-content .ui-btn-wa').first().click();
+    const [[num, , biz]] = await s.page.evaluate(() => window.__wa);
+    assert.equal(num, '2250100000001');
+    assert.match(biz, /package=com\.whatsapp\.w4b/);
+    await s.page.evaluate(() => { goTab('parametres'); });
+    await s.page.waitForSelector('.st-hero', { timeout: 10000 });
+    assert.match(await s.page.locator('#main-content').textContent(), /WhatsApp/);
+    await s.page.evaluate(() => uiSettings('whatsapp'));
+    await s.page.check('input[name="wa-app"][value="standard"]');
+    assert.equal(await s.page.evaluate(() => waPref()), 'standard');
+    assert.deepEqual(s.errors, []);
+    await s.context.close();
+  });
 });

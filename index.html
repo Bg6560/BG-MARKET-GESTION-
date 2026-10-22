@@ -3767,7 +3767,8 @@ function renderParametres(){
     stRow(ST_ICO.user,'c-turq',t('st.profile'),'',"uiSettings('profil')",t('st.profileSub'))+
     stRow(ST_ICO.palette,'c-violet',t('st.look'),stThemeLabel(),"uiSettings('apparence')")+
     stRow(ST_ICO.globe,'c-blue',t('st.lang'),uiLang==='en'?'English':'Français',"uiSettings('langue')")+
-    stRow(ST_ICO.info,'c-warn','Notifications','Dans l\'appli',"uiSettings('notifications')","Commandes, factures, stock")+'</div>';
+    stRow(ST_ICO.info,'c-warn','Notifications','Dans l\'appli',"uiSettings('notifications')","Commandes, factures, stock")+
+    (isAdmin?stRow(ST_ICO.globe,'c-ok','WhatsApp',waPref()==='standard'?'Classique':'Business',"uiSettings('whatsapp')","Application pour contacter les fournisseurs"):'')+'</div>';
   if(isAdmin&&!isBoss&&can('reglages')){
     h+='<div class="st-label">'+t('rl.work')+'</div><div class="st-group ui-in" style="--i:'+(i++)+'">'+
       stRow(ST_ICO.chart,'c-turq',t('st.sales'),(gs.margeDefaut||supplierMargin||12)+' %',"uiSettings('ventes')")+
@@ -3908,6 +3909,7 @@ function uiSettings(sec){
     '<section class="ui-card ui-in" style="--i:1">'+uiKV('Boutique',esc(gs.bizName||'BG-MARKET'))+uiKV('Téléphone',esc(gs.bizPhone||'05 65 60 36 89'))+uiKV('Adresse',esc(gs.bizAddr||'Yopougon, Abidjan'))+uiKV('Connecté en tant que',esc((currentUser&&currentUser.email)||''))+'</section>';
   }
   else if(sec==='notifications'){h+=ntfSettingsHtml();}
+  else if(sec==='whatsapp'&&isAdmin){h+=waSettingsHtml();}
   else {renderParametres();return;}
   h+='</div>';mc.innerHTML=h;window.scrollTo(0,0);
 }
@@ -5047,13 +5049,13 @@ function facSupPick(i){
   var num=facWaNum(f.whatsapp);
   if(!num){showToast(t('sup.nowa'),'e');return;}
   ctx.busy=true;
-  window.open('https://wa.me/'+num+'?text='+encodeURIComponent(facSupMsg(ctx.cmd)),'_blank');
+  waSupplier(num,facSupMsg(ctx.cmd));
   facSupSave(ctx,f);
 }
 function facSupOther(){
   var ctx=supCtx;if(!ctx||ctx.busy||!ctx.cmd)return;
   ctx.busy=true;
-  window.open('https://wa.me/?text='+encodeURIComponent(facSupMsg(ctx.cmd)),'_blank');
+  waSupplier('',facSupMsg(ctx.cmd));
   facSupSave(ctx,null);
 }
 async function facSupSave(ctx,f){
@@ -5694,7 +5696,7 @@ function renderFournList(){
 function foWa(id){
   var f=allFourns.find(function(x){return x.id===id;});if(!f)return;
   var n=facWaNum(f.whatsapp);if(!n){showToast(t('fo.noWa'),'e');return;}
-  window.open('https://wa.me/'+n,'_blank');
+  waSupplier(n,'');
 }
 
 async function viewFourn(id){
@@ -5719,7 +5721,7 @@ async function viewFourn(id){
      (can('totaux')&&st.cost>0?uiKV(t('fo.buy'),v2Money(st.cost)):'')+(can('totaux')&&st.profit>0?uiKV(t('fo.profit'),'+'+v2Money(st.profit),'ui-pos'):'')+
      '<p class="ui-muted" style="margin-top:10px;font-size:12px">'+t('fo.ordersNote')+'</p></section>';
   h+='<section class="ui-card ui-in" style="--i:'+(i++)+'"><h2>'+t('fo.contact')+'</h2>'+uiKV(t('fo.fwa'),esc(f.whatsapp||'—'))+(f.notes?uiKV(t('c.notes'),esc(f.notes)):'')+
-     (wa?'<div class="ui-btns2"><a class="ui-btn ui-btn-ghost ui-press" href="tel:'+esc(String(f.whatsapp).replace(/[^0-9+]/g,''))+'">'+UI_ICO.phone+t('c.call')+'</a><a class="ui-btn ui-btn-wa ui-press" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">'+UI_ICO.wa+t('c.wa')+'</a></div>':'<p class="ui-muted">'+t('fo.noWa')+'</p>')+'</section>';
+     (wa?'<div class="ui-btns2"><a class="ui-btn ui-btn-ghost ui-press" href="tel:'+esc(String(f.whatsapp).replace(/[^0-9+]/g,''))+'">'+UI_ICO.phone+t('c.call')+'</a><button type="button" class="ui-btn ui-btn-wa ui-press" onclick="waSupplier(\''+wa+'\',\'\')">'+UI_ICO.wa+t('c.wa')+'</button></div>':'<p class="ui-muted">'+t('fo.noWa')+'</p>')+'</section>';
   var rows=cmds.map(function(c){
     var stt=V2_STATUS[c.statut]||[c.statut||'—','p-other'];
     return '<button type="button" class="ui-row ui-press" onclick="v2OpenCmd(\''+c.id+'\')"><span class="ui-row-main"><b>'+esc(uiName(c.client)||'Client')+'</b><span>'+esc(v2CmdTitle(c))+'</span><small>'+esc(c.num||'')+(uiDate(c)?', '+foDateTxt(uiDate(c)):'')+'</small></span><span class="ui-row-side"><b class="num">'+v2Money(c.total||c.prix||0)+'</b><span class="h-pill '+stt[1]+'">'+esc(stt[0])+'</span></span></button>';
@@ -8045,5 +8047,35 @@ function prodKind(p){
 function prodKindBox(p,cls){
   var k=PRD_KINDS[prodKind(p)];
   return '<span class="'+cls+'" role="img" aria-label="'+k[0]+' (icône générique)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+k[1]+'</svg></span>';
+}
+
+/* Contact des fournisseurs : WhatsApp Business de préférence sur Android, WhatsApp classique en secours.
+   Android (Chrome, appli installée) : lien « intent » vers com.whatsapp.w4b ; si WhatsApp Business est absent,
+   le navigateur suit l'adresse de secours (wa.me), qui ouvre WhatsApp classique. Ailleurs : wa.me habituel.
+   Numéro et message préparé inchangés. Choix gardé sur l'appareil (Réglages › WhatsApp). */
+function waPref(){try{return localStorage.getItem('bg_wa_app')||'business';}catch(e){return 'business';}}
+function waSetPref(v){try{localStorage.setItem('bg_wa_app',v==='standard'?'standard':'business');}catch(e){}if(window._stSec==='whatsapp')uiSettings('whatsapp');}
+function waIsAndroid(){return /Android/i.test((navigator&&navigator.userAgent)||'');}
+function waUrls(num,text){
+  num=String(num||'').replace(/[^0-9]/g,'');
+  var enc=text?encodeURIComponent(text):'';
+  var web='https://wa.me/'+num+(enc?'?text='+enc:'');
+  var q=[num?'phone='+num:'',enc?'text='+enc:''].filter(Boolean).join('&');
+  return {web:web,biz:'intent://send/?'+q+'#Intent;scheme=whatsapp;package=com.whatsapp.w4b;S.browser_fallback_url='+encodeURIComponent(web)+';end'};
+}
+function waSupplier(num,text){
+  var u=waUrls(num,text);
+  if(waIsAndroid()&&waPref()==='business'){location.href=u.biz;return 'business';}
+  window.open(u.web,'_blank');return 'web';
+}
+function waSettingsHtml(){
+  var p=waPref(),and=waIsAndroid();
+  var opt=function(v,l,d){return '<label class="ui-row" style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer"><input type="radio" name="wa-app" value="'+v+'" '+(p===v?'checked ':'')+'onchange="waSetPref(\''+v+'\')" style="margin-top:3px"/><span><b>'+l+'</b><br><span class="ui-muted">'+d+'</span></span></label>';};
+  return stHead('WhatsApp','Contact des fournisseurs')+
+    '<section class="ui-card ui-in" style="--i:0"><h2>Application à ouvrir</h2>'+
+    opt('business','WhatsApp Business (recommandé)','Si WhatsApp Business n\'est pas installé sur le téléphone, WhatsApp classique s\'ouvre à la place.')+
+    opt('standard','WhatsApp classique','Le lien WhatsApp habituel.')+
+    '<p class="ui-note">'+(and?'Choix gardé sur cet appareil. Les numéros des fournisseurs et les messages préparés ne changent pas.'
+      :'Sur cet appareil (ordinateur, iPhone), le navigateur ne permet pas d\'imposer WhatsApp Business : le lien WhatsApp habituel est utilisé et c\'est le système qui choisit l\'application.')+'</p></section>';
 }
 </script></body></html>
