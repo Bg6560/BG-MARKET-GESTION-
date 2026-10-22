@@ -41,7 +41,7 @@ describe('Hors ligne : client', () => {
   it('création sans réseau : pas de blocage, état « en attente », envoi unique au retour du réseau', async () => {
     const { page, context } = await session();
     await page.evaluate(() => goTab('clients'));
-    await page.waitForSelector('.dsk-table', { timeout: 15000 });
+    await page.waitForSelector('.dc-grid', { timeout: 15000 });
     await context.setOffline(true);
     await waitBadge(page, /Hors ligne/);
     await page.evaluate(() => openNvClient());
@@ -67,7 +67,7 @@ describe('Hors ligne : facture, coûts, stock', () => {
   it('facture d\'un employé sans réseau : en attente de validation, coûts à part, stock et mouvement une seule fois', async () => {
     const { page, context } = await session();
     await page.evaluate(() => goTab('produits'));
-    await page.waitForSelector('.dsk-table', { timeout: 15000 });
+    await page.waitForSelector('.dc-grid', { timeout: 15000 });
     await context.setOffline(true);
     await waitBadge(page, /Hors ligne/);
     await page.evaluate(() => openNvFac());
@@ -103,7 +103,7 @@ describe('Hors ligne : compte suspendu puis réactivé', () => {
   it('l\'écriture en attente est conservée pendant la suspension et envoyée une seule fois après réactivation', async () => {
     const s = await session();
     await s.page.evaluate(() => goTab('clients'));
-    await s.page.waitForSelector('.dsk-table', { timeout: 15000 });
+    await s.page.waitForSelector('.dc-grid', { timeout: 15000 });
     await s.context.setOffline(true);
     await waitBadge(s.page, /Hors ligne/);
     await s.page.evaluate(() => openNvClient());
@@ -141,7 +141,7 @@ describe('Hors ligne : modification refusée (conflit)', () => {
     await server(async (db) => { await setDoc(doc(db, 'factures', 'fx'), { uid: U.empA, num: 'FAC-X', client: 'Client Fx', total: 1000, validation: 'a_valider', statut: 'en_attente', ts: Timestamp.now(), products: [{ name: 'Phone Test', qty: 1, price: 1000 }] }); });
     const { page, context } = await session();
     await page.evaluate(() => goTab('factures'));
-    await page.waitForSelector('.dsk-table', { timeout: 15000 });
+    await page.waitForSelector('.dc-grid', { timeout: 15000 });
     await context.setOffline(true);
     await waitBadge(page, /Hors ligne/);
     await page.evaluate(() => db.collection('factures').doc('fx').update({ client: 'Modifié hors ligne' }));

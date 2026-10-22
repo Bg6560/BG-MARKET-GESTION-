@@ -1521,7 +1521,7 @@ html,body{overflow-x:hidden}
 @media (min-width:1100px){
   .dsk-kpi-v{font-size:24px!important}
   /* Formulaires et fiches : largeur de lecture confortable, centrée */
-  #main-content>.ui-page:not(:has(.dsk-table)):not(:has(.dsk-hello)):not(:has(.dsk-grid)){max-width:980px;margin-left:auto;margin-right:auto}
+  #main-content>.ui-page:not(:has(.dsk-table)):not(:has(.dc-grid)):not(:has(.dsk-hello)):not(:has(.dsk-grid)){max-width:980px;margin-left:auto;margin-right:auto}
 }
 @media (max-width:1099px){
   .dsk-kpi .dsk-spark{top:16px;right:14px;height:28px}
@@ -1889,10 +1889,39 @@ html,body{overflow-x:hidden}
 /* Cases de statistiques : un montant n'est jamais coupé (taille adaptée, retour à la ligne en dernier recours) */
 .fo-stat b{white-space:normal!important;text-overflow:clip!important;overflow:visible!important;overflow-wrap:break-word;font-size:clamp(12.5px,3.7vw,15px)!important;line-height:1.2}
 .fo-stat span{display:block;white-space:normal!important;overflow-wrap:anywhere;hyphens:auto;font-size:clamp(10.5px,3.1vw,12px)!important;line-height:1.25}
-@media (min-width:1100px) and (max-width:1279px){
-  #main-content .dsk-table td,#main-content .dsk-table th{padding-left:9px!important;padding-right:9px!important}
-  #main-content .dsk-table{font-size:13px}
-}
+</style>
+<style id="cards-v9">
+/* Listes en cartes sur ordinateur (Commandes, Factures, Clients, Produits) */
+.dc-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 12px}
+.dc-count{color:var(--muted);font-size:13px;font-weight:600}
+.dc-sort{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+.dc-sort select{height:36px;border-radius:10px;padding:0 10px;background:var(--surface-2);color:var(--text);border:1px solid var(--line-strong);font:600 13px var(--font);cursor:pointer}
+.dc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:stretch}
+@media (min-width:1700px){.dc-grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}}
+.dc-card{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px 16px;border-radius:18px;cursor:pointer;color:var(--text);
+  background:var(--glass),var(--glass-solid);border:1px solid var(--glass-line);box-shadow:var(--sh-1);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.dc-card:hover{transform:translateY(-2px);border-color:rgba(0,212,200,.45);box-shadow:var(--sh-2)}
+.dc-card:focus-visible{outline:2px solid var(--turq);outline-offset:2px}
+.dc-card.warn{box-shadow:inset 3px 0 0 #F5A524,var(--sh-1)}.dc-card.bad{box-shadow:inset 3px 0 0 var(--danger),var(--sh-1)}
+.dc-top{display:flex;align-items:center;gap:12px;min-width:0}
+.dc-top>.h-dot,.dc-top>.cli-av{flex:none}
+.dc-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dc-id b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-id span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-top>.h-pill{flex:none;align-self:flex-start}
+.dc-desc{margin:0;font-size:13.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dc-desc small{color:var(--muted)}
+.dc-meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted)}
+.dc-meta i{font-style:normal;margin-right:5px}.dc-meta b{color:var(--text);font-weight:600}
+.dc-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid var(--line)}
+.dc-amt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dc-amt b{font-size:18px;font-weight:800;white-space:nowrap}
+.dc-amt small{font-size:12px;font-weight:700;white-space:nowrap}.dc-amt .dc-cap{color:var(--muted);font-weight:600}
+.dc-acts{flex-wrap:wrap;margin-left:auto}
+.fac-pend .dc-grid{margin-top:10px}
+@media (prefers-reduced-motion:reduce){.dc-card{transition:none}.dc-card:hover{transform:none}}
+/* Photo de profil : jamais d'initiale par-dessus la photo */
+.st-ava.has-photo{color:transparent!important;text-shadow:none!important}
 </style>
 </head>
 <body>
@@ -3689,12 +3718,14 @@ var ST_ICO={
 function uiInitial(p){return String((p&&(p.nom||p.email))||'?').trim().charAt(0).toUpperCase()||'?';}
 function uiAvatar(p,cls){
   var ph=p&&p.photo;
-  return '<span class="st-ava'+(cls?' '+cls:'')+(ph?' has-photo':'')+'"'+(ph?' style="background-image:url(\''+ph+'\')"':'')+'>'+esc(uiInitial(p))+'</span>';
+  return '<span class="st-ava'+(cls?' '+cls:'')+(ph?' has-photo':'')+'"'+(ph?' style="background-image:url(\''+ph+'\')" role="img" aria-label="'+facQ(uiName(p.nom)||'Photo de profil')+'"':'')+'>'+(ph?'':esc(uiInitial(p)))+'</span>';
 }
 function uiApplyAvatar(){
   var a=document.getElementById('uavatar');if(!a||!userProfile)return;
-  if(userProfile.photo){a.style.backgroundImage='url("'+userProfile.photo+'")';a.style.backgroundSize='cover';a.style.backgroundPosition='center';a.style.color='transparent';}
-  else{a.style.backgroundImage='';a.style.color='';}
+  if(userProfile.photo){a.style.backgroundImage='url("'+userProfile.photo+'")';a.style.backgroundSize='cover';a.style.backgroundPosition='center';a.style.color='transparent';a.textContent='';a.classList.add('has-photo');}
+  else{a.style.backgroundImage='';a.style.color='';a.classList.remove('has-photo');if(!a.textContent)a.textContent=(uiInitial(userProfile)||'?');}
+  /* carte profil de la barre du haut et pied du menu : reconstruites avec ou sans photo */
+  var pr=document.getElementById('dsk-prof');if(pr){var av=pr.querySelector('.st-ava');if(av)av.outerHTML=uiAvatar(userProfile,'sm');}
 }
 var _origUpdateNavUser=updateNavUser;
 updateNavUser=function(){try{_origUpdateNavUser();}catch(e){}uiApplyAvatar();uiApplyShellLang();};
@@ -4491,9 +4522,9 @@ function renderFacList(){
   if(pe){
     var pl=isAdmin?facSearched(all.filter(facPending)):[];
     if(pl.length){
-      var h='';pl.forEach(function(f,i){h+=facRowHTML(f,i);});
+      var dk=dskIsDesktop(),h='';if(!dk)pl.forEach(function(f,i){h+=facRowHTML(f,i);});
       pe.innerHTML='<section class="ui-card fac-pend ui-in"><div class="fac-pend-head"><h2>'+t('fac.tovalid')+'</h2><span class="ui-count fac-count-o">'+pl.length+'</span></div>'+
-        '<p class="fac-hint">'+t('fac.swipeHint')+'</p><div class="ui-list">'+h+'</div></section>';
+        (dk?dskFacTable(pl,true):'<p class="fac-hint">'+t('fac.swipeHint')+'</p><div class="ui-list">'+h+'</div>')+'</section>';
     }else pe.innerHTML='';
   }
   var base=facBase();
@@ -6783,74 +6814,83 @@ function dskQuick(ev){
 }
 
 /* ---------- Tableaux ---------- */
-function dskTable(cols,rows){
-  var h='<div class="dsk-tablewrap"><table class="dsk-table"><thead><tr>'+cols.map(function(c,i){return '<th class="'+(c.r?'r':'')+'" onclick="dskSort(this,'+i+','+(c.n?1:0)+')" scope="col">'+c.h+'</th>';}).join('')+'</tr></thead><tbody>';
-  rows.forEach(function(r){
-    h+='<tr onclick="'+r.open+'" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()">'+r.cells.map(function(c,i){return '<td class="'+(cols[i].r?'r ':'')+(c.cls||'')+'" data-v="'+facQ(String(c.v!=null?c.v:''))+'">'+c.h+'</td>';}).join('')+'</tr>';
-  });
-  return h+'</tbody></table></div><p class="dsk-count">'+rows.length+' ligne'+(rows.length>1?'s':'')+'</p>';
-}
-function dskSort(th,i,num){
-  var tb=th.closest('table').querySelector('tbody'),dir=th.dataset.dir==='1'?-1:1;
-  th.closest('tr').querySelectorAll('th').forEach(function(x){x.removeAttribute('data-dir');});th.dataset.dir=String(dir);
-  var rows=Array.prototype.slice.call(tb.rows);
-  rows.sort(function(a,b){var x=a.cells[i].dataset.v,y=b.cells[i].dataset.v;return (num?(parseFloat(x)||0)-(parseFloat(y)||0):x.localeCompare(y,'fr',{numeric:true}))*dir;});
-  rows.forEach(function(r){tb.appendChild(r);});
-}
 function dskDay(d){return d?d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—';}
 function dskPill(cls,txt){return '<span class="h-pill '+cls+'">'+esc(txt)+'</span>';}
 function dskAct(cls,label,call){return '<button type="button" class="'+cls+'" onclick="event.stopPropagation();'+call+'">'+label+'</button>';}
+/* Listes sur ordinateur : grille de cartes, même langage visuel que sur téléphone ; tri conservé (menu « Trier par »).
+   La page défile naturellement : aucun conteneur à hauteur limitée. */
+var DC_SORTS={};
+function dskCards(kind,sorts,cards,bare){
+  DC_SORTS[kind]=sorts;
+  var cur=sorts[0][0];try{var sv=localStorage.getItem('bg_sort_'+kind);if(sv&&sorts.some(function(s){return s[0]===sv;}))cur=sv;}catch(e){}
+  var h=(bare?'':'<div class="dc-bar"><span class="dc-count">'+cards.length+' élément'+(cards.length>1?'s':'')+'</span>'+
+    '<label class="dc-sort">Trier par <select aria-label="Trier la liste" onchange="dskCardSort(this,\''+kind+'\')">'+sorts.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===cur?' selected':'')+'>'+s[1]+'</option>';}).join('')+'</select></label></div>')+
+    '<div class="dc-grid" data-kind="'+kind+'">'+cards.map(function(c,i){
+      var ds=' data-s-o="'+i+'"'+Object.keys(c.s||{}).map(function(k){return ' data-s-'+k+'="'+facQ(String(c.s[k]==null?'':c.s[k]))+'"';}).join('');
+      return '<article class="dc-card'+(c.cls?' '+c.cls:'')+'" tabindex="0" onclick="'+c.open+'" onkeydown="if(event.key===\'Enter\'&&event.target===this)this.click()"'+ds+'>'+c.html+'</article>';
+    }).join('')+'</div>';
+  if(cur!==sorts[0][0])setTimeout(function(){var s=document.querySelector('.dc-grid[data-kind="'+kind+'"]');if(s)dskCardSortApply(s,kind,cur);},0);
+  return h;
+}
+function dskCardSort(sel,kind){try{localStorage.setItem('bg_sort_'+kind,sel.value);}catch(e){}var g=document.querySelector('.dc-grid[data-kind="'+kind+'"]');if(g)dskCardSortApply(g,kind,sel.value);}
+function dskCardSortApply(g,kind,key){
+  var def=(DC_SORTS[kind]||[]).filter(function(s){return s[0]===key;})[0];if(!def)return;
+  var f=def[2],num=def[3],dir=def[4]||1,cards=Array.prototype.slice.call(g.children);
+  cards.sort(function(a,b){var x=a.getAttribute('data-s-'+f)||'',y=b.getAttribute('data-s-'+f)||'';return (num?(parseFloat(x)||0)-(parseFloat(y)||0):x.localeCompare(y,'fr',{numeric:true,sensitivity:'base'}))*dir;});
+  cards.forEach(function(c){g.appendChild(c);});
+}
+function dcHead(ico,title,sub,pill){return '<header class="dc-top">'+ico+'<div class="dc-id"><b>'+title+'</b><span>'+sub+'</span></div>'+(pill||'')+'</header>';}
+function dcMeta(items){items=items.filter(function(x){return x&&x[1];});return items.length?'<div class="dc-meta">'+items.map(function(x){return '<span><i>'+x[0]+'</i><b>'+x[1]+'</b></span>';}).join('')+'</div>':'';}
+function dcFoot(amount,extra,acts){return '<footer class="dc-foot"><div class="dc-amt">'+(amount?'<b class="num">'+amount+'</b>':'')+(extra||'')+'</div>'+(acts?'<div class="dc-acts dsk-acts">'+acts+'</div>':'')+'</footer>';}
 function dskCmdTable(list){
-  var cols=[{h:'N°'},{h:'Client'},{h:'Produits'}].concat(isAdmin?[{h:'Vendeur'}]:[]).concat([{h:'Date',n:1},{h:'Montant',r:1,n:1},{h:'Statut'}]);
-  return dskTable(cols,list.map(function(c){
+  return dskCards('cmd',[['o','Plus récentes','o',1],['montant','Montant (décroissant)','m',1,-1],['client','Client (A → Z)','c',0],['statut','Statut','st',0]],list.map(function(c){
     var d=uiDate(c),st=V2_STATUS[c.statut]||[c.statut||'—','p-other'],n=c.nbArticles||(Array.isArray(c.produits)?c.produits.reduce(function(a,p){return a+(p.qty||1);},0):1);
-    var cells=[{h:esc(c.num||'—'),v:c.num},{h:'<b>'+esc(uiName(c.client)||'Client')+'</b><small>'+esc(c.tel||'')+'</small>',v:c.client},{h:esc(v2CmdTitle(c))+(n>1?' <small>'+n+' téléphones</small>':''),v:v2CmdTitle(c)}];
-    if(isAdmin)cells.push({h:esc(uiName(c.vendeur)||'—'),v:c.vendeur});
-    cells.push({h:dskDay(d),v:d?d.getTime():0},{h:v2Money(c.total||c.prix||0),v:c.total||c.prix||0,cls:'num'},{h:dskPill(st[1],st[0]),v:st[0]});
-    return {open:"viewCmd('"+c.id+"')",cells:cells};
+    var t0=v2CmdTitle(c),bd=v2BrandDot(t0),tot=c.total||c.prix||0;
+    return {open:"viewCmd('"+c.id+"')",s:{m:tot,c:uiName(c.client)||'',st:st[0]},cls:c.statut==='en_attente'?'warn':'',
+      html:dcHead('<span class="h-dot" style="background:'+bd[1]+'">'+esc(bd[0])+'</span>',esc(uiName(c.client)||'Client'),esc(c.num||'—')+' · '+dskDay(d),dskPill(st[1],st[0]))+
+        '<p class="dc-desc">'+esc(t0)+(n>1?' <small>('+n+' téléphones)</small>':'')+'</p>'+
+        dcMeta([['Téléphone',esc(c.tel||'')],isAdmin?['Vendeur',esc(uiName(c.vendeur)||'')]:null])+
+        dcFoot(v2Money(tot),'','')};
   }));
 }
-function dskFacTable(list){
+function dskFacTable(list,pendBlock){
   var showP=can('couts');
-  var cols=[{h:'N°'},{h:'Client'},{h:'Date',n:1}].concat(isAdmin?[{h:'Vendeur'}]:[]).concat([{h:'Montant',r:1,n:1}]).concat(showP?[{h:'Bénéfice',r:1,n:1}]:[]).concat([{h:'Statut'},{h:'Actions',r:1}]);
-  return dskTable(cols,list.map(function(f){
+  return dskCards(pendBlock?'facp':'fac',[['o','Plus récentes','o',1],['montant','Montant (décroissant)','m',1,-1],['client','Client (A → Z)','c',0]].concat(showP?[['benef','Bénéfice (décroissant)','b',1,-1]]:[]),list.map(function(f){
     var pend=facPending(f),d=facDate(f),pill=pend?['p-wait',t('fac.pending')]:(f.statut==='payee'?['p-done',t('fac.paid')]:['p-sent',t('fac.unpaid')]);
     var acts='';
     if(isAdmin&&pend)acts+=dskAct('ok',t('fac.validate'),"facValidate('"+f.id+"')");
     if(!isAdmin&&pend&&facMine(f))acts+=dskAct('',t('fac.edit'),"editFacture('"+f.id+"')");
     if(can('suppr'))acts+=dskAct('bad',t('fac.delete'),"facDelete('"+f.id+"')");
-    var cells=[{h:esc(f.num||'—'),v:f.num},{h:'<b>'+esc(uiName(f.client)||'Client')+'</b>',v:f.client},{h:dskDay(d),v:d?d.getTime():0}];
-    if(isAdmin)cells.push({h:esc(uiName(f.vendeur)||'—'),v:f.vendeur});
-    cells.push({h:v2Money(f.total||0),v:f.total||0,cls:'num'});
-    if(showP)cells.push({h:typeof f.profit==='number'?(f.profit>=0?'+':'')+v2Money(f.profit):'—',v:typeof f.profit==='number'?f.profit:0,cls:'num'});
-    cells.push({h:dskPill(pill[0],pill[1]),v:pill[1]},{h:'<div class="dsk-acts">'+acts+'</div>',v:''});
-    return {open:"viewFacture('"+f.id+"')",cells:cells};
-  }));
+    var pf=typeof f.profit==='number'?f.profit:null;
+    return {open:"viewFacture('"+f.id+"')",s:{m:f.total||0,c:uiName(f.client)||'',b:pf||0},cls:pend&&!pendBlock?'warn':'',
+      html:dcHead('<span class="h-dot fac-dot">'+FAC_ICO.receipt+'</span>',esc(uiName(f.client)||'Client'),esc(f.num||'—')+' · '+dskDay(d),dskPill(pill[0],pill[1]))+
+        dcMeta([isAdmin?['Vendeur',esc(uiName(f.vendeur)||'')]:null])+
+        dcFoot(v2Money(f.total||0),showP?'<small class="dc-pf '+(pf!=null&&pf<0?'ui-neg':'ui-pos')+'">Bénéfice '+(pf!=null?(pf>=0?'+':'')+v2Money(pf):'—')+'</small>':'',acts)};
+  }),pendBlock);
 }
 function dskCliTable(list){
   var st=cliStatsOn;
-  var cols=[{h:'Client'},{h:'Téléphone'},{h:'Adresse'}].concat(st?[{h:'Commandes',r:1,n:1},{h:'Total',r:1,n:1},{h:'Dernière',n:1}]:[]).concat([{h:'Actions',r:1}]);
-  return dskTable(cols,list.map(function(c){
+  return dskCards('cli',[['o','Nom (A → Z)','o',1]].concat(st?[['cmds','Nombre de commandes','n',1,-1],['total','Total dépensé','m',1,-1],['last','Dernière commande','l',1,-1]]:[]),list.map(function(c){
     var s=c._st,wa=facWaNum(c.whatsapp||c.tel),acts='';
     if(wa)acts+=dskAct('',t('cl.wa2'),"cliWa('"+c.id+"')");
     if(isAdmin)acts+=dskAct('',t('cl.edit'),"editClient('"+c.id+"')");
     if(can('suppr'))acts+=dskAct('bad',t('cl.del'),"deleteClient('"+c.id+"')");
-    var cells=[{h:'<b>'+esc(uiName(c.nom)||'—')+'</b>',v:c.nom},{h:esc(c.tel||c.whatsapp||'—'),v:c.tel},{h:esc(c.adresse||'—'),v:c.adresse}];
-    if(st)cells.push({h:String(s?s.n:0),v:s?s.n:0,cls:'num'},{h:v2Money(s?s.total:0),v:s?s.total:0,cls:'num'},{h:s&&s.last?dskDay(s.last):'—',v:s&&s.last?s.last.getTime():0});
-    cells.push({h:'<div class="dsk-acts">'+acts+'</div>',v:''});
-    return {open:"viewClient('"+c.id+"')",cells:cells};
+    return {open:"viewClient('"+c.id+"')",s:{n:s?s.n:0,m:s?s.total:0,l:s&&s.last?s.last.getTime():0},
+      html:dcHead(cliAvatar(c.nom),esc(uiName(c.nom)||'—'),esc(c.tel||c.whatsapp||'—'),st&&s&&s.n>=2?'<span class="h-pill p-done">'+t('cl.loyal')+'</span>':'')+
+        dcMeta([['Adresse',esc(c.adresse||'')]].concat(st?[['Commandes',String(s?s.n:0)],['Dernière',s&&s.last?dskDay(s.last):'']]:[]))+
+        dcFoot(st?v2Money(s?s.total:0):'',st?'<small class="dc-cap">Total dépensé</small>':'',acts)};
   }));
 }
 function dskProdTable(list){
   var buy=can('couts');
-  var cols=[{h:'Produit'},{h:'Marque'},{h:'Caractéristiques'},{h:'Stock',r:1,n:1},{h:'Prix de vente',r:1,n:1}].concat(buy?[{h:'Prix d\'achat',r:1,n:1},{h:'Marge',r:1,n:1}]:[]).concat([{h:'État'}]).concat(isAdmin?[{h:'Actions',r:1}]:[]);
-  return dskTable(cols,list.map(function(p){
+  return dskCards('prod',[['o','Marque','o',1],['nom','Modèle (A → Z)','nm',0],['stock','Stock (croissant)','q',1],['prix','Prix de vente (décroissant)','p',1,-1]].concat(buy?[['marge','Marge (décroissante)','mg',1,-1]]:[]),list.map(function(p){
     var s=prodState(p),q=p.quantite||0,pill=s==='ok'?['p-done',t('pr.inStock')]:(s==='low'?['p-wait',t('pr.low')]:['p-cancel',t('pr.out')]);
-    var cells=[{h:'<b>'+esc(prodName(p))+'</b>',v:prodName(p)},{h:esc(p._brand||''),v:p._brand},{h:esc(prodSpec(p)||'—'),v:prodSpec(p)},{h:String(q),v:q,cls:'num'},{h:v2Money(p.prixVente||0),v:p.prixVente||0,cls:'num'}];
-    if(buy)cells.push({h:p.prixAchat?v2Money(p.prixAchat):'—',v:p.prixAchat||0,cls:'num'},{h:p.prixAchat?'+'+v2Money((p.prixVente||0)-p.prixAchat):'—',v:(p.prixVente||0)-(p.prixAchat||0),cls:'num'});
-    cells.push({h:dskPill(pill[0],pill[1]),v:pill[1]});
-    if(isAdmin)cells.push({h:'<div class="dsk-acts">'+dskAct('',t('pr.edit'),"editProd('"+p.id+"')")+(can('suppr')?dskAct('bad',t('pr.del'),"deleteProd('"+p.id+"')"):'')+'</div>',v:''});
-    return {open:"viewProd('"+p.id+"')",cells:cells};
+    var mg=p.prixAchat?(p.prixVente||0)-p.prixAchat:null;
+    var acts=isAdmin?dskAct('',t('pr.edit'),"editProd('"+p.id+"')")+(can('suppr')?dskAct('bad',t('pr.del'),"deleteProd('"+p.id+"')"):''):'';
+    return {open:"viewProd('"+p.id+"')",s:{nm:prodName(p),q:q,p:p.prixVente||0,mg:mg||0},cls:s==='ok'?'':(s==='low'?'warn':'bad'),
+      html:dcHead(prodDot(p._brand),esc(prodName(p)),esc([p._brand,prodSpec(p)].filter(Boolean).join(' · ')||'—'),dskPill(pill[0],pill[1]))+
+        dcMeta([['Stock',String(q)]].concat(buy?[['Achat',p.prixAchat?v2Money(p.prixAchat):'—'],['Marge',mg!=null?'+'+v2Money(mg):'—']]:[]))+
+        dcFoot(v2Money(p.prixVente||0),'<small class="dc-cap">Prix de vente</small>',acts)};
   }));
 }
 

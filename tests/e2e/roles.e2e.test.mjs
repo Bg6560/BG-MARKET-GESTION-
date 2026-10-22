@@ -147,10 +147,10 @@ describe('Tableaux de bord : un par rôle (ordinateur)', () => {
 });
 
 describe('Listes en tableaux et accès aux données (ordinateur)', () => {
-  it('employé : ses clients seulement (tableau), pas de fournisseur', async () => {
+  it('employé : ses clients seulement (cartes), pas de fournisseur', async () => {
     const { page, context } = await session(EMAILS.empA);
     await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"clients\"]');
-    await page.waitForSelector('.dsk-table', { timeout: 15000 });
+    await page.waitForSelector('.dc-grid', { timeout: 15000 });
     const t = await text(page);
     assert.match(t, /Client Un/);
     assert.doesNotMatch(t, /Client Deux|sans propriétaire/);
@@ -160,31 +160,31 @@ describe('Listes en tableaux et accès aux données (ordinateur)', () => {
     assert.doesNotMatch(await text(page), /Fournisseur Secret/);
     await context.close();
   });
-  it('patron : tous les clients, tableau des commandes triable, recherche rapide', async () => {
+  it('patron : tous les clients, cartes des commandes, recherche rapide', async () => {
     const { page, context } = await session(EMAILS.patron);
     await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"clients\"]');
-    await page.waitForSelector('.dsk-table');
+    await page.waitForSelector('.dc-grid');
     const t = await text(page);
     assert.match(t, /Client Un/); assert.match(t, /Client Deux/); assert.match(t, /sans propriétaire/);
     await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"commandes\"]');
-    await page.waitForSelector('.dsk-table');
-    assert.equal(await page.locator('.dsk-table tbody tr').count(), 2);
+    await page.waitForSelector('.dc-grid');
+    assert.equal(await page.locator('.dc-card').count(), 2);
     await page.fill('#dsk-q', 'Deux');
     await page.waitForTimeout(300);
-    assert.equal(await page.locator('.dsk-table tbody tr').count(), 1);
+    assert.equal(await page.locator('.dc-card').count(), 1);
     await shot(page, 'commandes-patron-desktop');
     await context.close();
   });
   it('patron : factures avec bénéfice ; administrateur sans « couts » : colonne absente', async () => {
     let s = await session(EMAILS.patron);
     await s.page.click('#dsk-menu'); await s.page.click('#dsk-nav [data-tab=\"factures\"]');
-    await s.page.waitForSelector('.dsk-table');
-    assert.match(await s.page.locator('.dsk-table thead').textContent(), /Bénéfice/);
+    await s.page.waitForSelector('.dc-grid');
+    assert.match(await s.page.locator('.dc-grid[data-kind="fac"]').textContent(), /Bénéfice/);
     await s.context.close();
     s = await session(EMAILS.adminNoCouts);
     await s.page.click('#dsk-menu'); await s.page.click('#dsk-nav [data-tab=\"factures\"]');
-    await s.page.waitForSelector('.dsk-table');
-    assert.doesNotMatch(await s.page.locator('.dsk-table thead').textContent(), /Bénéfice/);
+    await s.page.waitForSelector('.dc-grid');
+    assert.doesNotMatch(await s.page.locator('.dc-grid[data-kind="fac"]').textContent(), /Bénéfice/);
     await s.context.close();
   });
 });
