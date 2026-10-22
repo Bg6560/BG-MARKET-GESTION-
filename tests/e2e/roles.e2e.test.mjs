@@ -75,8 +75,27 @@ describe('Tableaux de bord : un par rôle (ordinateur)', () => {
     assert.match(t, /Nouvelle Recrue/);
     assert.match(t, /État du stock/);
     assert.match(t, /Phone Test/, 'stock bas listé');
+    /* menu rétractable : masqué par défaut, s'ouvre par-dessus sans déplacer le contenu, se ferme (Échap, clic à côté, choix) */
+    assert.equal(await page.locator('#dsk-nav').isVisible(), false);
+    const x0 = (await page.locator('#main-content').boundingBox()).x;
+    await page.click('#dsk-menu');
+    await page.waitForFunction(() => getComputedStyle(document.getElementById('dsk-nav')).transform === 'none');
     assert.equal(await page.locator('#dsk-nav').isVisible(), true);
-    assert.match(await page.locator('#dsk-nav').textContent(), /Équipe/);
+    assert.equal((await page.locator('#main-content').boundingBox()).x, x0, 'le contenu ne bouge pas');
+    const navTxt = await page.locator('#dsk-nav').textContent();
+    assert.match(navTxt, /Équipe/);
+    for (const re of [/Fournisseurs/, /Produits/, /Historique/, /Précommandes/, /SAV/]) assert.match(navTxt, re);
+    assert.doesNotMatch(navTxt, /Prix et marges|Importation|Rapports|Stock(?! )/, 'raccourcis redondants retirés');
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.body.classList.contains('nav-open'));
+    await page.click('#dsk-menu');
+    await page.mouse.click(1300, 600);
+    await page.waitForFunction(() => !document.body.classList.contains('nav-open'));
+    await page.click('#dsk-menu');
+    await page.click('#dsk-nav [data-tab="produits"]');
+    await page.waitForFunction(() => !document.body.classList.contains('nav-open') && /Produits/.test(document.querySelector('#main-content h1')?.textContent || ''));
+    await page.evaluate(() => goTab('dashboard'));
+    await page.waitForSelector('#main-content .dsk-hello', { timeout: 15000 });
     await shot(page, 'dashboard-patron-desktop');
     assert.deepEqual(errors, []);
     await context.close();
@@ -124,7 +143,7 @@ describe('Tableaux de bord : un par rôle (ordinateur)', () => {
 describe('Listes en tableaux et accès aux données (ordinateur)', () => {
   it('employé : ses clients seulement (tableau), pas de fournisseur', async () => {
     const { page, context } = await session(EMAILS.empA);
-    await page.click('#dsk-nav [data-tab="clients"]');
+    await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"clients\"]');
     await page.waitForSelector('.dsk-table', { timeout: 15000 });
     const t = await text(page);
     assert.match(t, /Client Un/);
@@ -137,11 +156,11 @@ describe('Listes en tableaux et accès aux données (ordinateur)', () => {
   });
   it('patron : tous les clients, tableau des commandes triable, recherche rapide', async () => {
     const { page, context } = await session(EMAILS.patron);
-    await page.click('#dsk-nav [data-tab="clients"]');
+    await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"clients\"]');
     await page.waitForSelector('.dsk-table');
     const t = await text(page);
     assert.match(t, /Client Un/); assert.match(t, /Client Deux/); assert.match(t, /sans propriétaire/);
-    await page.click('#dsk-nav [data-tab="commandes"]');
+    await page.click('#dsk-menu'); await page.click('#dsk-nav [data-tab=\"commandes\"]');
     await page.waitForSelector('.dsk-table');
     assert.equal(await page.locator('.dsk-table tbody tr').count(), 2);
     await page.fill('#dsk-q', 'Deux');
@@ -152,12 +171,12 @@ describe('Listes en tableaux et accès aux données (ordinateur)', () => {
   });
   it('patron : factures avec bénéfice ; administrateur sans « couts » : colonne absente', async () => {
     let s = await session(EMAILS.patron);
-    await s.page.click('#dsk-nav [data-tab="factures"]');
+    await s.page.click('#dsk-menu'); await s.page.click('#dsk-nav [data-tab=\"factures\"]');
     await s.page.waitForSelector('.dsk-table');
     assert.match(await s.page.locator('.dsk-table thead').textContent(), /Bénéfice/);
     await s.context.close();
     s = await session(EMAILS.adminNoCouts);
-    await s.page.click('#dsk-nav [data-tab="factures"]');
+    await s.page.click('#dsk-menu'); await s.page.click('#dsk-nav [data-tab=\"factures\"]');
     await s.page.waitForSelector('.dsk-table');
     assert.doesNotMatch(await s.page.locator('.dsk-table thead').textContent(), /Bénéfice/);
     await s.context.close();
@@ -202,7 +221,7 @@ describe('Approbation des nouveaux comptes (de bout en bout)', () => {
     });
     const p = await session(EMAILS.patron);
     assert.ok(uidRecrue);
-    await p.page.click('#dsk-nav [data-tab="equipe"]');
+    await p.page.click('#dsk-menu'); await p.page.click('#dsk-nav [data-tab=\"equipe\"]');
     await p.page.click('.ui-row:has-text("Jean Recrue")');
     await p.page.waitForSelector('text=Approuver le compte', { timeout: 8000 });
     await p.page.click('text=Approuver le compte');

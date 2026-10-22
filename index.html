@@ -1840,6 +1840,22 @@ html,body{overflow-x:hidden}
 @media (max-width:640px){.ntf-pan{top:auto;bottom:0;left:0;right:0;width:auto;max-height:82vh;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom)}}
 @media (prefers-reduced-motion:no-preference){.ntf-pan{animation:ntfIn .16s ease-out}@keyframes ntfIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}}
 </style>
+<style id="nav-v7">
+/* Menu latéral rétractable (ordinateur) : masqué par défaut, se superpose au contenu sans déplacer la grille */
+.dsk-menu-btn{display:none}
+@media (min-width:1100px){
+  body.v2-app{padding-left:0!important}
+  #dsk-nav{z-index:970!important;transform:translateX(-105%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+  body.nav-open #dsk-nav{transform:none;visibility:visible;transition:transform .22s ease;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .dsk-menu-btn{display:grid;position:relative;width:44px;height:44px;border-radius:14px;place-items:center;flex:none;cursor:pointer;color:var(--text);background:var(--glass),var(--glass-solid);border:1px solid var(--glass-line);box-shadow:var(--sh-1)}
+  .dsk-menu-btn svg{width:22px;height:22px}
+  #dsk-scrim{position:fixed;inset:0;z-index:965;background:rgba(4,8,16,.35)}
+  #dsk-scrim[hidden]{display:none}
+  .dsk-nav-x{position:absolute;top:14px;right:12px;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--text);font-size:22px;line-height:1;cursor:pointer}
+}
+@media (max-width:1099px){.dsk-nav-x{display:none}}
+@media (prefers-reduced-motion:reduce){#dsk-nav{transition:none!important}}
+</style>
 </head>
 <body>
 <div id="splash" role="img" aria-label="BG-MARKET, technologie pour tous">
@@ -6650,11 +6666,11 @@ function dskNavItems(){
   var it=[{sec:'Pilotage'},{tab:'dashboard',l:'Tableau de bord',i:'dashboard'},
     {sec:'Ventes'},{tab:'commandes',l:isAdmin?'Commandes':'Mes commandes',i:'box',b:'commandes'},{tab:'precommandes',l:'Précommandes',i:'clock'},
     {tab:'factures',l:isAdmin?'Factures':'Mes factures',i:'receipt',b:'factures'},{tab:'clients',l:isAdmin?'Clients':'Mes clients',i:'users'},
-    {sec:'Stock et achats'},{tab:'produits',l:'Produits',i:'phone'},{tab:'stock',go:"goTab('produits');setTimeout(function(){setProdFilter('__low')},400);dskNavPaint('stock')",l:'Stock',i:'box'},{tab:'sav',l:'SAV et retours',i:'wrench'}];
-  if(isAdmin)it.push({tab:'fournisseurs',l:'Fournisseurs',i:'building'},{tab:'prix',go:"fournTab='prix';goTab('fournisseurs');dskNavPaint('prix')",l:'Prix et marges',i:'sliders'},{tab:'import',go:"fournTab='contacts';goTab('fournisseurs');dskNavPaint('import');showToast('Ouvre la fiche d\\'un fournisseur pour importer sa liste de prix','i')",l:'Importation',i:'download'});
+    {sec:'Stock et achats'},{tab:'produits',l:'Produits',i:'phone'},{tab:'sav',l:'SAV et retours',i:'wrench'}];
+  if(isAdmin)it.push({tab:'fournisseurs',l:'Fournisseurs',i:'building'}); /* prix, marges, comparaison et importation : onglets et fiches de Fournisseurs */
   it.push({sec:'Gestion'});
   if(isBoss)it.push({tab:'equipe',l:'Équipe',i:'users',b:'equipe'});
-  if(isAdmin&&can('totaux'))it.push({tab:'rapports',go:"goTab('historique');setTimeout(function(){histSetTab('mois')},300);dskNavPaint('rapports')",l:'Rapports',i:'chart'});
+  /* rapports mensuels : onglet de l'Historique */
   it.push({tab:'historique',l:isAdmin?'Historique':'Mon historique',i:'history'},{tab:'parametres',l:'Réglages',i:'sliders'});
   return it;
 }
@@ -6666,15 +6682,29 @@ function dskNavBuild(){
   var role=isBoss?'Patron':(isAdmin?'Administrateur':'Employé');
   if(!DSK_ICO.download)DSK_ICO.download=dskSvg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>');
   if(!DSK_ICO.chart)DSK_ICO.chart=dskSvg('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>');
-  nav.innerHTML='<button type="button" class="dsk-logo" onclick="goTab(\'dashboard\')" aria-label="Accueil BG-MARKET"><span class="brand-logo" role="img" aria-label="BG-MARKET"></span><span class="dsk-logo-sub">Gestion</span></button>'+
+  nav.innerHTML='<button type="button" class="dsk-nav-x" onclick="dskNavOpen(false)" aria-label="Fermer le menu">×</button><button type="button" class="dsk-logo" onclick="dskNavOpen(false);goTab(\'dashboard\')" aria-label="Accueil BG-MARKET"><span class="brand-logo" role="img" aria-label="BG-MARKET"></span><span class="dsk-logo-sub">Gestion</span></button>'+
     dskNavItems().map(function(x){
       if(x.sec)return '<div class="dsk-sec">'+x.sec+'</div>';
-      return '<button type="button" class="dsk-item" data-tab="'+x.tab+'" onclick="'+(x.go||"goTab('"+x.tab+"')")+'">'+DSK_ICO[x.i]+'<span>'+x.l+'</span>'+(x.b?'<span class="dsk-badge" data-b="'+x.b+'" hidden></span>':'')+'</button>';
+      return '<button type="button" class="dsk-item" data-tab="'+x.tab+'" onclick="dskNavOpen(false);'+(x.go||"goTab('"+x.tab+"')")+'">'+DSK_ICO[x.i]+'<span>'+x.l+'</span>'+(x.b?'<span class="dsk-badge" data-b="'+x.b+'" hidden></span>':'')+'</button>';
     }).join('')+
-    '<div class="dsk-foot"><button type="button" class="dsk-me" onclick="goTab(\'parametres\');setTimeout(function(){uiSettings(\'profil\')},200)" aria-label="Mon profil">'+uiAvatar(userProfile||{nom:nom},'sm')+'<div><b>'+esc(nom)+'</b><span>'+role+'</span></div><span class="dsk-me-go" aria-hidden="true">→</span></button>'+
-    '<button type="button" class="dsk-logout" onclick="doLogout()">Se déconnecter</button></div>';
+    '<div class="dsk-foot"><button type="button" class="dsk-me" onclick="dskNavOpen(false);goTab(\'parametres\');setTimeout(function(){uiSettings(\'profil\')},200)" aria-label="Mon profil">'+uiAvatar(userProfile||{nom:nom},'sm')+'<div><b>'+esc(nom)+'</b><span>'+role+'</span></div><span class="dsk-me-go" aria-hidden="true">→</span></button>'+
+    '<button type="button" class="dsk-logout" onclick="dskNavOpen(false);doLogout()">Se déconnecter</button></div>';
   dskTopInit();dskNavPaint(activeTab);Object.keys(DSK_BADGE).forEach(function(k){if(k!=='_bell')dskBadge(k,DSK_BADGE[k]);});
 }
+/* Ouverture / fermeture du menu latéral (ordinateur) : clic à côté, Échap, choix d'une section */
+function dskNavOpen(on){
+  on=!!on;var was=document.body.classList.contains('nav-open');if(on===was)return;
+  document.body.classList.toggle('nav-open',on);
+  var sc=document.getElementById('dsk-scrim');
+  if(!sc){sc=document.createElement('div');sc.id='dsk-scrim';sc.hidden=true;sc.onclick=function(){dskNavOpen(false);};document.body.appendChild(sc);}
+  sc.hidden=!on;
+  var b=document.getElementById('dsk-menu'),nav=document.getElementById('dsk-nav');
+  if(b){b.setAttribute('aria-expanded',String(on));b.setAttribute('aria-label',on?'Fermer le menu':'Ouvrir le menu');}
+  if(on){var a=nav&&(nav.querySelector('.dsk-item.active')||nav.querySelector('.dsk-item'));if(a)try{a.focus({preventScroll:true});}catch(e){}}
+  else if(b&&nav&&nav.contains(document.activeElement))try{b.focus({preventScroll:true});}catch(e){}
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('nav-open'))dskNavOpen(false);});
+window.addEventListener('resize',function(){if(window.innerWidth<1100&&document.body.classList.contains('nav-open'))dskNavOpen(false);});
 function dskNavPaint(name){document.querySelectorAll('#dsk-nav .dsk-item').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});}
 function dskBadge(k,n){DSK_BADGE[k]=n||0;document.querySelectorAll('#dsk-nav .dsk-badge[data-b="'+k+'"]').forEach(function(b){b.hidden=!n;b.textContent=n>99?'99+':n;});}
 function dskTopInit(){
@@ -6685,6 +6715,12 @@ function dskTopInit(){
     var c=document.createElement('button');c.type='button';c.className='dsk-create dsk-only';c.innerHTML=DSK_ICO.plus.replace('<svg','<svg width="18" height="18" stroke="currentColor"')+'Créer';c.setAttribute('onclick',"v2Toggle('create')");
     bar.insertBefore(c,bar.firstChild);bar.insertBefore(s,bar.firstChild);
     document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){var q=document.getElementById('dsk-q');if(q&&q.offsetParent){e.preventDefault();q.focus();q.select();}}});
+  }
+  if(!document.getElementById('dsk-menu')){
+    var mb=document.createElement('button');mb.type='button';mb.id='dsk-menu';mb.className='dsk-menu-btn';mb.setAttribute('aria-label','Ouvrir le menu');mb.setAttribute('aria-controls','dsk-nav');mb.setAttribute('aria-expanded','false');
+    mb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    mb.onclick=function(){dskNavOpen(!document.body.classList.contains('nav-open'));};
+    bar.insertBefore(mb,bar.firstChild);
   }
   if(!document.getElementById('dsk-bell')){
     var b=document.createElement('button');b.type='button';b.id='dsk-bell';b.className='dsk-bell';b.setAttribute('aria-label','Notifications');b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-expanded','false');
