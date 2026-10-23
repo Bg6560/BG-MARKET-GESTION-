@@ -14,7 +14,7 @@
    - l'employé vend et voit ses propres chiffres ;
    - l'administrateur gère ;
    - le patron voit tout et décide.
-5. **Le créateur :** voir ci-dessous.
+5. **Le créateur :** le fondateur de BG-MARKET (voir ci-dessous).
 6. **Clôture :** nom, signature « Technologie pour tous », adresse ou contact à confirmer.
 
 ## Faits utilisables tels quels
@@ -24,23 +24,17 @@
 - Trois rôles avec des droits réglables ; la confidentialité des coûts est appliquée côté serveur.
 - Fonctionnement hors ligne avec synchronisation automatique.
 
-## Benjamin Keld, créateur de l'application
-- **Information disponible :** seulement le fait, communiqué par le demandeur, que Benjamin Keld est le créateur de l'application. Son nom n'apparaît nulle part dans le code ni dans la documentation du projet.
-- **Non disponible, à fournir par Benjamin Keld ou le patron :**
-  - fonction ou rôle exact (fondateur de BG-MARKET ? développeur ? les deux ?) ;
-  - parcours, expérience, motivation pour créer l'application ;
-  - citation ou phrase qu'il souhaite voir dans la vidéo ;
-  - photo ou portrait autorisé, et conditions d'utilisation de son image et de son nom ;
-  - manière souhaitée d'être crédité (« Créé par… », « Une application de… »).
-- **Règle :** n'écrire aucune biographie, aucun chiffre ni aucune affirmation à son sujet tant que ces éléments ne sont pas fournis.
+## Le créateur : le fondateur de BG-MARKET
+- **Information fournie par lui-même (23 octobre 2026) :** il est le **propriétaire et fondateur de BG-MARKET**, et le créateur de l'application. Le nom a été transmis à l'oral (transcription : « Nyoite Jolo ») ; **l'orthographe exacte doit être confirmée par écrit** avant d'être affichée ou prononcée. Une mention précédente d'un autre nom était une erreur.
+- **Non disponible :** parcours, diplômes, citation, photo. N'écrire aucune biographie ni aucun chiffre à son sujet.
 
 ## Informations à confirmer avant d'écrire le scénario
-1. **Public de la vidéo :** clients de la boutique, autres commerçants (prospects), investisseurs, ou présentation interne ?
-2. **Statut commercial :** l'application est-elle proposée à d'autres boutiques ? Avec quel prix ou quelle offre ?
+1. **Public de la vidéo :** commerçants de tout type, boutiques physiques et vente en ligne (confirmé).
+2. **Statut commercial :** conception d'applications personnalisées après un audit (confirmé) ; prix et délais non communiqués.
 3. **Chiffres réels** que le patron accepte de publier : nombre d'utilisateurs, ancienneté, gain de temps. Sinon, aucun chiffre.
-4. **Logo officiel** en haute définition, et éventuelles couleurs de marque différentes de celles de l'application.
-5. **Contact à afficher** à la fin : site, numéro WhatsApp, adresse.
+4. **Logo :** obligatoire ; versions extraites de l'application dans `logo/` (haute définition souhaitée).
+5. **Contact :** WhatsApp uniquement (confirmé) ; numéro à fournir.
 6. **Durée et format :** 30, 60 ou 90 secondes ; horizontal (16:9) ou vertical (9:16) pour WhatsApp, TikTok ou Instagram.
-7. **Langue et voix off :** français uniquement, ou version anglaise.
+7. **Voix off :** masculine, française, très naturelle (confirmé).
 8. **Défaut d'affichage des réglages** (WhatsApp et Notifications) : corrigé, à publier avant le tournage si ces écrans doivent apparaître.
 9. **Notifications sur le téléphone :** à ne pas montrer, sauf si le forfait Blaze est activé plus tard.

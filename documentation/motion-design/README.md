@@ -19,6 +19,7 @@ Ce dossier décrit l'application **telle qu'elle existe**, pour préparer une vi
 | 7 | [07-direction-narrative.md](07-direction-narrative.md) | Base factuelle pour le récit, dont la section sur le créateur, à compléter |
 | 8 | [08-scenario.md](08-scenario.md) | Brief « personnalisation » : 5 hooks, hook retenu, scénario minuté avec voix off, visuels, transitions, garde-fous, informations manquantes |
 | — | [captures/INVENTAIRE.md](captures/INVENTAIRE.md) | Liste des 42 captures disponibles |
+| — | `logo/` | Logo BG MARKET extrait de l'application : fond sombre, fond clair (720 × 200 px) et icône « BG » (192 × 192 px), en PNG et WebP |
 
 ## Règles de lecture
 
@@ -30,4 +31,4 @@ Ce dossier décrit l'application **telle qu'elle existe**, pour préparer une vi
 
 ## À confirmer avant d'écrire le scénario
 
-Voir la fin de [07-direction-narrative.md](07-direction-narrative.md) : informations sur Benjamin Keld, chiffres d'usage, public exact, logo officiel, ton et durée de la vidéo.
+Voir la fin de [07-direction-narrative.md](07-direction-narrative.md) : orthographe du nom du fondateur, numéro WhatsApp, logo en haute définition (voir aussi la section 8 de [08-scenario.md](08-scenario.md)).

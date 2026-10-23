@@ -10,7 +10,7 @@
 | Couleur d'action | Orange `#FF6208` (bouton « Créer », « + », « Se connecter ») |
 | Succès / alerte / danger | Vert `#3CCB7F` · jaune orangé (stock bas, à valider) · rouge `#FF7B7B` (rupture, supprimer) |
 | Violet | `#A78BFA` (icônes secondaires, graphiques) |
-| Logo | « BG MARKET », « Technologie pour tous » (fichier image intégré à l'application ; demander au patron la version officielle en haute définition) |
+| Logo | « BG MARKET », « Technologie pour tous » : cercle « BG » turquoise et orange, « MARKET » avec un « A » turquoise et un « K » orange. Fichiers extraits de l'application dans `logo/` (fond sombre, fond clair, icône) ; une version haute définition reste souhaitable |
 | Monnaie | « F » (franc CFA), espaces entre les milliers : « 430 000 F » |
 | Formes | Coins arrondis (14 à 22 px), étiquettes de statut en pastille colorée, avatars ronds à initiales |
 

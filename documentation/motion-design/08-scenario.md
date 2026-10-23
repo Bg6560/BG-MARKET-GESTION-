@@ -29,9 +29,10 @@ Les « règles » sur les post-it sont **de vraies règles de BG-MARKET-GESTION*
 5. **Démonstration par profil :** chaque post-it devient une fonction réelle (employé, administrateur, patron).
 6. **Valeur :** une organisation claire, où chacun voit ce qu'il doit voir.
 7. **Bascule :** les post-it se vident, « Et vos règles à vous ? ».
-8. **Créateur et appel à l'action.**
+8. **Démarche réelle :** contact WhatsApp, audit, votre marque, votre application.
+9. **Le fondateur et l'appel à l'action (WhatsApp).**
 
-## 4. Scénario minuté (version principale 16:9, environ 100 secondes)
+## 4. Scénario minuté (version principale 16:9, environ 2 minutes)
 
 Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.md). **Réel** = l'application le fait ; **Mise en scène** = effet visuel seulement.
 
@@ -48,20 +49,22 @@ Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.m
 | 9 | 1:04–1:08 | « Et ses droits, c'est le patron qui les décide. » | Fiche d'un membre : cases de droits (coûts, suppression, réglages, totaux) qui se cochent (`pc-sombre-14`) | — | — | Réel (patron uniquement) |
 | 10 | 1:08–1:24 | « Le soir, le patron n'a plus besoin de refaire les comptes. Ventes et bénéfice du jour, évolution sur sept jours ou sur douze mois, meilleurs produits, performance de chaque vendeur, objectif du mois : tout est là. Il approuve les nouveaux comptes, garde l'historique de chaque mois, et voit ce que les administrateurs ont modifié. » | Écho du hook H2 : l'horloge de la boutique passe à 19 h, le cahier se ferme. Accueil patron complet (`pc-sombre-02`), caméra qui descend : 4 cartes du jour → graphique qui bascule de « 7 jours » à « 12 mois » → répartition et top produits → performance des employés → anneau d'objectif. Puis Historique › Mois (`pc-sombre-16`). Le post-it « le patron valide » s'aligne avec les autres | Patron · *Voit tout, décide* | Les trois post-it se rangent en colonne | Réel. Ne pas inventer de chiffres : utiliser les valeurs de démonstration des captures, ou des montants fictifs signalés comme tels |
 | 11 | 1:24–1:31 | « Trois profils, des droits précis, des alertes au bon moment. Chaque règle de notre boutique est devenue une fonction. » | Les trois post-it se transforment en trois icônes : cadenas (droits), cloche (alertes), graphique (pilotage) ; en fond, l'application en sombre puis en clair (`pc-clair-17`) | **Nos règles sont devenues notre application.** | Les post-it se vident | Réel (fonctions) / mise en scène (icônes) |
-| 12 | 1:31–1:38 | « Vos règles sont différentes ? Tant mieux. C'est exactement ce que nous construisons. » | Le comptoir revient, avec d'autres types de commerces en silhouettes ; trois post-it **vierges** se collent, un stylo écrit « vos règles… » | **Et vos règles à vous ?** | — | Mise en scène |
-| 13 | 1:38–1:44 | « BG-MARKET-GESTION a été conçue par Benjamin Keld et l'équipe BG-MARKET. » | Portrait ou silhouette **[À FOURNIR : photo autorisée]** ; titre **[À FOURNIR]** | Benjamin Keld — **[titre à valider]** | Fondu vers la fin | Information à valider |
-| 14 | 1:44–1:50 | « Parlons de votre commerce. » | Logo BG MARKET « Technologie pour tous » ; contact | **[À FOURNIR : WhatsApp / site / adresse]** | Fin | — |
+| 12 | 1:31–1:38 | « Vos règles sont différentes ? Tant mieux. Boutique de quartier, supermarché, pharmacie, quincaillerie, restaurant, salon de beauté, vente en ligne… Quel que soit votre commerce. » | Le comptoir revient, puis se démultiplie en silhouettes de commerces variés (boutique physique et vente en ligne : téléphone avec panier) ; trois post-it **vierges** se collent | **Et vos règles à vous ?** | Les silhouettes se rangent en ligne | Mise en scène : liste de commerces **visés**, pas de références clients |
+| 13 | 1:38–1:52 | « Tout commence par un message WhatsApp. Nous faisons l'audit de votre commerce : vous nous expliquez comment il fonctionne, vous nous confiez votre marque, votre logo, vos couleurs, votre charte graphique. Et nous construisons l'application qui vous ressemble, pour que vous ne soyez jamais perdu. » | Quatre étapes animées en frise : ① bulle WhatsApp « Bonjour » → ② **Audit** : loupe sur le comptoir, post-it remplis par le commerçant → ③ **Votre marque** : logo fictif « VOTRE LOGO », pastilles de couleurs qui se déposent → ④ **Votre application** : un téléphone affiche une interface aux couleurs du logo fictif (maquette générique, **pas** BG-MARKET-GESTION) | 1. Contact WhatsApp · 2. Audit · 3. Votre marque · 4. Votre application | Le téléphone pivote vers la scène suivante | Démarche réelle (décrite par le fondateur) ; l'interface finale est une **maquette illustrative** |
+| 14 | 1:52–1:58 | « BG-MARKET-GESTION, nous l'avons conçue pour notre propre boutique. Moi, c'est [NOM — à confirmer], fondateur de BG-MARKET. » | Portrait du fondateur **[photo à fournir]**, ou silhouette sur fond turquoise si aucune photo | [NOM], fondateur de BG-MARKET | Fondu | Information fournie par le fondateur ; orthographe du nom à confirmer |
+| 15 | 1:58–2:05 | « Votre commerce mérite une application à son image. Écrivez-nous sur WhatsApp. » | Logo BG MARKET « Technologie pour tous » (`logo/logo-bg-market-fond-sombre.png`), icône WhatsApp, numéro | **Contact : WhatsApp uniquement — [NUMÉRO À FOURNIR]** | Fin | — |
 
-**Voix off :** environ 250 mots, ton posé et chaleureux, débit naturel. Français d'Afrique de l'Ouest bienvenu, à décider.
+**Voix off :** voix **masculine, française, très naturelle** (choix du fondateur) ; environ 300 mots ; ton posé, chaleureux et assuré. La scène 14 peut être dite par le fondateur lui-même s'il le souhaite.
 **Musique :** rythme moyen et montant, percussions légères ; un temps calme sur la scène 12.
 **Sons :** pose des post-it, clic de validation, petite cloche (scène 7).
 
 ## 5. Déclinaisons
-- **Vertical 9:16 (WhatsApp, TikTok, Instagram), environ 45 secondes :** scènes 1, 3, 4, 6 (raccourcie), 8 (validation et fournisseurs), 10 (raccourcie), 12 et 14. Utiliser uniquement les captures `tel-`.
-- **Version de 30 secondes :** scènes 1, 3, 4, puis un montage rapide des trois profils (3 secondes chacun), puis 12 et 14.
+- **Vertical 9:16 (WhatsApp, TikTok, Instagram), environ 50 secondes :** scènes 1, 3, 4, 6 (raccourcie), 8 (validation et fournisseurs), 10 (raccourcie), 13 (frise des 4 étapes) et 15. Utiliser uniquement les captures `tel-`.
+- **Version de 30 secondes :** scènes 1, 3, 4, puis un montage rapide des trois profils (3 secondes chacun), puis 13 (frise) et 15.
 
 ## 6. Garde-fous (à respecter au montage)
-- Ne jamais dire ni montrer que le client recevra **cette** application : BG-MARKET-GESTION est **notre** exemple.
+- Ne jamais dire ni montrer que le client recevra **cette** application : BG-MARKET-GESTION est **notre** exemple. La personnalisation porte **à la fois** sur le fonctionnement (après l'audit) **et** sur l'identité visuelle (marque, logo, couleurs, charte) : ne pas la réduire à un changement de logo.
+- Les commerces cités (scène 12) sont des **cibles**, pas des clients existants.
 - Pas de notification sur écran verrouillé, pas de photo de produit, pas de paiement en ligne, pas d'application Play Store ou App Store, pas d'intelligence artificielle. La lecture des listes fournisseurs est une analyse de texte.
 - WhatsApp : l'application **prépare** le message ; montrer l'utilisateur appuyer sur Envoyer.
 - L'administrateur ne gère ni l'équipe, ni les objectifs, ni l'export : c'est le patron.
@@ -69,10 +72,17 @@ Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.m
 - Aucun chiffre réel ni statistique d'usage tant qu'ils ne sont pas fournis. Les montants des captures sont fictifs.
 - Les réglages WhatsApp et Notifications sont corrigés et publiés : les captures 35 et 36 sont utilisables.
 
-## 7. Informations manquantes, à fournir avant production
-1. **Benjamin Keld :** titre exact, rôle (fondateur, développeur…), photo autorisée, formulation du crédit, citation éventuelle. Sans ces éléments, la scène 13 se limite à « conçue par Benjamin Keld et l'équipe BG-MARKET ».
-2. **Contact final :** numéro WhatsApp, site, adresse.
-3. **Offre :** BG-MARKET propose-t-il déjà ce service à des clients ? Délais, prix, démonstration gratuite ? Sinon, l'appel reste « Parlons de votre commerce ».
-4. **Secteurs à montrer en silhouette** (scène 12) : à choisir parmi les clients visés réels, sans laisser entendre que des applications existent déjà pour ces secteurs.
-5. **Voix off :** voix masculine ou féminine, accent, langue (français seul ?).
-6. **Logo officiel** en haute définition.
+## 7. Informations reçues du fondateur (23 octobre 2026)
+- **Créateur :** le fondateur et propriétaire de BG-MARKET. Le nom a été transmis à l'oral (transcription : « Nyoite Jolo ») : **orthographe exacte à confirmer par écrit** avant toute incrustation à l'écran ou lecture en voix off.
+- **Contact :** **WhatsApp uniquement.**
+- **Offre :** application personnalisée. Démarche : prise de contact sur WhatsApp, puis audit du commerce (le client explique son fonctionnement et fournit sa marque, son logo, ses couleurs et sa charte graphique), puis création de l'application adaptée, « pour que le client ne se sente pas perdu ».
+- **Cibles :** tout type de commerce, boutique physique ou vente en ligne.
+- **Voix off :** masculine, française, très naturelle.
+- **Logo :** obligatoire ; c'est l'identité de BG-MARKET. Versions extraites de l'application dans `logo/`.
+
+## 8. Informations encore manquantes
+1. **Nom du fondateur** : orthographe exacte, écrite.
+2. **Numéro WhatsApp** à afficher.
+3. **Photo du fondateur** (facultative) : sinon, silhouette.
+4. **Logo en haute définition** : les fichiers de `logo/` font 720 × 200 px (icône 192 × 192), suffisant pour une vignette mais un peu juste pour une vidéo en 1080p. Une version vectorielle ou en grande taille serait préférable.
+5. **Délais et prix** de l'offre : non communiqués, donc **non mentionnés** dans la vidéo.
