@@ -19,6 +19,9 @@ L'application distingue **trois rôles**. Les restrictions ne sont pas seulement
 | Journal d'activité des administrateurs | Non | Non | **Oui** |
 | Objectif du mois de la boutique | Voit son objectif employé | Voit l'objectif | Le définit |
 | Performance des employés | Non | Non | Oui |
+| Informations de la boutique, numérotation des factures, objectifs | Non | Non | Oui |
+| Export des données (CSV) | Non | Non | **Oui** |
+| Créer un produit, modifier les fiches produits | Non (consulte les produits et le stock, sans prix d'achat) | Oui | Oui |
 | Notifications internes | Suivi de ses commandes et factures | Commandes et factures à valider, stock | Les mêmes, plus les comptes à approuver |
 
 Valeurs par défaut d'un administrateur, d'après le code (`ROLE_DEF`) : coûts **oui**, réglages **oui**, totaux **non**, suppression **non**. Le patron peut changer chaque droit, membre par membre. Le changement s'applique immédiatement, même si la personne est connectée.

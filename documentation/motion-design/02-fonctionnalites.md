@@ -121,8 +121,9 @@ Statuts : **Confirmé** (présent et fonctionnel, la plupart du temps couvert pa
 | Apparence, Langue | Confirmé / Partiel | Voir plus haut |
 | Notifications | Confirmé | Catégories, historique de l'appareil, explication sur les notifications du téléphone non disponibles |
 | WhatsApp | Confirmé | Business ou classique, pour les gestionnaires |
-| Informations de la boutique, factures (numérotation, garantie), ventes (marge par défaut, seuil de stock), objectifs | Confirmé | Selon les droits |
-| Export des données (CSV pour Excel) | Confirmé | Commandes, factures, clients, produits |
+| Informations de la boutique, numérotation des factures, objectifs | Confirmé | Patron uniquement |
+| Ventes (marge par défaut, seuil de stock), garantie par défaut | Confirmé | Patron, et administrateur ayant le droit « réglages » |
+| Export des données (CSV pour Excel) | Confirmé | **Patron uniquement** : commandes, factures, clients, produits |
 
 ## Défauts visuels connus
 - Le défaut d'affichage des boutons de choix et des cases à cocher dans **Réglages › WhatsApp** et **Réglages › Notifications** (grands rectangles vides) est **corrigé** sur la branche de travail. Captures 35 et 36 refaites. Il reste à publier ce correctif pour que la version en ligne en bénéficie.

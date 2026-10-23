@@ -17,6 +17,7 @@ Ce dossier décrit l'application **telle qu'elle existe**, pour préparer une vi
 | 5 | [05-reference-visuelle.md](05-reference-visuelle.md) | Identité visuelle, écrans représentatifs, liste commentée des captures |
 | 6 | [06-base-motion-design.md](06-base-motion-design.md) | Ce qui peut être animé fidèlement, ce qui relève de la mise en scène, ce qu'il ne faut pas montrer comme réel |
 | 7 | [07-direction-narrative.md](07-direction-narrative.md) | Base factuelle pour le récit, dont la section sur le créateur, à compléter |
+| 8 | [08-scenario.md](08-scenario.md) | Brief « personnalisation » : 5 hooks, hook retenu, scénario minuté avec voix off, visuels, transitions, garde-fous, informations manquantes |
 | — | [captures/INVENTAIRE.md](captures/INVENTAIRE.md) | Liste des 42 captures disponibles |
 
 ## Règles de lecture
