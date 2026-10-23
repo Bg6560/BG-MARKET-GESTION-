@@ -1922,6 +1922,8 @@ html,body{overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){.dc-card{transition:none}.dc-card:hover{transform:none}}
 /* Photo de profil : jamais d'initiale par-dessus la photo */
 .st-ava.has-photo{color:transparent!important;text-shadow:none!important}
+/* Cases à cocher et boutons de choix : apparence native (la règle générale des champs les transformait en grands rectangles vides) */
+input[type="checkbox"],input[type="radio"]{-webkit-appearance:auto!important;appearance:auto!important;width:22px!important;height:22px!important;min-width:22px;flex:none;margin:0;padding:0!important;border:0!important;box-shadow:none!important;background:none!important;accent-color:var(--turq);cursor:pointer}
 </style>
 </head>
 <body>
