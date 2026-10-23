@@ -124,5 +124,5 @@ Statuts : **Confirmé** (présent et fonctionnel, la plupart du temps couvert pa
 | Informations de la boutique, factures (numérotation, garantie), ventes (marge par défaut, seuil de stock), objectifs | Confirmé | Selon les droits |
 | Export des données (CSV pour Excel) | Confirmé | Commandes, factures, clients, produits |
 
-## Défauts visuels connus (application publiée)
-- Dans **Réglages › WhatsApp** et **Réglages › Notifications**, les boutons de choix et les cases à cocher s'affichent comme de grands rectangles vides. Captures 35 et 36. Le fonctionnement n'est pas en cause. **À éviter à l'écran**, ou à corriger avant le tournage.
+## Défauts visuels connus
+- Le défaut d'affichage des boutons de choix et des cases à cocher dans **Réglages › WhatsApp** et **Réglages › Notifications** (grands rectangles vides) est **corrigé** sur la branche de travail. Captures 35 et 36 refaites. Il reste à publier ce correctif pour que la version en ligne en bénéficie.

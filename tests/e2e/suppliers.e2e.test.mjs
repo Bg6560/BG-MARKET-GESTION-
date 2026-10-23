@@ -198,6 +198,8 @@ describe('Catalogue fournisseur', () => {
     await s.page.waitForSelector('.st-hero', { timeout: 10000 });
     assert.match(await s.page.locator('#main-content').textContent(), /WhatsApp/);
     await s.page.evaluate(() => uiSettings('whatsapp'));
+    const rb = await s.page.locator('input[name="wa-app"]').first().boundingBox();
+    assert.ok(rb.width <= 26 && rb.height <= 26, 'bouton de choix de taille normale : ' + JSON.stringify(rb));
     await s.page.check('input[name="wa-app"][value="standard"]');
     assert.equal(await s.page.evaluate(() => waPref()), 'standard');
     assert.deepEqual(s.errors, []);

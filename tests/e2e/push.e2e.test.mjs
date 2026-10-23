@@ -113,6 +113,8 @@ describe('Notifications internes : cloche, rôles, ouverture', () => {
     assert.doesNotMatch(t, /Activer les notifications|Clé web push/);
     assert.match(t, /Comptes à approuver/);
     assert.equal(await page.locator('#push-vapid').count(), 0);
+    const box = await page.locator('#main-content input[type="checkbox"]').first().boundingBox();
+    assert.ok(box.width <= 26 && box.height <= 26, 'case à cocher de taille normale : ' + JSON.stringify(box));
     assert.deepEqual(errors, []);
     await context.close();
   });

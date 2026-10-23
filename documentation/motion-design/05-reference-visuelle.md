@@ -25,9 +25,9 @@
 8. **Page de connexion** (`pc-01`, `tel-01`).
 
 ## Captures disponibles
-Voir [captures/INVENTAIRE.md](captures/INVENTAIRE.md) : 40 fichiers PNG, avec leur section et ce qu'ils montrent.
+Voir [captures/INVENTAIRE.md](captures/INVENTAIRE.md) : 42 fichiers PNG, avec leur section et ce qu'ils montrent.
 
 - **Formats :** ordinateur 1440 × 900 px (sauf `pc-sombre-02`, tableau de bord complet de 2300 px de haut) ; téléphone 390 × 844 px (sauf `tel-sombre-20`, tableau de bord complet de 3400 px de haut).
 - **Contenu :** données de démonstration uniquement. Les adresses e-mail sont masquées (« adresse masquée »).
 - Le libellé « 01/05/2026 – 31/10/2026 » en haut du tableau de bord correspond à la période du graphique (6 mois).
-- **À éviter :** `tel-sombre-35` (Réglages › WhatsApp) et `tel-sombre-36` (Réglages › Notifications) montrent le défaut d'affichage des boutons de choix et des cases à cocher.
+- `tel-sombre-35` / `tel-clair-35` (Réglages › WhatsApp) et `tel-sombre-36` / `tel-clair-36` (Réglages › Notifications) montrent les réglages corrigés. Le correctif est sur la branche de travail ; il sera en ligne après publication.

@@ -26,6 +26,8 @@ Préfixes : `pc-` ordinateur · `tel-` téléphone · `sombre` / `clair` thème 
 | `pc-sombre-15-historique.png` | Historique | Onglets Commandes, Factures, SAV, Mois ; filtres par vendeur | 1440 × 900 |
 | `pc-sombre-16-historique-mois.png` | Historique | Bilan mensuel : chiffre d'affaires, commandes, factures, bénéfice | 1440 × 900 |
 | `tel-01-connexion.png` | Connexion | Page de connexion sur téléphone | 390 × 844 |
+| `tel-clair-35-reglages-whatsapp.png` | Réglages | Choix WhatsApp Business ou classique, thème clair (affichage corrigé) | 390 × 844 |
+| `tel-clair-36-reglages-notifications.png` | Réglages | Catégories de notifications, thème clair (affichage corrigé) | 390 × 844 |
 | `tel-clair-37-tableau-de-bord-haut.png` | Tableau de bord | Thème clair sur téléphone | 390 × 844 |
 | `tel-employe-40-tableau-de-bord.png` | Tableau de bord (employé) | Vue employé sur téléphone : « Mes ventes du jour », sans bénéfice | 390 × 844 |
 | `tel-employe-41-mes-commandes.png` | Commandes (employé) | « Mes commandes » : seulement les siennes | 390 × 844 |
@@ -44,9 +46,9 @@ Préfixes : `pc-` ordinateur · `tel-` téléphone · `sombre` / `clair` thème 
 | `tel-sombre-32-sav.png` | SAV | Liste SAV avec étapes (déposé, en réparation…) | 390 × 844 |
 | `tel-sombre-33-import-catalogue.png` | Fournisseurs | Importer une liste de prix collée depuis WhatsApp | 390 × 844 |
 | `tel-sombre-34-reglages.png` | Réglages | Accueil des réglages (e-mail masqué) | 390 × 844 |
-| `tel-sombre-35-reglages-whatsapp.png` | Réglages | Choix WhatsApp Business ou classique : montre le défaut d'affichage des boutons de choix, à éviter | 390 × 844 |
-| `tel-sombre-36-reglages-notifications.png` | Réglages | Catégories de notifications : montre le défaut d'affichage des cases à cocher, à éviter | 390 × 844 |
+| `tel-sombre-35-reglages-whatsapp.png` | Réglages | Choix WhatsApp Business ou classique (affichage corrigé) | 390 × 844 |
+| `tel-sombre-36-reglages-notifications.png` | Réglages | Catégories de notifications (affichage corrigé) | 390 × 844 |
 
-Total : 40 fichiers.
+Total : 42 fichiers.
 
-À éviter dans la vidéo : `tel-sombre-35` et `tel-sombre-36` (défaut d'affichage connu des boutons de choix et des cases à cocher dans les réglages).
+Les captures 35 et 36 (réglages) ont été refaites après la correction du défaut d'affichage des boutons de choix et des cases à cocher (correctif sur la branche de travail, pas encore publié).

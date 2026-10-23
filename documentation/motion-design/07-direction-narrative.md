@@ -42,5 +42,5 @@
 5. **Contact à afficher** à la fin : site, numéro WhatsApp, adresse.
 6. **Durée et format :** 30, 60 ou 90 secondes ; horizontal (16:9) ou vertical (9:16) pour WhatsApp, TikTok ou Instagram.
 7. **Langue et voix off :** français uniquement, ou version anglaise.
-8. **Défaut d'affichage des réglages** (WhatsApp et Notifications) : le corriger avant le tournage si ces écrans doivent apparaître.
+8. **Défaut d'affichage des réglages** (WhatsApp et Notifications) : corrigé, à publier avant le tournage si ces écrans doivent apparaître.
 9. **Notifications sur le téléphone :** à ne pas montrer, sauf si le forfait Blaze est activé plus tard.
