@@ -31,4 +31,4 @@ Ce dossier décrit l'application **telle qu'elle existe**, pour préparer une vi
 
 ## À confirmer avant d'écrire le scénario
 
-Voir la fin de [07-direction-narrative.md](07-direction-narrative.md) : orthographe du nom du fondateur, numéro WhatsApp, logo en haute définition (voir aussi la section 8 de [08-scenario.md](08-scenario.md)).
+Voir la fin de [07-direction-narrative.md](07-direction-narrative.md) : numéro WhatsApp, logo en haute définition (voir aussi la section 8 de [08-scenario.md](08-scenario.md)).

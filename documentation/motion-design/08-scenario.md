@@ -51,7 +51,7 @@ Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.m
 | 11 | 1:24–1:31 | « Trois profils, des droits précis, des alertes au bon moment. Chaque règle de notre boutique est devenue une fonction. » | Les trois post-it se transforment en trois icônes : cadenas (droits), cloche (alertes), graphique (pilotage) ; en fond, l'application en sombre puis en clair (`pc-clair-17`) | **Nos règles sont devenues notre application.** | Les post-it se vident | Réel (fonctions) / mise en scène (icônes) |
 | 12 | 1:31–1:38 | « Vos règles sont différentes ? Tant mieux. Boutique de quartier, supermarché, pharmacie, quincaillerie, restaurant, salon de beauté, vente en ligne… Quel que soit votre commerce. » | Le comptoir revient, puis se démultiplie en silhouettes de commerces variés (boutique physique et vente en ligne : téléphone avec panier) ; trois post-it **vierges** se collent | **Et vos règles à vous ?** | Les silhouettes se rangent en ligne | Mise en scène : liste de commerces **visés**, pas de références clients |
 | 13 | 1:38–1:52 | « Tout commence par un message WhatsApp. Nous faisons l'audit de votre commerce : vous nous expliquez comment il fonctionne, vous nous confiez votre marque, votre logo, vos couleurs, votre charte graphique. Et nous construisons l'application qui vous ressemble, pour que vous ne soyez jamais perdu. » | Quatre étapes animées en frise : ① bulle WhatsApp « Bonjour » → ② **Audit** : loupe sur le comptoir, post-it remplis par le commerçant → ③ **Votre marque** : logo fictif « VOTRE LOGO », pastilles de couleurs qui se déposent → ④ **Votre application** : un téléphone affiche une interface aux couleurs du logo fictif (maquette générique, **pas** BG-MARKET-GESTION) | 1. Contact WhatsApp · 2. Audit · 3. Votre marque · 4. Votre application | Le téléphone pivote vers la scène suivante | Démarche réelle (décrite par le fondateur) ; l'interface finale est une **maquette illustrative** |
-| 14 | 1:52–1:58 | « BG-MARKET-GESTION, nous l'avons conçue pour notre propre boutique. Moi, c'est [NOM — à confirmer], fondateur de BG-MARKET. » | Portrait du fondateur **[photo à fournir]**, ou silhouette sur fond turquoise si aucune photo | [NOM], fondateur de BG-MARKET | Fondu | Information fournie par le fondateur ; orthographe du nom à confirmer |
+| 14 | 1:52–1:58 | « BG-MARKET-GESTION, nous l'avons conçue pour notre propre boutique. Moi, c'est Gnohité Pharel, fondateur de BG-MARKET. » | Portrait du fondateur **[photo à fournir]**, ou silhouette sur fond turquoise si aucune photo | **GNOHITÉ PHAREL** — Fondateur de BG-MARKET | Fondu | Information fournie et confirmée par écrit par le fondateur |
 | 15 | 1:58–2:05 | « Votre commerce mérite une application à son image. Écrivez-nous sur WhatsApp. » | Logo BG MARKET « Technologie pour tous » (`logo/logo-bg-market-fond-sombre.png`), icône WhatsApp, numéro | **Contact : WhatsApp uniquement — [NUMÉRO À FOURNIR]** | Fin | — |
 
 **Voix off :** voix **masculine, française, très naturelle** (choix du fondateur) ; environ 300 mots ; ton posé, chaleureux et assuré. La scène 14 peut être dite par le fondateur lui-même s'il le souhaite.
@@ -73,7 +73,7 @@ Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.m
 - Les réglages WhatsApp et Notifications sont corrigés et publiés : les captures 35 et 36 sont utilisables.
 
 ## 7. Informations reçues du fondateur (23 octobre 2026)
-- **Créateur :** le fondateur et propriétaire de BG-MARKET. Le nom a été transmis à l'oral (transcription : « Nyoite Jolo ») : **orthographe exacte à confirmer par écrit** avant toute incrustation à l'écran ou lecture en voix off.
+- **Créateur :** le fondateur et propriétaire de BG-MARKET. Nom confirmé par écrit : **GNOHITÉ PHAREL**. À l'écran : « GNOHITÉ PHAREL — Fondateur de BG-MARKET ». En voix off : « Gnohité Pharel » (prononciation à faire valider à l'écoute).
 - **Contact :** **WhatsApp uniquement.**
 - **Offre :** application personnalisée. Démarche : prise de contact sur WhatsApp, puis audit du commerce (le client explique son fonctionnement et fournit sa marque, son logo, ses couleurs et sa charte graphique), puis création de l'application adaptée, « pour que le client ne se sente pas perdu ».
 - **Cibles :** tout type de commerce, boutique physique ou vente en ligne.
@@ -81,8 +81,7 @@ Abréviations des captures : voir [captures/INVENTAIRE.md](captures/INVENTAIRE.m
 - **Logo :** obligatoire ; c'est l'identité de BG-MARKET. Versions extraites de l'application dans `logo/`.
 
 ## 8. Informations encore manquantes
-1. **Nom du fondateur** : orthographe exacte, écrite.
-2. **Numéro WhatsApp** à afficher.
-3. **Photo du fondateur** (facultative) : sinon, silhouette.
-4. **Logo en haute définition** : les fichiers de `logo/` font 720 × 200 px (icône 192 × 192), suffisant pour une vignette mais un peu juste pour une vidéo en 1080p. Une version vectorielle ou en grande taille serait préférable.
-5. **Délais et prix** de l'offre : non communiqués, donc **non mentionnés** dans la vidéo.
+1. **Numéro WhatsApp** à afficher.
+2. **Photo du fondateur** (facultative) : sinon, silhouette.
+3. **Logo en haute définition** : les fichiers de `logo/` font 720 × 200 px (icône 192 × 192), suffisant pour une vignette mais un peu juste pour une vidéo en 1080p. Une version vectorielle ou en grande taille serait préférable.
+4. **Délais et prix** de l'offre : non communiqués, donc **non mentionnés** dans la vidéo.

@@ -25,7 +25,7 @@
 - Fonctionnement hors ligne avec synchronisation automatique.
 
 ## Le créateur : le fondateur de BG-MARKET
-- **Information fournie par lui-même (23 octobre 2026) :** il est le **propriétaire et fondateur de BG-MARKET**, et le créateur de l'application. Le nom a été transmis à l'oral (transcription : « Nyoite Jolo ») ; **l'orthographe exacte doit être confirmée par écrit** avant d'être affichée ou prononcée. Une mention précédente d'un autre nom était une erreur.
+- **Information fournie par lui-même (23 octobre 2026) :** il est le **propriétaire et fondateur de BG-MARKET**, et le créateur de l'application. Son nom, confirmé par écrit : **GNOHITÉ PHAREL** (écrit ainsi, en majuscules, par l'intéressé). Une mention précédente d'un autre nom était une erreur.
 - **Non disponible :** parcours, diplômes, citation, photo. N'écrire aucune biographie ni aucun chiffre à son sujet.
 
 ## Informations à confirmer avant d'écrire le scénario
