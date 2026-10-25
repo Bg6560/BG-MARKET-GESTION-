@@ -102,7 +102,7 @@
       const ang = K(ANG, t), px = K(POSX, t), py = K(POSY, t);
       phone.group.position.set(px, py, 0); phone.inner.rotation.set(K(TILT, t) * DEG, (ang + 180) * DEG, K(ROLL, t) * DEG, "YXZ"); phone.group.updateMatrixWorld(true);
       const on = K(SCREEN_ON, t); phone.screenMat.emissiveIntensity = 1.2 * on;
-      if (on > 0.001) { drawScreen(phone.uiC.getContext("2d"), t); phone.uiTex.needsUpdate = true; }
+      if (on > 0.001) { drawScreen(phone.uiC.getContext("2d"), t); phone.flush(); }
       // four-lens highlight pulses (the 4 cameras of the Leica Quad Camera)
       phone.lensRings.forEach((m, i) => { const q = (t - (17.0 + i * 0.32)) / 0.9, glowAll = clamp((t - 18.3) / 0.4, 0, 1) * (1 - clamp((t - 19.0) / 0.4, 0, 1)); m.material.opacity = (q > 0 && q < 1 ? Math.sin(Math.PI * q) : 0) * 0.95 + glowAll * 0.7; m.scale.setScalar(1 + 0.25 * clamp(q, 0, 1)); });
       // finale: the phone splits into the four official colours

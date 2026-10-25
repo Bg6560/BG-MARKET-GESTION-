@@ -74,22 +74,58 @@
     const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g;
   }
 
+
+  // ---- smooth normals for a non-indexed geometry (merge by position) ----
+  function smoothNormals(g) {
+    const pos = g.attributes.position, n = pos.count, acc = new Map(), key = (i) => Math.round(pos.getX(i) * 2000) + "," + Math.round(pos.getY(i) * 2000) + "," + Math.round(pos.getZ(i) * 2000);
+    const va = new TH.Vector3(), vb = new TH.Vector3(), vc = new TH.Vector3(), fn = new TH.Vector3();
+    for (let i = 0; i < n; i += 3) {
+      va.fromBufferAttribute(pos, i); vb.fromBufferAttribute(pos, i + 1); vc.fromBufferAttribute(pos, i + 2);
+      fn.subVectors(vc, vb).cross(new TH.Vector3().subVectors(va, vb));
+      for (let k = 0; k < 3; k++) { const kk = key(i + k); const a = acc.get(kk) || new TH.Vector3(); a.add(fn); acc.set(kk, a); }
+    }
+    const nr = new Float32Array(n * 3), t = new TH.Vector3();
+    for (let i = 0; i < n; i++) { t.copy(acc.get(key(i))).normalize(); nr[i * 3] = t.x; nr[i * 3 + 1] = t.y; nr[i * 3 + 2] = t.z; }
+    g.setAttribute("normal", new TH.BufferAttribute(nr, 3)); return g;
+  }
+  // arc length of the side bevel (ellipse BX x BZ) up to a horizontal offset d: used so artwork wraps the curved glass without stretching
+  const ARC_D = [], ARC_L = [];
+  (function () { const N = 96; let L = 0, px = 0, pz = BZ; ARC_D.push(0); ARC_L.push(0); for (let i = 1; i <= N; i++) { const f = i / N * Math.PI / 2, x = BX * Math.sin(f), z = BZ * Math.cos(f); L += Math.hypot(x - px, z - pz); px = x; pz = z; ARC_D.push(x); ARC_L.push(L); } })();
+  function arcLen(d) { d = Math.min(Math.max(d, 0), BX); let i = 1; while (i < ARC_D.length - 1 && ARC_D[i] < d) i++; const a = ARC_D[i - 1], b = ARC_D[i], k = b > a ? (d - a) / (b - a) : 0; return ARC_L[i - 1] + (ARC_L[i] - ARC_L[i - 1]) * k; }
+  // front / back skin = the body's own front-facing (or back-facing) triangles, pushed out by `off`, with wrap-around UVs
+  function skinFromBody(body, sign, off, flipU, flatV) {
+    const pos = body.attributes.position, P = [], va = new TH.Vector3(), vb = new TH.Vector3(), vc = new TH.Vector3(), fn = new TH.Vector3();
+    for (let i = 0; i < pos.count; i += 3) {
+      va.fromBufferAttribute(pos, i); vb.fromBufferAttribute(pos, i + 1); vc.fromBufferAttribute(pos, i + 2);
+      fn.subVectors(vc, vb).cross(new TH.Vector3().subVectors(va, vb)).normalize();
+      const hz = (D - 2 * BZ) / 2 - 1e-3; if (sign * va.z >= hz && sign * vb.z >= hz && sign * vc.z >= hz) P.push(va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z);
+    }
+    const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(new Float32Array(P), 3)); smoothNormals(g);
+    const gp = g.attributes.position, gn = g.attributes.normal, n = gp.count, uv = new Float32Array(n * 2), hx = W / 2 - BX, S = 2 * (hx + arcLen(BX));
+    for (let i = 0; i < n; i++) {
+      const x = gp.getX(i), y = gp.getY(i), ax = Math.abs(x), sx = Math.sign(x) * (ax <= hx ? ax : hx + arcLen(ax - hx)); let u = (sx + S / 2) / S; if (flipU) u = 1 - u;
+      const v = flatV ? Math.min(1, Math.max(0, 0.5 + y / (H - 2 * BX))) : 0.5 + y / H; uv[i * 2] = u; uv[i * 2 + 1] = v;
+      gp.setXYZ(i, gp.getX(i) + gn.getX(i) * off, gp.getY(i) + gn.getY(i) * off, gp.getZ(i) + gn.getZ(i) * off);
+    }
+    g.setAttribute("uv", new TH.BufferAttribute(uv, 2)); return g;
+  }
+
   const UIW = 760, UIH = 1560;
   function createPhone(imgs, withUI) {
     const grp = new TH.Group(), inner = new TH.Group(); grp.add(inner);
     const sh = new TH.Shape(), bw = W - 2 * BX, bh = H - 2 * BX, br = RC - BX, hx = bw / 2, hy = bh / 2;
-    sh.moveTo(-hx + br, -hy); sh.lineTo(hx - br, -hy); sh.absarc(hx - br, -hy + br, br, -Math.PI / 2, 0, false); sh.lineTo(hx, hy - br); sh.absarc(hx - br, hy - br, br, 0, Math.PI / 2, false); sh.lineTo(-hx + br, hy); sh.absarc(-hx + br, hy - br, br, Math.PI / 2, Math.PI, false); sh.lineTo(-hx, -hy + br); sh.absarc(-hx + br, -hy + br, br, Math.PI, Math.PI * 1.5, false);
+    sh.moveTo(-hx + br, -hy); sh.absarc(hx - br, -hy + br, br, -Math.PI / 2, 0, false); sh.absarc(hx - br, hy - br, br, 0, Math.PI / 2, false); sh.absarc(-hx + br, hy - br, br, Math.PI / 2, Math.PI, false); sh.absarc(-hx + br, -hy + br, br, Math.PI, Math.PI * 1.5, false);
     const bodyGeo = new TH.ExtrudeGeometry(sh, { depth: D - 2 * BZ, bevelEnabled: true, bevelThickness: BZ, bevelSize: BX, bevelSegments: 12, curveSegments: 18, steps: 1 });
-    bodyGeo.translate(0, 0, -(D - 2 * BZ) / 2);
+    bodyGeo.translate(0, 0, -(D - 2 * BZ) / 2); smoothNormals(bodyGeo);
     const bodyMat = new TH.MeshStandardMaterial({ color: COLORS[0].frame, metalness: 0.95, roughness: 0.28 });
     inner.add(new TH.Mesh(bodyGeo, bodyMat));
     const bwp = 600, bhp = 1288, backC = document.createElement("canvas"); backC.width = bwp; backC.height = bhp; const bg = backC.getContext("2d");
     const backTex = new TH.CanvasTexture(backC); backTex.colorSpace = TH.SRGBColorSpace; backTex.anisotropy = 4;
     const backMat = new TH.MeshPhysicalMaterial({ map: backTex, metalness: 0.15, roughness: 0.34, clearcoat: 0.9, clearcoatRoughness: 0.12, envMapIntensity: 0.9, side: TH.DoubleSide });
-    inner.add(new TH.Mesh(skinGeometry(-1, 0.004, true), backMat));
-    const uiC = document.createElement("canvas"); uiC.width = UIW; uiC.height = UIH; const uiTex = new TH.CanvasTexture(uiC); uiTex.colorSpace = TH.SRGBColorSpace; uiTex.anisotropy = 8;
+    inner.add(new TH.Mesh(skinFromBody(bodyGeo, -1, 0.004, true, false), backMat));
+    const uiC = document.createElement("canvas"); uiC.width = UIW; uiC.height = UIH; const uiOut = document.createElement("canvas"); uiOut.width = UIW; uiOut.height = UIH; const uiTex = new TH.CanvasTexture(uiOut); const uiMargin = Math.round(UIH * BX / H); uiTex.colorSpace = TH.SRGBColorSpace; uiTex.anisotropy = 8;
     const screenMat = new TH.MeshPhysicalMaterial({ color: 0x020305, roughness: 0.06, metalness: 0.0, clearcoat: 0.7, clearcoatRoughness: 0.08, emissive: 0xffffff, emissiveMap: withUI ? uiTex : null, emissiveIntensity: 0.0, envMapIntensity: 0.55, side: TH.DoubleSide });
-    inner.add(new TH.Mesh(skinGeometry(1, 0.004, false), screenMat));
+    inner.add(new TH.Mesh(skinFromBody(bodyGeo, 1, 0.004, false, false), screenMat));
     // camera module: ring, black glass, four lenses (procedural, stays sharp in macro shots)
     const cy = H / 2 - 252 / 81.5, ringMat = new TH.MeshStandardMaterial({ color: COLORS[0].ring, metalness: 0.7, roughness: 0.3 }), zb = -D / 2 - 0.004;
     const ring = new TH.Mesh(new TH.CylinderGeometry(2.33, 2.36, 0.07, 96), ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(0, cy, zb - 0.035); inner.add(ring);
@@ -134,7 +170,8 @@
       bodyMat.color.copy(new TH.Color(COLORS[a].frame)).lerp(new TH.Color(COLORS[b].frame), p);
       ringMat.color.copy(new TH.Color(COLORS[a].ring)).lerp(new TH.Color(COLORS[b].ring), p);
     }
-    return { group: grp, inner, uiC, uiTex, screenMat, setColor, lensRings };
+    function flush() { const o = uiOut.getContext("2d"); o.fillStyle = "#000"; o.fillRect(0, 0, UIW, UIH); o.drawImage(uiC, 0, uiMargin, UIW, UIH - 2 * uiMargin); uiTex.needsUpdate = true; }
+    return { group: grp, inner, uiC, uiTex, screenMat, setColor, lensRings, flush };
   }
 
   // ---------- screen: official EMUI reference captures + subtle, finger-less interactions ----------
