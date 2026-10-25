@@ -1,0 +1,29 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    
+    .fxs { position:absolute; inset:0; overflow:hidden; mix-blend-mode:screen; }
+    .fxs i { position:absolute; left:50%; top:-300px; width:420px; height:1700px; margin-left:-210px; background:linear-gradient(90deg,rgba(0,212,200,0),rgba(190,255,250,.55) 45%,rgba(255,255,255,.9) 50%,rgba(255,150,80,.5) 56%,rgba(255,98,8,0)); filter:blur(14px); }
+  </style>
+  <div id="root" data-composition-id="fx" data-width="1920" data-height="1080">
+<div id="fx-s0" class="clip fxs" data-start="3.5" data-duration="0.9"><i></i></div><div id="fx-s1" class="clip fxs" data-start="9.9" data-duration="0.9"><i></i></div><div id="fx-s2" class="clip fxs" data-start="15.0" data-duration="0.9"><i></i></div><div id="fx-s3" class="clip fxs" data-start="21.849999999999998" data-duration="0.9"><i></i></div><div id="fx-s4" class="clip fxs" data-start="26.45" data-duration="0.9"><i></i></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo("#fx-s0 i", { x:-2400, skewX:-24, opacity:0 }, { x:2400, skewX:-24, opacity:1, duration:0.7, ease:"power2.inOut" }, 3.5);
+    tl.to("#fx-s0 i", { opacity:0, duration:0.2 }, 4.21);
+    tl.fromTo("#fx-s1 i", { x:-2400, skewX:-24, opacity:0 }, { x:2400, skewX:-24, opacity:1, duration:0.7, ease:"power2.inOut" }, 9.9);
+    tl.to("#fx-s1 i", { opacity:0, duration:0.2 }, 10.61);
+    tl.fromTo("#fx-s2 i", { x:-2400, skewX:-24, opacity:0 }, { x:2400, skewX:-24, opacity:1, duration:0.7, ease:"power2.inOut" }, 15.0);
+    tl.to("#fx-s2 i", { opacity:0, duration:0.2 }, 15.71);
+    tl.fromTo("#fx-s3 i", { x:-2400, skewX:-24, opacity:0 }, { x:2400, skewX:-24, opacity:1, duration:0.7, ease:"power2.inOut" }, 21.849999999999998);
+    tl.to("#fx-s3 i", { opacity:0, duration:0.2 }, 22.56);
+    tl.fromTo("#fx-s4 i", { x:-2400, skewX:-24, opacity:0 }, { x:2400, skewX:-24, opacity:1, duration:0.7, ease:"power2.inOut" }, 26.45);
+    tl.to("#fx-s4 i", { opacity:0, duration:0.2 }, 27.16);
+    window.__timelines["fx"] = tl;
+  </script>
+</template>

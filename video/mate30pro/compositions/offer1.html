@@ -1,43 +1,40 @@
 <template>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; font-family:"Montserrat",sans-serif; color:#fff; }
-    #root .glow { position:absolute; border-radius:50%; filter:blur(110px); }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
     #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
-    #offer1-stage { position:absolute; inset:0; }
-    #offer1-phone { position:absolute; left:170px; top:70px; height:940px; width:auto; filter:drop-shadow(0 40px 60px rgba(0,0,0,.6)); }
-    #offer1-tag { position:absolute; left:820px; top:150px; font-weight:800; font-size:34px; letter-spacing:.18em; padding:12px 26px; border:3px solid #00D4C8; color:#00D4C8; border-radius:40px; white-space:nowrap; }
-    #offer1-ram { position:absolute; left:820px; top:240px; font-weight:900; font-size:98px; letter-spacing:-0.02em; white-space:nowrap; }
-    #offer1-old { position:absolute; left:820px; top:410px; font-weight:700; font-size:60px; color:#9aa4ad; white-space:nowrap; }
-    #offer1-strike { position:absolute; left:820px; top:446px; height:7px; width:420px; background:#FF6208; transform-origin:left center; }
-    #offer1-new { position:absolute; left:820px; top:500px; font-weight:900; font-size:200px; letter-spacing:-0.04em; color:#00D4C8; line-height:1; white-space:nowrap; }
-    #offer1-new small { font-size:70px; letter-spacing:0; color:#fff; font-weight:800; }
-    #offer1-eco { position:absolute; left:820px; top:760px; font-weight:800; font-size:48px; padding:18px 34px; background:#00D4C8; color:#0B0F14; border-radius:16px; white-space:nowrap; }
+    #root .w { display:inline-block; white-space:pre; }
+    
+    #offer1-tag { position:absolute; left:1080px; top:170px; font-weight:800; font-size:34px; letter-spacing:.2em; padding:12px 28px; border:3px solid #00D4C8; color:#00D4C8; border-radius:40px; white-space:nowrap; }
+    #offer1-r1 { position:absolute; left:1076px; top:250px; font-weight:900; font-size:98px; letter-spacing:-0.03em; line-height:1; white-space:nowrap; }
+    #offer1-r2 { position:absolute; left:1076px; top:352px; font-weight:900; font-size:98px; letter-spacing:-0.03em; line-height:1; white-space:nowrap; color:#00D4C8; }
+    #offer1-new { position:absolute; left:1074px; top:520px; font-weight:900; font-size:142px; letter-spacing:-0.045em; line-height:1; color:#00D4C8; white-space:nowrap; }
+    #offer1-new small { font-size:50px; letter-spacing:0; color:#fff; font-weight:800; }
+    #offer1-old { position:absolute; left:1080px; top:730px; font-weight:700; font-size:58px; color:#9aa4ad; white-space:nowrap; }
+    #offer1-strike { position:absolute; left:-8px; top:50%; height:6px; width:calc(100% + 16px); background:#FF6208; transform-origin:left center; }
+    #offer1-eco { position:absolute; left:1080px; top:850px; font-weight:800; font-size:46px; padding:16px 32px; background:#00D4C8; color:#0B0F14; border-radius:16px; white-space:nowrap; }
   </style>
   <div id="root" data-composition-id="offer1" data-width="1920" data-height="1080">
-    <div id="offer1-stage">
-      <div class="glow" data-layout-allow-overflow style="left:-100px;top:100px;width:800px;height:800px;background:#00D4C8;opacity:.22"></div>
-      <img id="offer1-phone" class="clip" data-start="0" data-duration="7.5" src="assets/huawei/mate30-pro-4g-design-pic-silver-2x.png" alt="Huawei Mate 30 Pro" />
-      <div id="offer1-tag" class="clip" data-start="0.3" data-duration="7.0">VERSION 1</div>
-      <div id="offer1-ram" class="clip" data-start="0.5" data-duration="6.8">8 Go RAM + 256 Go</div>
-      <div id="offer1-old" class="clip" data-start="1.3" data-duration="6.0">175 000 FCFA</div>
-      <div id="offer1-strike" class="clip" data-layout-allow-occlusion data-start="1.3" data-duration="6.0"></div>
-      <div id="offer1-new" class="clip" data-start="2.3" data-duration="5.0">160 000 <small>FCFA</small></div>
-      <div id="offer1-eco" class="clip" data-start="3.4" data-duration="3.9">Économie : 15 000 FCFA</div>
-    </div>
+    <div id="offer1-tag" class="clip" data-start="0.6" data-duration="5.10">VERSION 1</div>
+    <div id="offer1-r1" class="clip" data-start="0.85" data-duration="4.90">8 Go RAM</div>
+    <div id="offer1-r2" class="clip" data-start="1.2" data-duration="4.55">+ 256 Go</div>
+    <div id="offer1-new" class="clip" data-start="2.9" data-duration="2.85"><span id="offer1-num">160 000</span><small> FCFA</small></div>
+    <div id="offer1-old" class="clip" data-start="4.5" data-duration="1.25"><span>175 000 FCFA</span><i id="offer1-strike"></i></div>
+    <div id="offer1-eco" class="clip" data-start="5.2" data-duration="0.55">Économie : 15 000 FCFA</div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    const dir = "left" === "left" ? -1 : 1;
-    tl.fromTo("#offer1-phone", { x:dir*700, rotation:dir*10, opacity:0, filter:"blur(16px)" }, { x:0, rotation:dir*-3, opacity:1, filter:"blur(0px)", duration:0.9, ease:"expo.out" }, 0);
-    tl.fromTo("#offer1-tag", { opacity:0, filter:"blur(8px)" }, { opacity:1, filter:"blur(0px)", duration:0.2, ease:"power4.out" }, 0.3);
-    tl.fromTo("#offer1-ram", { opacity:0, filter:"blur(10px)", x:dir*-60 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.45, ease:"expo.out" }, 0.5);
-    tl.fromTo("#offer1-old", { opacity:0 }, { opacity:1, duration:0.2, ease:"power2.out" }, 1.3);
-    tl.fromTo("#offer1-strike", { scaleX:0 }, { scaleX:1, duration:0.35, ease:"power3.inOut" }, 1.8);
-    tl.fromTo("#offer1-new", { opacity:0, filter:"blur(22px)", scale:1.18, transformOrigin:"left center" }, { opacity:1, filter:"blur(0px)", scale:1, duration:0.5, ease:"expo.out" }, 2.3);
-    tl.fromTo("#offer1-eco", { opacity:0, clipPath:"inset(0 100% 0 0)" }, { opacity:1, clipPath:"inset(0 0% 0 0)", duration:0.4, ease:"power3.out" }, 3.4);
-    tl.to("#offer1-phone", { rotation:dir, x:dir*-30, duration:6.1, ease:"none" }, 1.0);
-    tl.to("#offer1-stage", { opacity:0, filter:"blur(10px)", duration:0.18, ease:"power3.in" }, 7.3);
+
+    const dirx = 1;
+    tl.fromTo("#offer1-tag", { opacity:0, filter:"blur(8px)" }, { opacity:1, filter:"blur(0px)", duration:0.25, ease:"power4.out" }, 0.6);
+    tl.fromTo("#offer1-r1", { opacity:0, filter:"blur(14px)", x:dirx*120 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.5, ease:"expo.out" }, 0.85);
+    tl.fromTo("#offer1-r2", { opacity:0, filter:"blur(14px)", x:dirx*120 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.5, ease:"expo.out" }, 1.2);
+    tl.fromTo("#offer1-new", { opacity:0, scale:1.25, filter:"blur(22px)", transformOrigin:"0% 60%" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.55, ease:"expo.out" }, 2.9);
+    const c = { v:0 }; tl.to(c, { v:160000, duration:0.9, ease:"power3.out", onUpdate:()=>{ document.getElementById("offer1-num").textContent = Math.round(c.v).toString().replace(/\B(?=(\d{3})+(?!\d))/g," "); } }, 2.9);
+    tl.fromTo("#offer1-old", { opacity:0, y:20 }, { opacity:1, y:0, duration:0.3, ease:"power3.out" }, 4.5);
+    tl.fromTo("#offer1-strike", { scaleX:0 }, { scaleX:1, duration:0.35, ease:"power3.inOut" }, 4.95);
+    tl.fromTo("#offer1-eco", { opacity:0, clipPath:"inset(0 100% 0 0)" }, { opacity:1, clipPath:"inset(0 0% 0 0)", duration:0.4, ease:"power3.out" }, 5.2);
+    tl.to(["#offer1-tag","#offer1-r1","#offer1-r2","#offer1-new","#offer1-old","#offer1-eco"], { opacity:0, x:dirx*200, filter:"blur(14px)", duration:0.24, ease:"power3.in", stagger:0.03 }, 5.58);
     window.__timelines["offer1"] = tl;
   </script>
 </template>

@@ -4,19 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/vendor/three.min.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0f14; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1920" data-height="1080">
-      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="3" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="reveal" data-composition-id="reveal" data-composition-src="compositions/reveal.html" data-start="3" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="offer1" data-composition-id="offer1" data-composition-src="compositions/offer1.html" data-start="7" data-duration="7.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="offer2" data-composition-id="offer2" data-composition-src="compositions/offer2.html" data-start="14.5" data-duration="7" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="trust" data-composition-id="trust" data-composition-src="compositions/trust.html" data-start="21.5" data-duration="3.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="outro" data-composition-id="outro" data-composition-src="compositions/outro.html" data-start="25" data-duration="5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="31" data-width="1920" data-height="1080">
+      <div id="stage" data-composition-id="stage" data-composition-src="compositions/stage.html" data-start="0" data-duration="31" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="brand" data-composition-id="brand" data-composition-src="compositions/brand.html" data-start="0.8" data-duration="21.6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="4.4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="offer1" data-composition-id="offer1" data-composition-src="compositions/offer1.html" data-start="4.4" data-duration="6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="offer2" data-composition-id="offer2" data-composition-src="compositions/offer2.html" data-start="10.4" data-duration="5.3" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="demo" data-composition-id="demo" data-composition-src="compositions/demo.html" data-start="15.7" data-duration="6.7" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="pay" data-composition-id="pay" data-composition-src="compositions/pay.html" data-start="22.4" data-duration="4.6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="end" data-composition-id="end" data-composition-src="compositions/end.html" data-start="27" data-duration="4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="fx" data-composition-id="fx" data-composition-src="compositions/fx.html" data-start="0" data-duration="31" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <audio id="mus" src="assets/audio/music.mp3" data-start="0" data-duration="30" data-volume="0.5" data-fade-in="0.4" data-fade-out="1.6" data-track-index="10"></audio>
+      <audio id="vo1" src="assets/audio/v_s1.mp3" data-start="0.4" data-duration="3.6" data-volume="1.15" data-track-index="11"></audio>
+      <audio id="vo2" src="assets/audio/v_s2.mp3" data-start="4.4" data-duration="5.85" data-volume="1.15" data-track-index="12"></audio>
+      <audio id="vo3" src="assets/audio/v_s3.mp3" data-start="10.4" data-duration="5.33" data-volume="1.15" data-track-index="13"></audio>
+      <audio id="vo4" src="assets/audio/v_s4.mp3" data-start="15.9" data-duration="2.35" data-volume="1.15" data-track-index="14"></audio>
+      <audio id="vo5" src="assets/audio/v_s5.mp3" data-start="22.4" data-duration="1.78" data-volume="1.15" data-track-index="15"></audio>
+      <audio id="vo6" src="assets/audio/v_s6.mp3" data-start="24.35" data-duration="2.64" data-volume="1.15" data-track-index="16"></audio>
+      <audio id="vo7" src="assets/audio/v_s7.mp3" data-start="27.2" data-duration="1.02" data-volume="1.15" data-track-index="17"></audio>
+      <audio id="vo8" src="assets/audio/v_s8.mp3" data-start="28.3" data-duration="1.59" data-volume="1.15" data-track-index="18"></audio>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
