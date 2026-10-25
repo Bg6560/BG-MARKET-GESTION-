@@ -128,8 +128,8 @@ offer('offer2', 'left', 'VERSION 2', '8 Go RAM', '+ 128 Go', '155 000', '140 000
 # 7. sealed (host 52.3 -> 54.7)
 write('sealed', scene('sealed', '''    <div id="sealed-a" class="clip" data-start="0.1" data-duration="2.1">NEUF SCELLÉ</div>
     <div id="sealed-b" class="clip" data-start="1.25" data-duration="1.0">GARANTIE <span class="o">3 MOIS</span></div>''', '''
-    #sealed-a { position:absolute; left:110px; top:300px; font-weight:900; font-size:132px; letter-spacing:-0.03em; color:#00D4C8; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }
-    #sealed-b { position:absolute; left:110px; top:470px; font-weight:900; font-size:110px; letter-spacing:-0.03em; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }''', '''
+    #sealed-a { position:absolute; left:110px; top:300px; font-weight:900; font-size:108px; letter-spacing:-0.03em; color:#00D4C8; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }
+    #sealed-b { position:absolute; left:110px; top:440px; font-weight:900; font-size:92px; letter-spacing:-0.03em; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }''', '''
     tl.fromTo("#sealed-a", { opacity:0, x:-160, filter:"blur(22px)" }, { opacity:1, x:0, filter:"blur(0px)", duration:0.55, ease:"expo.out" }, 0.1);
     tl.fromTo("#sealed-b", { opacity:0, x:-160, filter:"blur(22px)" }, { opacity:1, x:0, filter:"blur(0px)", duration:0.55, ease:"expo.out" }, 1.25);
     tl.to(["#sealed-a","#sealed-b"], { opacity:0, x:-200, filter:"blur(14px)", duration:0.24, ease:"power3.in", stagger:0.04 }, 2.1);'''))

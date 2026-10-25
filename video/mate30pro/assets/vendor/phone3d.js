@@ -162,7 +162,7 @@
     g.save(); rr(g, x0, y0, w, h, 52); g.clip(); const fh = (h - 120) * level + 60; const fg = g.createLinearGradient(0, y0 + h - fh, 0, y0 + h); fg.addColorStop(0, "rgba(220,250,255,.95)"); fg.addColorStop(1, "rgba(0,212,200,.85)"); g.fillStyle = fg; g.fillRect(x0, y0 + h - fh, w, fh); g.restore();
     const sg = g.createLinearGradient(x0, y0, x0 + w, y0 + h); sg.addColorStop(0, "rgba(255,255,255,.95)"); sg.addColorStop(.5, "rgba(0,212,200,.9)"); sg.addColorStop(1, "rgba(255,255,255,.9)"); g.strokeStyle = sg; g.lineWidth = 5; rr(g, x0, y0, w, h, 52); g.stroke();
     g.strokeStyle = "rgba(0,212,200,.35)"; g.lineWidth = 16; rr(g, x0 - 2, y0 - 2, w + 4, h + 4, 54); g.stroke();
-    g.strokeStyle = "#0b0f14"; g.lineWidth = 7; g.lineCap = "round"; const cx = x0 + w / 2;
+    g.strokeStyle = level > 0.9 ? "#0b0f14" : "#ffffff"; g.lineWidth = 7; g.lineCap = "round"; const cx = x0 + w / 2;
     g.beginPath(); g.moveTo(cx - 20, y0 + 62); g.lineTo(cx + 20, y0 + 62); g.moveTo(cx, y0 + 42); g.lineTo(cx, y0 + 82); g.stroke();
     g.strokeStyle = level > 0.12 ? "#0b0f14" : "#fff"; g.beginPath(); g.moveTo(cx - 20, y0 + h - 62); g.lineTo(cx + 20, y0 + h - 62); g.stroke();
     g.restore();
@@ -171,17 +171,17 @@
   function faceScan(g, k) {
     if (k <= 0 || k >= 1) return; const cx = UIW / 2, cy = UIH * 0.46, R = 250, a = Math.sin(Math.PI * k);
     g.save(); g.globalAlpha = Math.min(1, a * 1.6);
-    for (let i = 0; i < 5; i++) { const kk = (k * 1.4 + i * 0.2) % 1, rad = 60 + 520 * kk; g.strokeStyle = "rgba(0,212,200," + 0.5 * (1 - kk) + ")"; g.lineWidth = 3; g.beginPath(); g.arc(UIW * 0.5, 40, rad, Math.PI * 0.12, Math.PI * 0.88); g.stroke(); }
+    for (let i = 0; i < 5; i++) { const kk = (k * 1.4 + i * 0.2) % 1, rad = 60 + 520 * kk; g.strokeStyle = "rgba(0,212,200," + 0.8 * (1 - kk) + ")"; g.lineWidth = 6; g.beginPath(); g.arc(UIW * 0.5, 40, rad, Math.PI * 0.12, Math.PI * 0.88); g.stroke(); }
     g.fillStyle = "rgba(190,255,250,.9)";
-    for (let r = 1; r <= 7; r++) for (let n = 0; n < r * 8; n++) { const th = n / (r * 8) * TAU, rad = r * R / 7, x = cx + Math.cos(th) * rad * 0.82, y = cy + Math.sin(th) * rad; const vis = Math.abs((y - (cy - R)) / (2 * R) - k) < 0.12; if (vis) { g.globalAlpha = a; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); } }
-    g.globalAlpha = a; g.strokeStyle = "rgba(0,212,200,.95)"; g.lineWidth = 6; g.beginPath(); g.ellipse(cx, cy, R * 0.86, R * 1.08, 0, 0, TAU); g.setLineDash([22, 14]); g.stroke(); g.setLineDash([]);
+    for (let r = 1; r <= 7; r++) for (let n = 0; n < r * 8; n++) { const th = n / (r * 8) * TAU, rad = r * R / 7, x = cx + Math.cos(th) * rad * 0.82, y = cy + Math.sin(th) * rad; const yy = (y - (cy - R)) / (2 * R); if (yy < k + 0.03 && yy > -0.05) { g.globalAlpha = Math.min(1, a * 1.6) * (0.55 + 0.45 * Math.max(0, 1 - Math.abs(yy - k) * 5)); g.beginPath(); g.arc(x, y, 5.5, 0, TAU); g.fill(); } }
+    g.globalAlpha = Math.min(1, a * 1.6); g.strokeStyle = "rgba(0,230,215,1)"; g.lineWidth = 9; g.beginPath(); g.ellipse(cx, cy, R * 0.86, R * 1.08, 0, 0, TAU); g.setLineDash([22, 14]); g.stroke(); g.setLineDash([]);
     const sy = cy - R + 2 * R * k; const sg = g.createLinearGradient(0, sy - 30, 0, sy + 30); sg.addColorStop(0, "rgba(0,212,200,0)"); sg.addColorStop(.5, "rgba(190,255,250,.9)"); sg.addColorStop(1, "rgba(0,212,200,0)"); g.fillStyle = sg; g.fillRect(cx - R, sy - 30, 2 * R, 60);
     g.restore();
   }
   // in-display fingerprint area: concentric arcs lighting up
   function fingerprint(g, k) {
     if (k <= 0 || k >= 1) return; const cx = UIW / 2, cy = UIH * 0.855, a = Math.sin(Math.PI * k);
-    g.save(); g.globalAlpha = Math.min(1, a * 1.5); for (let i = 0; i < 6; i++) { const rr_ = 16 + i * 17, lit = k * 7 > i; g.strokeStyle = lit ? "rgba(0,212,200,.95)" : "rgba(255,255,255,.35)"; g.lineWidth = 4; g.beginPath(); g.arc(cx, cy, rr_, Math.PI * (1.08 - 0.02 * i), Math.PI * (1.92 + 0.02 * i)); g.stroke(); }
+    g.save(); g.globalAlpha = Math.min(1, a * 1.5); for (let i = 0; i < 6; i++) { const rr_ = 16 + i * 17, lit = k * 7 > i; g.strokeStyle = lit ? "rgba(0,235,220,1)" : "rgba(255,255,255,.55)"; g.lineWidth = 7; g.beginPath(); g.arc(cx, cy, rr_, Math.PI * (1.08 - 0.02 * i), Math.PI * (1.92 + 0.02 * i)); g.stroke(); }
     const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 140 * (0.4 + k)); gr.addColorStop(0, "rgba(0,212,200," + 0.35 * a + ")"); gr.addColorStop(1, "rgba(0,212,200,0)"); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, 160, 0, TAU); g.fill(); g.restore();
   }
   function sweepBar(g, v, k, h) { if (k <= 0 || k >= 1) return; const y = v * UIH, hh = h || 70, a = Math.sin(Math.PI * k); const gr = g.createLinearGradient(0, 0, UIW, 0); gr.addColorStop(0, "rgba(0,212,200,0)"); gr.addColorStop(Math.max(0, k - .2), "rgba(0,212,200,0)"); gr.addColorStop(k, "rgba(0,212,200," + 0.35 * a + ")"); gr.addColorStop(Math.min(1, k + .2), "rgba(0,212,200,0)"); gr.addColorStop(1, "rgba(0,212,200,0)"); g.fillStyle = gr; g.fillRect(0, y - hh / 2, UIW, hh); }
