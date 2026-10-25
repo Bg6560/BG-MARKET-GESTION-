@@ -8,3 +8,5 @@ tests/e2e/shots/gallery/
 
 video/mate30pro/.hyperframes/
 video/mate30pro/renders/
+video/mate30pro_vertical/.hyperframes/
+video/mate30pro_vertical/renders/
