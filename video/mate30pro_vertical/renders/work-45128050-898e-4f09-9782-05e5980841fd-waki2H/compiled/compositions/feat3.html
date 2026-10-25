@@ -1,0 +1,27 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.66); border:2px solid rgba(255,255,255,.14); border-radius:24px; }
+    #root .c { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:1000px; text-align:center; white-space:nowrap; }
+    
+    #feat3-n { top:1560px; font-weight:900; font-size:86px; padding:14px 38px; }
+    #feat3-s { top:1700px; font-weight:800; font-size:44px; padding:10px 28px; }
+  </style>
+  <div id="root" data-composition-id="feat3" data-width="1080" data-height="1920">
+    <div id="feat3-n" class="clip c plate" data-start="0.05" data-duration="2.3"><span id="feat3-num" class="t">1</span> <span>CAMÉRAS</span></div>
+    <div id="feat3-s" class="clip c plate" data-start="1.35" data-duration="1.0">POUR TOUT CAPTURER</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo("#feat3-n", { opacity:0, y:40, filter:"blur(10px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 0.05);
+    ["2","3","4"].forEach((n, i) => { tl.set("#feat3-num", { textContent:n }, 0.42 + i * 0.32); });
+    tl.set("#feat3-num", { textContent:"1" }, 0.05);
+    tl.fromTo("#feat3-s", { opacity:0, y:30, filter:"blur(10px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 1.4);
+    tl.to(["#feat3-n","#feat3-s"], { opacity:0, y:-40, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 2.1);
+    window.__timelines["feat3"] = tl;
+  </script>
+</template>

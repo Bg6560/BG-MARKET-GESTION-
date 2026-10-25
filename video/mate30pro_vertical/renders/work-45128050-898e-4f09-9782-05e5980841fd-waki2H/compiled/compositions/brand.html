@@ -1,0 +1,22 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.66); border:2px solid rgba(255,255,255,.14); border-radius:24px; }
+    #root .c { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:1000px; text-align:center; white-space:nowrap; }
+    
+    #brand-logo { position:absolute; left:50px; top:66px; width:220px; height:auto; }
+  </style>
+  <div id="root" data-composition-id="brand" data-width="1080" data-height="1920">
+    <img id="brand-logo" class="clip" data-start="0.2" data-duration="60.2" src="assets/brand/logo_bg_market.png" alt="BG-MARKET" />
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo("#brand-logo", { opacity:0 }, { opacity:0.95, duration:0.5, ease:"power2.out" }, 0.2);
+    tl.to("#brand-logo", { opacity:0, duration:0.3, ease:"power2.in" }, 59.9);
+    window.__timelines["brand"] = tl;
+  </script>
+</template>

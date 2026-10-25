@@ -1,0 +1,33 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.66); border:2px solid rgba(255,255,255,.14); border-radius:24px; }
+    #root .c { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:1000px; text-align:center; white-space:nowrap; }
+    
+    .ct { position:absolute; inset:0; }
+    .ct svg { position:absolute; left:340px; top:530px; filter:drop-shadow(0 0 14px rgba(0,212,200,.9)); }
+  </style>
+  <div id="root" data-composition-id="contour" data-width="1080" data-height="1920">
+<div id="ct0" class="clip ct" data-start="10.7" data-duration="1.1"><svg viewBox="0 0 400 860" width="400" height="860"><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#00D4C8" stroke-width="6" vector-effect="non-scaling-stroke"/><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#FF6208" stroke-width="3" vector-effect="non-scaling-stroke" opacity=".8"/><path d="M130 6 Q130 52 160 52 L240 52 Q270 52 270 6" fill="none" stroke="#fff" stroke-width="4" vector-effect="non-scaling-stroke"/></svg></div><div id="ct1" class="clip ct" data-start="19.3" data-duration="1.1"><svg viewBox="0 0 400 860" width="400" height="860"><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#00D4C8" stroke-width="6" vector-effect="non-scaling-stroke"/><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#FF6208" stroke-width="3" vector-effect="non-scaling-stroke" opacity=".8"/><path d="M130 6 Q130 52 160 52 L240 52 Q270 52 270 6" fill="none" stroke="#fff" stroke-width="4" vector-effect="non-scaling-stroke"/></svg></div><div id="ct2" class="clip ct" data-start="26.9" data-duration="1.1"><svg viewBox="0 0 400 860" width="400" height="860"><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#00D4C8" stroke-width="6" vector-effect="non-scaling-stroke"/><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#FF6208" stroke-width="3" vector-effect="non-scaling-stroke" opacity=".8"/><path d="M130 6 Q130 52 160 52 L240 52 Q270 52 270 6" fill="none" stroke="#fff" stroke-width="4" vector-effect="non-scaling-stroke"/></svg></div><div id="ct3" class="clip ct" data-start="40.25" data-duration="1.1"><svg viewBox="0 0 400 860" width="400" height="860"><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#00D4C8" stroke-width="6" vector-effect="non-scaling-stroke"/><rect x="6" y="6" width="388" height="848" rx="60" ry="60" fill="none" stroke="#FF6208" stroke-width="3" vector-effect="non-scaling-stroke" opacity=".8"/><path d="M130 6 Q130 52 160 52 L240 52 Q270 52 270 6" fill="none" stroke="#fff" stroke-width="4" vector-effect="non-scaling-stroke"/></svg></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo("#ct0 svg", { scale:0.9, transformOrigin:"50% 50%" }, { scale:6, duration:0.95, ease:"power3.in" }, 10.7);
+    tl.fromTo("#ct0 svg", { opacity:0 }, { opacity:1, duration:0.12, ease:"none" }, 10.7);
+    tl.to("#ct0 svg", { opacity:0, duration:0.25, ease:"power2.out" }, 11.5);
+    tl.fromTo("#ct1 svg", { scale:0.9, transformOrigin:"50% 50%" }, { scale:6, duration:0.95, ease:"power3.in" }, 19.3);
+    tl.fromTo("#ct1 svg", { opacity:0 }, { opacity:1, duration:0.12, ease:"none" }, 19.3);
+    tl.to("#ct1 svg", { opacity:0, duration:0.25, ease:"power2.out" }, 20.1);
+    tl.fromTo("#ct2 svg", { scale:0.9, transformOrigin:"50% 50%" }, { scale:6, duration:0.95, ease:"power3.in" }, 26.9);
+    tl.fromTo("#ct2 svg", { opacity:0 }, { opacity:1, duration:0.12, ease:"none" }, 26.9);
+    tl.to("#ct2 svg", { opacity:0, duration:0.25, ease:"power2.out" }, 27.7);
+    tl.fromTo("#ct3 svg", { scale:0.9, transformOrigin:"50% 50%" }, { scale:6, duration:0.95, ease:"power3.in" }, 40.25);
+    tl.fromTo("#ct3 svg", { opacity:0 }, { opacity:1, duration:0.12, ease:"none" }, 40.25);
+    tl.to("#ct3 svg", { opacity:0, duration:0.25, ease:"power2.out" }, 41.05);
+    window.__timelines["contour"] = tl;
+  </script>
+</template>

@@ -1,0 +1,39 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.66); border:2px solid rgba(255,255,255,.14); border-radius:24px; }
+    #root .c { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:1000px; text-align:center; white-space:nowrap; }
+        #col-h { top:190px; font-weight:900; font-size:60px; letter-spacing:-0.02em; }
+    #col-n0 { top:1600px; font-weight:900; font-size:118px; letter-spacing:-0.03em; color:#C3C4E2; text-shadow:0 6px 30px rgba(0,0,0,.6); }
+    #col-n1 { top:1600px; font-weight:900; font-size:118px; letter-spacing:-0.03em; color:#FFFFFF; text-shadow:0 6px 30px rgba(0,0,0,.6); }
+    #col-n2 { top:1600px; font-weight:900; font-size:118px; letter-spacing:-0.03em; color:#1FE0CF; text-shadow:0 6px 30px rgba(0,0,0,.6); }
+    #col-n3 { top:1600px; font-weight:900; font-size:118px; letter-spacing:-0.03em; color:#C77DFF; text-shadow:0 6px 30px rgba(0,0,0,.6); }
+
+  </style>
+  <div id="root" data-composition-id="colors" data-width="1080" data-height="1920">
+    <div id="col-h" class="clip c" data-start="0.1" data-duration="5.7">4 COLORIS <span class="t">OFFICIELS</span></div>
+    <div id="col-n0" class="clip c" data-start="1.45" data-duration="1.17">SPACE SILVER</div>
+    <div id="col-n1" class="clip c" data-start="2.62" data-duration="0.76">NOIR</div>
+    <div id="col-n2" class="clip c" data-start="3.38" data-duration="1.02">EMERALD GREEN</div>
+    <div id="col-n3" class="clip c" data-start="4.42" data-duration="1.33">COSMIC PURPLE</div>
+
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#col-h", { opacity:0, filter:"blur(10px)" }, { opacity:1, filter:"blur(0px)", duration:0.4, ease:"power4.out" }, 0.1);
+    tl.to("#col-h", { opacity:0, filter:"blur(10px)", duration:0.25 }, 5.5);
+    tl.fromTo("#col-n0", { opacity:0, y:60, filter:"blur(16px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 1.45);
+    tl.to("#col-n0", { opacity:0, y:-40, filter:"blur(12px)", duration:0.2, ease:"power3.in" }, 2.4);
+    tl.fromTo("#col-n1", { opacity:0, y:60, filter:"blur(16px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 2.62);
+    tl.to("#col-n1", { opacity:0, y:-40, filter:"blur(12px)", duration:0.2, ease:"power3.in" }, 3.16);
+    tl.fromTo("#col-n2", { opacity:0, y:60, filter:"blur(16px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 3.38);
+    tl.to("#col-n2", { opacity:0, y:-40, filter:"blur(12px)", duration:0.2, ease:"power3.in" }, 4.18);
+    tl.fromTo("#col-n3", { opacity:0, y:60, filter:"blur(16px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.4, ease:"expo.out" }, 4.42);
+    tl.to("#col-n3", { opacity:0, y:-40, filter:"blur(12px)", duration:0.2, ease:"power3.in" }, 5.53);
+
+    window.__timelines["colors"] = tl;
+  </script>
+</template>

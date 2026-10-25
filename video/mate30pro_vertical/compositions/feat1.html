@@ -1,0 +1,27 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.66); border:2px solid rgba(255,255,255,.14); border-radius:24px; }
+    #root .c { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:1000px; text-align:center; white-space:nowrap; }
+        #feat1-a { top:1600px; font-weight:900; font-size:58px; letter-spacing:-0.02em; color:#fff; padding:16px 34px; }
+    #feat1-b { top:1600px; font-weight:900; font-size:62px; letter-spacing:-0.02em; color:#00D4C8; padding:16px 34px; }
+
+  </style>
+  <div id="root" data-composition-id="feat1" data-width="1080" data-height="1920">
+    <div id="feat1-a" class="clip c plate" data-start="0.2" data-duration="1.7"><span class="w">ÉCRAN </span><span class="w"><span class="t">OLED</span> </span><span class="w">INCURVÉ </span></div>
+    <div id="feat1-b" class="clip c plate" data-start="1.95" data-duration="1.25"><span class="w">BORDS </span><span class="w">ULTRA-FINS </span></div>
+
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#feat1-a .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 0.2);
+    tl.to("#feat1-a", { opacity:0, y:-40, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 1.66);
+    tl.fromTo("#feat1-b .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 1.95);
+    tl.to("#feat1-b", { opacity:0, y:-40, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 2.96);
+
+    window.__timelines["feat1"] = tl;
+  </script>
+</template>
