@@ -5,3 +5,5 @@ tools/out/
 sauvegardes/
 backups/
 tests/e2e/shots/gallery/
+
+video/mate30pro/.hyperframes/

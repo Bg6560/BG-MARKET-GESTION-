@@ -1,0 +1,33 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .glow { position:absolute; border-radius:50%; filter:blur(110px); }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #reveal-stage { position:absolute; inset:0; }
+    #reveal-img { position:absolute; left:0; top:115px; width:1920px; height:850px; object-fit:cover; }
+    #reveal-fadeT, #reveal-fadeB { position:absolute; left:0; width:1920px; height:200px; }
+    #reveal-fadeT { top:115px; background:linear-gradient(#0B0F14,rgba(11,15,20,0)); }
+    #reveal-fadeB { top:765px; background:linear-gradient(rgba(11,15,20,0),#0B0F14); }
+    #reveal-title { position:absolute; left:130px; top:120px; font-weight:900; font-size:110px; letter-spacing:-0.02em; white-space:nowrap; }
+    #reveal-sub { position:absolute; left:134px; top:800px; font-weight:700; font-size:56px; white-space:nowrap; }
+    .rw { display:inline-block; }
+  </style>
+  <div id="root" data-composition-id="reveal" data-width="1920" data-height="1080">
+    <div id="reveal-stage">
+      <img id="reveal-img" class="clip" data-start="0" data-duration="4" src="assets/huawei/mate30-pro-4g-design-pic-kv-2x.jpg" alt="Huawei Mate 30 Pro, vue de profil" />
+      <div id="reveal-fadeT" class="clip" data-start="0" data-duration="4"></div>
+      <div id="reveal-fadeB" class="clip" data-start="0" data-duration="4"></div>
+      <div id="reveal-title" class="clip" data-start="0.35" data-duration="3.4"><span class="rw">HUAWEI</span> <span class="rw t">MATE 30 PRO</span></div>
+      <div id="reveal-sub" class="clip" data-start="1.1" data-duration="2.7"><span class="rw">Disponible chez</span> <span class="rw o">BG-MARKET</span></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#reveal-img", { clipPath:"inset(0 100% 0 0)", opacity:1 }, { clipPath:"inset(0 0% 0 0)", duration:0.9, ease:"power2.inOut" }, 0);
+    tl.fromTo("#reveal-title .rw", { opacity:0, filter:"blur(6px)" }, { opacity:1, filter:"blur(0px)", duration:0.13, ease:"power4.out", stagger:0.12 }, 0.45);
+    tl.fromTo("#reveal-sub .rw", { opacity:0, filter:"blur(6px)" }, { opacity:1, filter:"blur(0px)", duration:0.13, ease:"power4.out", stagger:0.1 }, 1.2);
+    tl.to("#reveal-stage", { opacity:0, filter:"blur(10px)", duration:0.18, ease:"power3.in" }, 3.8);
+    window.__timelines["reveal"] = tl;
+  </script>
+</template>

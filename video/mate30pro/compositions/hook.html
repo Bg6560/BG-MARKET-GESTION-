@@ -1,0 +1,31 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .glow { position:absolute; border-radius:50%; filter:blur(110px); }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #hook-stage { position:absolute; inset:0; }
+    #hook-line1 { position:absolute; left:130px; top:250px; font-weight:800; font-size:68px; letter-spacing:-0.01em; white-space:nowrap; }
+    #hook-line2 { position:absolute; left:124px; top:350px; font-weight:900; font-size:230px; letter-spacing:-0.03em; color:#FF6208; white-space:nowrap; line-height:1; }
+    #hook-phone { position:absolute; right:70px; top:90px; height:900px; width:auto; filter:drop-shadow(0 40px 60px rgba(0,0,0,.6)); }
+    .hw { display:inline-block; }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <div id="hook-stage">
+      <div class="glow" data-layout-allow-overflow style="left:-200px;top:-150px;width:800px;height:800px;background:rgba(0,212,200,.28)"></div>
+      <div class="glow" data-layout-allow-overflow style="right:-150px;bottom:-250px;width:900px;height:900px;background:rgba(255,98,8,.26)"></div>
+      <div id="hook-line1" class="clip" data-start="0" data-duration="3"><span class="hw">LE</span> <span class="hw">HUAWEI</span> <span class="hw t">MATE</span> <span class="hw t">30</span> <span class="hw t">PRO</span> <span class="hw">EN</span></div>
+      <div id="hook-line2" class="clip" data-start="0" data-duration="3"><span class="hw" id="hook-w1">PROMO</span><span class="hw" id="hook-w2"> !</span></div>
+      <img id="hook-phone" class="clip" data-start="0" data-duration="3" src="assets/huawei/mate30-pro-4g-design-pic-silver-2x.png" alt="Huawei Mate 30 Pro" />
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#hook-line1 .hw", { opacity:1, filter:"blur(0px)" }, { opacity:1, filter:"blur(0px)", duration:0.16, ease:"power4.out", stagger:0.06 }, 0);
+    tl.fromTo("#hook-w1", { opacity:1, filter:"blur(6px)", x:-60 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.55, ease:"expo.out" }, 0.1);
+    tl.fromTo("#hook-w2", { opacity:0, filter:"blur(12px)" }, { opacity:1, filter:"blur(0px)", duration:0.2, ease:"power4.out" }, 0.55);
+    tl.fromTo("#hook-phone", { x:1000, rotation:-14, opacity:1, filter:"blur(18px)" }, { x:0, rotation:-4, opacity:1, filter:"blur(0px)", duration:0.9, ease:"expo.out" }, 0.1);
+    tl.to("#hook-stage", { opacity:0, filter:"blur(10px)", duration:0.18, ease:"power3.in" }, 2.8);
+    window.__timelines["hook"] = tl;
+  </script>
+</template>

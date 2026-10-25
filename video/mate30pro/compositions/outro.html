@@ -1,0 +1,36 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .glow { position:absolute; border-radius:50%; filter:blur(110px); }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #outro-stage { position:absolute; inset:0; }
+    #outro-mods { position:absolute; inset:0; }
+    .chip { position:absolute; left:0; right:0; margin:auto; width:max-content; font-weight:800; font-size:62px; padding:30px 56px; border-radius:22px; white-space:nowrap; }
+    #outro-c1 { top:330px; background:#00D4C8; color:#0B0F14; }
+    #outro-c2 { top:520px; background:#FF6208; color:#0B0F14; }
+    #outro-logo { position:absolute; left:460px; top:230px; width:1000px; height:auto; }
+    #outro-cta { position:absolute; left:0; right:0; top:700px; text-align:center; font-weight:800; font-size:62px; white-space:nowrap; }
+  </style>
+  <div id="root" data-composition-id="outro" data-width="1920" data-height="1080">
+    <div id="outro-stage">
+      <div class="glow" data-layout-allow-overflow style="left:300px;top:100px;width:600px;height:600px;background:rgba(0,212,200,.22)"></div>
+      <div class="glow" data-layout-allow-overflow style="left:1000px;top:300px;width:600px;height:600px;background:rgba(255,98,8,.22)"></div>
+      <div id="outro-mods" class="clip" data-start="0" data-duration="2.3">
+        <div id="outro-c1" class="chip">Paiement à la livraison à Abidjan</div>
+        <div id="outro-c2" class="chip">Hors Abidjan : paiement avant expédition</div>
+      </div>
+      <img id="outro-logo" class="clip" data-start="2.3" data-duration="2.7" src="assets/brand/logo_bg_market.png" alt="BG-MARKET, Technologie pour tous" />
+      <div id="outro-cta" class="clip" data-start="2.8" data-duration="2.2">Contactez-nous pour commander</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#outro-c1", { opacity:0, x:-300, filter:"blur(14px)" }, { opacity:1, x:0, filter:"blur(0px)", duration:0.5, ease:"expo.out" }, 0.1);
+    tl.fromTo("#outro-c2", { opacity:0, x:300, filter:"blur(14px)" }, { opacity:1, x:0, filter:"blur(0px)", duration:0.5, ease:"expo.out" }, 0.5);
+    tl.to("#outro-mods", { opacity:0, filter:"blur(10px)", duration:0.15, ease:"power3.in" }, 2.1);
+    tl.fromTo("#outro-logo", { opacity:0, scale:0.86, filter:"blur(16px)" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.55, ease:"expo.out" }, 2.3);
+    tl.fromTo("#outro-cta", { opacity:0, filter:"blur(8px)" }, { opacity:1, filter:"blur(0px)", duration:0.2, ease:"power4.out" }, 2.8);
+    window.__timelines["outro"] = tl;
+  </script>
+</template>

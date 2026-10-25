@@ -1,0 +1,33 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .glow { position:absolute; border-radius:50%; filter:blur(110px); }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #trust-stage { position:absolute; inset:0; }
+    #trust-phone { position:absolute; left:1300px; top:90px; height:900px; width:auto; filter:drop-shadow(0 40px 60px rgba(0,0,0,.6)); }
+    #trust-a, #trust-b { position:absolute; left:130px; font-weight:900; letter-spacing:-0.03em; white-space:nowrap; line-height:1; }
+    #trust-a { top:400px; font-size:150px; color:#00D4C8; }
+    #trust-b { top:340px; font-size:150px; }
+    #trust-b span { color:#FF6208; }
+    #trust-seal { position:absolute; left:134px; top:250px; width:110px; height:110px; }
+  </style>
+  <div id="root" data-composition-id="trust" data-width="1920" data-height="1080">
+    <div id="trust-stage">
+      <div class="glow" data-layout-allow-overflow style="left:900px;top:100px;width:900px;height:900px;background:rgba(0,212,200,.22)"></div>
+      <img id="trust-phone" class="clip" data-start="0" data-duration="3.5" src="assets/huawei/mate30-pro-4g-design-pic-silver-2x.png" alt="Huawei Mate 30 Pro" />
+      <div id="trust-a" class="clip" data-start="0.2" data-duration="1.55">NEUF SCELLÉ</div>
+      <div id="trust-b" class="clip" data-start="1.85" data-duration="1.45">GARANTIE<br><span>3 MOIS</span></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#trust-phone", { x:300, rotation:6, opacity:0, filter:"blur(14px)" }, { x:0, rotation:3, opacity:1, filter:"blur(0px)", duration:0.8, ease:"expo.out" }, 0);
+    tl.fromTo("#trust-a", { opacity:0, filter:"blur(20px)", x:-100 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.5, ease:"expo.out" }, 0.2);
+    tl.to("#trust-a", { opacity:0, filter:"blur(10px)", duration:0.13, ease:"power3.in" }, 1.6);
+    tl.fromTo("#trust-b", { opacity:0, filter:"blur(20px)", x:-100 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.5, ease:"expo.out" }, 1.85);
+    tl.to("#trust-phone", { rotation:-3, x:-40, duration:0.5, ease:"power2.inOut" }, 1.7);
+    tl.to("#trust-stage", { opacity:0, filter:"blur(10px)", duration:0.18, ease:"power3.in" }, 3.3);
+    window.__timelines["trust"] = tl;
+  </script>
+</template>
