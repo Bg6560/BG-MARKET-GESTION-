@@ -107,8 +107,8 @@ def offer(id, side, ver, ram1, ram2, old, new, eco, acc, dur, t_new, t_old, t_ec
     #{id}-tag {{ position:absolute; left:{x}px; top:170px; font-weight:800; font-size:34px; letter-spacing:.2em; padding:12px 28px; border:3px solid {acc}; color:{acc}; border-radius:40px; white-space:nowrap; }}
     #{id}-r1 {{ position:absolute; left:{x-4}px; top:250px; font-weight:900; font-size:98px; letter-spacing:-0.03em; line-height:1; white-space:nowrap; }}
     #{id}-r2 {{ position:absolute; left:{x-4}px; top:352px; font-weight:900; font-size:98px; letter-spacing:-0.03em; line-height:1; white-space:nowrap; color:{acc}; }}
-    #{id}-new {{ position:absolute; left:{x-6}px; top:520px; font-weight:900; font-size:142px; letter-spacing:-0.045em; line-height:1; color:{acc}; white-space:nowrap; text-shadow:0 8px 40px rgba(0,0,0,.55); }}
-    #{id}-new small {{ font-size:50px; letter-spacing:0; color:#fff; font-weight:800; }}
+    #{id}-new {{ position:absolute; left:{x-6}px; top:520px; font-weight:900; font-size:156px; letter-spacing:-0.045em; line-height:1; color:{acc}; white-space:nowrap; text-shadow:0 8px 40px rgba(0,0,0,.55); }}
+    #{id}-new small {{ font-size:54px; letter-spacing:0; color:#fff; font-weight:800; }}
     #{id}-old {{ position:absolute; left:{x}px; top:730px; font-weight:700; font-size:58px; color:#9aa4ad; white-space:nowrap; }}
     #{id}-strike {{ position:absolute; left:-8px; top:50%; height:6px; width:calc(100% + 16px); background:#FF6208; transform-origin:left center; }}
     #{id}-eco {{ position:absolute; left:{x}px; top:850px; font-weight:800; font-size:46px; padding:16px 32px; background:{acc}; color:#0B0F14; border-radius:16px; white-space:nowrap; }}''', f'''
@@ -122,12 +122,12 @@ def offer(id, side, ver, ram1, ram2, old, new, eco, acc, dur, t_new, t_old, t_ec
     tl.fromTo("#{id}-strike", {{ scaleX:0 }}, {{ scaleX:1, duration:0.35, ease:"power3.inOut" }}, {r(t_old+0.45)});
     tl.fromTo("#{id}-eco", {{ opacity:0, clipPath:"inset(0 100% 0 0)" }}, {{ opacity:1, clipPath:"inset(0 0% 0 0)", duration:0.4, ease:"power3.out" }}, {t_eco});
     tl.to(["#{id}-tag","#{id}-r1","#{id}-r2","#{id}-new","#{id}-old","#{id}-eco"], {{ opacity:0, x:dirx*200, filter:"blur(14px)", duration:0.24, ease:"power3.in", stagger:0.03 }}, {r(dur-0.42)});'''))
-offer('offer1', 'right', 'VERSION 1', '8 Go RAM', '+ 256 Go', '175 000', '160 000', '15 000', '#00D4C8', 6.3, 3.0, 4.9, 5.45, 160000)
-offer('offer2', 'left', 'VERSION 2', '8 Go RAM', '+ 128 Go', '155 000', '140 000', '15 000', '#FF6208', 5.6, 2.7, 4.0, 4.65, 140000)
+offer('offer1', 'right', 'VERSION 1', '8 Go RAM', '+ 256 Go', '175 000', '160 000', '15 000', '#00D4C8', 6.3, 2.3, 3.3, 4.1, 160000)
+offer('offer2', 'left', 'VERSION 2', '8 Go RAM', '+ 128 Go', '155 000', '140 000', '15 000', '#FF6208', 5.6, 2.0, 3.0, 3.8, 140000)
 
 # 7. sealed (host 52.3 -> 54.7)
 write('sealed', scene('sealed', '''    <div id="sealed-a" class="clip" data-start="0.1" data-duration="2.1">NEUF SCELLÉ</div>
-    <div id="sealed-b" class="clip" data-start="1.25" data-duration="1.0">GARANTIE <span class="o">3 MOIS</span></div>''', '''
+    <div id="sealed-b" class="clip" data-start="1.25" data-duration="1.0">GARANTIE : <span class="o">3 MOIS</span></div>''', '''
     #sealed-a { position:absolute; left:110px; top:300px; font-weight:900; font-size:108px; letter-spacing:-0.03em; color:#00D4C8; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }
     #sealed-b { position:absolute; left:110px; top:440px; font-weight:900; font-size:92px; letter-spacing:-0.03em; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }''', '''
     tl.fromTo("#sealed-a", { opacity:0, x:-160, filter:"blur(22px)" }, { opacity:1, x:0, filter:"blur(0px)", duration:0.55, ease:"expo.out" }, 0.1);
@@ -135,10 +135,10 @@ write('sealed', scene('sealed', '''    <div id="sealed-a" class="clip" data-star
     tl.to(["#sealed-a","#sealed-b"], { opacity:0, x:-200, filter:"blur(14px)", duration:0.24, ease:"power3.in", stagger:0.04 }, 2.1);'''))
 
 # 8. payment (host 54.7 -> 61.6, dur 6.9)
-write('pay', scene('pay', '''    <div id="pay-c1" class="clip" data-start="0.05" data-duration="6.4"><span class="o">À Abidjan</span> : paiement à la livraison</div>
-    <div id="pay-c2" class="clip" data-start="2.15" data-duration="4.3"><span class="t">Hors Abidjan</span> : paiement du téléphone et des<br>frais d'expédition <span class="t">avant expédition</span></div>''', '''
-    #pay-c1, #pay-c2 { position:absolute; left:0; right:0; margin:auto; width:max-content; font-weight:800; font-size:50px; padding:20px 44px; border-radius:20px; background:rgba(11,15,20,.72); border:3px solid rgba(255,255,255,.22); text-align:center; line-height:1.25; }
-    #pay-c1 { top:56px; } #pay-c2 { top:164px; }''', '''
+write('pay', scene('pay', '''    <div id="pay-c1" class="clip" data-start="0.05" data-duration="6.4"><span class="o">À ABIDJAN</span> : PAIEMENT À LA LIVRAISON.</div>
+    <div id="pay-c2" class="clip" data-start="2.15" data-duration="4.3"><span class="t">HORS ABIDJAN</span> : PAIEMENT DU TÉLÉPHONE ET DES<br>FRAIS D'EXPÉDITION <span class="t">AVANT EXPÉDITION</span>.</div>''', '''
+    #pay-c1, #pay-c2 { position:absolute; left:0; right:0; margin:auto; width:max-content; font-weight:800; font-size:46px; padding:18px 42px; border-radius:20px; background:rgba(11,15,20,.74); border:3px solid rgba(255,255,255,.22); text-align:center; line-height:1.25; letter-spacing:.01em; }
+    #pay-c1 { top:56px; } #pay-c2 { top:160px; }''', '''
     tl.fromTo("#pay-c1", { opacity:0, y:-60, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.5, ease:"expo.out" }, 0.05);
     tl.fromTo("#pay-c2", { opacity:0, y:-60, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.5, ease:"expo.out" }, 2.15);
     tl.to(["#pay-c1","#pay-c2"], { opacity:0, y:-40, filter:"blur(10px)", duration:0.25, ease:"power3.in", stagger:0.05 }, 6.25);'''))
@@ -147,14 +147,14 @@ write('pay', scene('pay', '''    <div id="pay-c1" class="clip" data-start="0.05"
 write('end', scene('end', '''    <img id="end-logo" class="clip" data-start="0.1" data-duration="6.8" src="assets/brand/logo_bg_market.png" alt="BG-MARKET, Technologie pour tous" />
     <div id="end-shine" class="clip" data-start="0.7" data-duration="1.4"></div>
     <div id="end-cta" class="clip" data-start="1.35" data-duration="5.5">Contactez-nous pour commander</div>
-    <div id="end-tel" class="clip" data-start="2.1" data-duration="4.8"><span class="t">07</span> 15 78 69 75</div>''', '''
+    <div id="end-tel" class="clip" data-start="2.1" data-duration="4.8"><svg id="end-wa" viewBox="0 0 64 64" width="70" height="70"><circle cx="32" cy="32" r="30" fill="#25D366"/><path d="M32 13.5c-10.2 0-18.5 8.2-18.5 18.4 0 3.3.9 6.4 2.5 9.1L13.6 50.5l9.7-2.5c2.6 1.4 5.5 2.2 8.6 2.2 10.2 0 18.5-8.2 18.5-18.4S42.200 13.5 32 13.5z" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/><path d="M25.800 22.500c-.5-1-1-1-1.500-1h-1.300c-.5 0-1.200.2-1.800.9-.6.700-2.400 2.300-2.400 5.600s2.400 6.500 2.800 6.900c.3.400 4.700 7.300 11.500 9.900 5.700 2.200 6.800 1.800 8 1.700 1.200-.1 3.900-1.600 4.400-3.100.5-1.500.5-2.800.4-3.100-.2-.3-.6-.5-1.300-.9s-3.900-1.900-4.500-2.100-1-.3-1.500.3c-.4.700-1.700 2.100-2.100 2.500-.4.400-.8.500-1.500.2-.7-.3-2.800-1-5.400-3.300-2-1.800-3.300-4-3.700-4.700-.4-.700 0-1.100.3-1.400.3-.3.700-.8 1-1.200.3-.4.400-.7.700-1.100.2-.5.100-.9-.1-1.200s-1.500-3.600-2-4.900z" fill="#fff"/></svg><span class="t">07</span> 15 78 69 75</div>''', '''
     #end-logo { position:absolute; left:600px; top:40px; width:720px; height:auto; }
     #end-shine { position:absolute; left:600px; top:40px; width:720px; height:240px; overflow:hidden; mix-blend-mode:screen; }
     #end-shine::before { content:""; position:absolute; top:-40px; left:-300px; width:160px; height:360px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0)); transform:skewX(-20deg); transform:skewX(-20deg); }
     #end-cta { position:absolute; left:0; right:0; top:838px; text-align:center; font-weight:800; font-size:54px; letter-spacing:-0.02em; white-space:nowrap; }
     #end-cta::after { content:""; position:absolute; left:50%; margin-left:-300px; width:600px; bottom:-12px; height:6px; background:linear-gradient(90deg,#00D4C8,#FF6208); transform-origin:left; transform:scaleX(var(--ul,0)); }
     #end-cta { --ul:0; }
-    #end-tel { position:absolute; left:0; right:0; top:905px; text-align:center; font-weight:900; font-size:96px; letter-spacing:.02em; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); }''', '''
+    #end-tel { position:absolute; left:0; right:0; top:905px; text-align:center; font-weight:900; font-size:96px; letter-spacing:.02em; white-space:nowrap; text-shadow:0 6px 40px rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; gap:26px; } #end-wa { filter:drop-shadow(0 4px 16px rgba(0,0,0,.5)); }''', '''
     tl.fromTo("#end-logo", { opacity:0, scale:0.8, filter:"blur(18px)" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.7, ease:"expo.out" }, 0.1);
     tl.fromTo("#end-shine", { opacity:1 }, { opacity:1, duration:0.01 }, 0.7);
     tl.fromTo("#end-cta", { opacity:0, y:40, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.5, ease:"expo.out" }, 1.35);

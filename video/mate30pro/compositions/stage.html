@@ -2,11 +2,12 @@
   <style>
     #root { position:absolute; inset:0; overflow:hidden; background:#0B0F14; }
     #stage-bg { position:absolute; inset:0; background:radial-gradient(ellipse 70% 80% at 50% 45%, #14212b 0%, #0B0F14 70%); }
+    #stage-wrap { position:absolute; inset:0; transform-origin:50% 50%; }
     #stage-canvas { position:absolute; left:0; top:0; width:1920px; height:1080px; }
   </style>
   <div id="root" data-composition-id="stage" data-width="1920" data-height="1080">
     <div id="stage-bg" class="clip" data-start="0" data-duration="68.5"></div>
-    <canvas id="stage-canvas" class="clip" data-start="0" data-duration="68.5" width="1920" height="1080"></canvas>
+    <div id="stage-wrap"><canvas id="stage-canvas" class="clip" data-start="0" data-duration="68.5" width="1920" height="1080"></canvas></div>
   </div>
   <script>
   (function () {
@@ -83,12 +84,29 @@
     }
 
     // ------------------------------------------------------------------ build
-    let phone, clones = [], imgs = [];
+    let phone, clones = [], imgs = [], mainM = null, cloneMs = [];
+    const FLOOR_Y = -8.75, mirrorRoot = new TH.Group();
+    // reflection fade: scales the pixels already drawn by the mirrored phones (premultiplied alpha), strongest at the floor line
+    const fadeScene = new TH.Scene(), fadeCam = new TH.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const fadeMat = new TH.ShaderMaterial({ uniforms: { uFloor: { value: -0.5 }, uLen: { value: 0.55 }, uStrength: { value: 0.35 } },
+      vertexShader: "varying float vY; void main(){ vY = position.y; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+      fragmentShader: "varying float vY; uniform float uFloor; uniform float uLen; uniform float uStrength; void main(){ float d = uFloor - vY; float f = clamp(d / uLen, 0.0, 1.0); float keep = uStrength * (1.0 - smoothstep(0.0, 1.0, f)); if (d < 0.0) keep = uStrength; gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0 - keep); }",
+      transparent: true, depthTest: false, depthWrite: false, blending: TH.CustomBlending, blendEquation: TH.AddEquation, blendSrc: TH.ZeroFactor, blendDst: TH.OneMinusSrcAlphaFactor });
+    fadeScene.add(new TH.Mesh(new TH.PlaneGeometry(2, 2), fadeMat));
+    // soft light pool on the floor + two background lights (turquoise / orange) that follow the product
+    const poolC = document.createElement("canvas"); poolC.width = 256; poolC.height = 256; { const g = poolC.getContext("2d"); const r = g.createRadialGradient(128, 128, 0, 128, 128, 128); r.addColorStop(0, "rgba(255,255,255,.9)"); r.addColorStop(.5, "rgba(255,255,255,.28)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 256, 256); }
+    const poolTex = new TH.CanvasTexture(poolC);
+    const pool = new TH.Mesh(new TH.PlaneGeometry(26, 26), new TH.MeshBasicMaterial({ map: poolTex, color: 0x00d4c8, transparent: true, opacity: 0.0, depthWrite: false, blending: TH.AdditiveBlending })); pool.rotation.x = -Math.PI / 2; pool.position.y = FLOOR_Y + 0.02; scene.add(pool);
+    const bgLightMat = (c, o) => new TH.SpriteMaterial({ map: poolTex, color: c, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, opacity: o });
+    const bgT = new TH.Sprite(bgLightMat(0x00d4c8, 0.09)), bgO = new TH.Sprite(bgLightMat(0xff6208, 0.07)); bgT.scale.set(80, 80, 1); bgO.scale.set(70, 70, 1); scene.add(bgT); scene.add(bgO);
     const ready = (async function () {
       for (const c of P.COLORS) imgs.push(await P.loadImg(c.img));
       await P.loadScreens(["lock", "home", "menu", "settings", "about", "camera", "gallery", "music", "video", "themes", "manager"]);
       phone = P.createPhone(imgs, true); scene.add(phone.group);
       for (let i = 0; i < 4; i++) { const c = P.createPhone(imgs, false); c.setColor(i, i, 0); c.group.visible = false; scene.add(c.group); clones.push(c); }
+      mirrorRoot.scale.y = -1; mirrorRoot.position.y = 2 * FLOOR_Y; scene.add(mirrorRoot);
+      const mk = (src) => { const m = src.group.clone(); mirrorRoot.add(m); return m; };
+      mainM = mk(phone); cloneMs = clones.map(mk);
       window.__stageReady = true;
     })();
     window.__hf = window.__hf || {}; window.__hf.buildReady = window.__hf.buildReady || {}; window.__hf.buildReady["stage"] = ready;
@@ -125,11 +143,33 @@
       rig.key.position.set(-20 + 40 * Math.sin(t * 0.55), 25, 30); rig.rim.position.set(25 * Math.cos(t * 0.4), 5 + 8 * Math.sin(t * 0.7), -25);
       rig.glowMat.color.lerp(new TH.Color(t >= LINEUP ? 0x00d4c8 : P.COLORS[ci].glow), 0.25); rig.glow.position.set(px * 0.9, py, -16);
       rig.glowMat.opacity = (0.34 + 0.14 * Math.sin(t * 0.9)) * (ci === 1 && t < LINEUP ? 0.6 : 1);
+      // lights that travel with the product: rim lights turn with the phone, turquoise on one side and orange on the other
+      const aR = ang * DEG * 0.5;
+      rig.rim.color.set(0x35e0d6); rig.rim.intensity = 2.0; rig.rim.position.set(28 * Math.cos(aR + 0.5), 6 + 3 * Math.sin(t * 0.6), -22 + 6 * Math.sin(aR));
+      rig.rim2.color.set(0xff6a1a); rig.rim2.intensity = 0.8; rig.rim2.position.set(-28 * Math.cos(aR + 0.2), -6, -20 - 5 * Math.sin(aR));
+      bgT.position.set(px * 0.6 - 24 + 3 * Math.sin(t * 0.35), 6 + py * 0.3, -34); bgO.position.set(px * 0.6 + 26 + 3 * Math.cos(t * 0.3), -7 + py * 0.3, -34);
+      // reflection under the product (wide shots only)
+      const useRef = K(TW, t) < 0.2 && K(DIST, t) > 28 && t > 2.4 && t < 61.2, strength = 0.28 * sstep((py + 3) / 3);
+      pool.material.opacity = useRef ? 0.17 * sstep((py + 3) / 3) : 0; pool.material.color.set(P.COLORS[ci].glow === 0xff9a55 ? 0xff7a30 : 0x00d4c8);
+      rig.renderer.autoClear = false; rig.renderer.clear();
+      if (useRef && strength > 0.01) {
+        mainM.visible = phone.group.visible; mainM.position.copy(phone.group.position); mainM.scale.copy(phone.group.scale); mainM.children[0].rotation.copy(phone.inner.rotation);
+        cloneMs.forEach((m, i) => { m.visible = clones[i].group.visible; m.position.copy(clones[i].group.position); m.scale.copy(clones[i].group.scale); m.children[0].rotation.copy(clones[i].inner.rotation); });
+        mirrorRoot.visible = true; phone.group.visible = false; clones.forEach((c) => { c.group.visible = false; }); const gv = rig.glow.visible, bt = bgT.visible, bo = bgO.visible, pv = pool.visible; rig.glow.visible = false; bgT.visible = false; bgO.visible = false; pool.visible = false;
+        rig.renderer.render(scene, camera);
+        const fy = new TH.Vector3(0, FLOOR_Y, 0).project(camera).y; fadeMat.uniforms.uFloor.value = fy; fadeMat.uniforms.uLen.value = 0.5; fadeMat.uniforms.uStrength.value = strength; rig.renderer.render(fadeScene, fadeCam);
+        rig.renderer.clearDepth(); mirrorRoot.visible = false; phone.group.visible = t < LINEUP; clones.forEach((c) => { c.group.visible = t >= LINEUP; }); rig.glow.visible = gv; bgT.visible = bt; bgO.visible = bo; pool.visible = pv;
+      } else { mirrorRoot.visible = false; }
       rig.renderer.render(scene, camera);
     }
     window.__stageRender = renderAt;
     window.addEventListener("hf-seek", (e) => { renderAt(e.detail.time); });
     const tl = gsap.timeline({ paused: true }); window.__timelines = window.__timelines || {}; window.__timelines["stage"] = tl;
+    // cinematic whip at the cuts: a short motion-blur + push on the 3D layer, timed with the light streaks and the whoosh sounds
+    [4.9, 10.8, 14.2, 19.4, 22.7, 27.0, 40.4, 46.7, 52.3, 54.9].forEach((T) => {
+      tl.fromTo("#stage-wrap", { filter: "blur(0px)", scale: 1 }, { filter: "blur(13px)", scale: 1.045, duration: 0.2, ease: "power2.in" }, T - 0.24);
+      tl.to("#stage-wrap", { filter: "blur(0px)", scale: 1, duration: 0.34, ease: "power3.out" }, T - 0.04);
+    });
     ready.then(() => renderAt(0));
   })();
   </script>

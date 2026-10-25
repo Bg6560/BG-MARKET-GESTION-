@@ -35,8 +35,8 @@
     const c = document.createElement("canvas"); c.width = 1024; c.height = 512; const g = c.getContext("2d");
     const grad = g.createLinearGradient(0, 0, 0, 512); grad.addColorStop(0, "#1c2733"); grad.addColorStop(.5, "#0a0e14"); grad.addColorStop(1, "#05070a"); g.fillStyle = grad; g.fillRect(0, 0, 1024, 512);
     const strip = (x, y, w, h, col, blur) => { g.save(); g.filter = "blur(" + blur + "px)"; g.fillStyle = col; g.fillRect(x, y, w, h); g.restore(); };
-    strip(120, 60, 90, 360, "#ffffff", 10); strip(420, 20, 200, 60, "#bfeaff", 8); strip(760, 80, 70, 340, "#ffd9bf", 10);
-    strip(560, 300, 160, 40, "#00d4c8", 12); strip(0, 200, 60, 200, "#ff6208", 14); strip(940, 150, 70, 240, "#9fb8ff", 12);
+    strip(120, 60, 90, 360, "#ffffff", 10); strip(420, 20, 200, 60, "#bfeaff", 8); strip(760, 80, 70, 340, "#e8e4e0", 10);
+    strip(560, 300, 160, 40, "#00d4c8", 12); strip(0, 200, 60, 200, "#5a2a12", 14); strip(940, 150, 70, 240, "#9fb8ff", 12);
     const tex = new TH.CanvasTexture(c); tex.mapping = TH.EquirectangularReflectionMapping; tex.colorSpace = TH.SRGBColorSpace;
     const pm = new TH.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(tex).texture; pm.dispose();
     const key = new TH.DirectionalLight(0xfff0e0, 2.2); key.position.set(-20, 25, 30); scene.add(key);
@@ -130,20 +130,25 @@
     const cy = H / 2 - 252 / 81.5, ringMat = new TH.MeshStandardMaterial({ color: COLORS[0].ring, metalness: 0.7, roughness: 0.3 }), zb = -D / 2 - 0.004;
     const ring = new TH.Mesh(new TH.CylinderGeometry(2.33, 2.36, 0.07, 96), ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(0, cy, zb - 0.035); inner.add(ring);
     const glass = new TH.Mesh(new TH.CylinderGeometry(1.53, 1.55, 0.09, 96), new TH.MeshPhysicalMaterial({ color: 0x010102, metalness: 0.1, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 0.7 })); glass.rotation.x = Math.PI / 2; glass.position.set(0, cy, zb - 0.115); inner.add(glass);
-    const lensRim = new TH.MeshStandardMaterial({ color: 0x0a0b0e, metalness: 0.55, roughness: 0.42, envMapIntensity: 0.6 });
-    const lc = document.createElement("canvas"); lc.width = lc.height = 256; { const g = lc.getContext("2d"); const bgG = g.createRadialGradient(128, 128, 0, 128, 128, 128); bgG.addColorStop(0, "#0b1530"); bgG.addColorStop(.55, "#050a1c"); bgG.addColorStop(.85, "#020309"); bgG.addColorStop(1, "#000"); g.fillStyle = bgG; g.fillRect(0, 0, 256, 256);
-      const cg = g.createRadialGradient(100, 100, 4, 110, 112, 120); cg.addColorStop(0, "rgba(120,170,255,.95)"); cg.addColorStop(.18, "rgba(50,90,220,.75)"); cg.addColorStop(.5, "rgba(80,40,160,.35)"); cg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = cg; g.fillRect(0, 0, 256, 256);
-      for (let i = 1; i <= 4; i++) { g.strokeStyle = "rgba(120,150,255," + (0.22 - i * 0.04) + ")"; g.lineWidth = 2; g.beginPath(); g.arc(128, 128, 22 + i * 24, 0, TAU); g.stroke(); }
-      g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.arc(88, 84, 7, 0, TAU); g.fill(); }
-    const lensTex = new TH.CanvasTexture(lc); lensTex.colorSpace = TH.SRGBColorSpace;
-    const lensGlass = new TH.MeshBasicMaterial({ map: lensTex }), lensCoat = new TH.MeshPhysicalMaterial({ color: 0x000000, transparent: true, opacity: 0.35, metalness: 0, roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.1, depthWrite: false });
+    // lens stack measured on the official render: outer ring r = 0.39 cm, glass r = 0.36 cm, blue cores of different sizes (right-hand lenses larger)
+    const ringA = new TH.MeshStandardMaterial({ color: 0x2b2e35, metalness: 0.8, roughness: 0.35, envMapIntensity: 0.8 }), ringB = new TH.MeshStandardMaterial({ color: 0x14161b, metalness: 0.6, roughness: 0.45, envMapIntensity: 0.6 });
+    function lensTexture(core) {
+      const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+      const bgG = g.createRadialGradient(128, 128, 0, 128, 128, 128); bgG.addColorStop(0, "#050a1a"); bgG.addColorStop(.7, "#03050d"); bgG.addColorStop(1, "#000"); g.fillStyle = bgG; g.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 3; i++) { g.strokeStyle = "rgba(90,110,190," + (0.16 - i * 0.04) + ")"; g.lineWidth = 3; g.beginPath(); g.arc(128, 128, 86 + i * 14, 0, TAU); g.stroke(); }
+      const R = core * 128, cg = g.createRadialGradient(128 - R * 0.25, 128 - R * 0.3, R * 0.05, 128, 128, R); cg.addColorStop(0, "#8fd0ff"); cg.addColorStop(.25, "#1c7bff"); cg.addColorStop(.7, "#0a3aa8"); cg.addColorStop(1, "rgba(5,20,70,0)"); g.fillStyle = cg; g.beginPath(); g.arc(128, 128, R * 1.05, 0, TAU); g.fill();
+      g.fillStyle = "rgba(255,255,255,.9)"; g.beginPath(); g.arc(128 - R * 0.32, 128 - R * 0.36, Math.max(3, R * 0.11), 0, TAU); g.fill();
+      const t = new TH.CanvasTexture(c); t.colorSpace = TH.SRGBColorSpace; return t;
+    }
+    const lensCoat = new TH.MeshPhysicalMaterial({ color: 0x000000, transparent: true, opacity: 0.35, metalness: 0, roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.1, depthWrite: false });
     const lensRings = [];
-    [[-0.65, 0.71], [0.65, 0.71], [-0.65, -0.71], [0.65, -0.71]].forEach((p) => {
-      const r = new TH.Mesh(new TH.CylinderGeometry(0.52, 0.54, 0.12, 48), lensRim); r.rotation.x = Math.PI / 2; r.position.set(p[0], cy + p[1], zb - 0.16); inner.add(r);
-      const l = new TH.Mesh(new TH.CircleGeometry(0.4, 48), lensGlass); l.rotation.y = Math.PI; l.position.set(p[0], cy + p[1], zb - 0.226); inner.add(l);
-      const l2 = new TH.Mesh(new TH.CircleGeometry(0.4, 48), lensCoat); l2.rotation.y = Math.PI; l2.position.set(p[0], cy + p[1], zb - 0.232); inner.add(l2);
-      
-      const hl = new TH.Mesh(new TH.TorusGeometry(0.64, 0.028, 10, 64), new TH.MeshBasicMaterial({ color: 0x00d4c8, transparent: true, opacity: 0, depthWrite: false, blending: TH.AdditiveBlending })); hl.position.set(p[0], cy + p[1], zb - 0.24); inner.add(hl); lensRings.push(hl);
+    [{ p: [-0.65, 0.71], core: 0.36 }, { p: [0.65, 0.71], core: 0.56 }, { p: [-0.65, -0.71], core: 0.42 }, { p: [0.65, -0.71], core: 0.48 }].forEach((L) => {
+      const p = L.p, x = p[0], y = cy + p[1];
+      const r1 = new TH.Mesh(new TH.TorusGeometry(0.385, 0.02, 10, 64), ringA); r1.position.set(x, y, zb - 0.2); inner.add(r1);
+      const r2 = new TH.Mesh(new TH.TorusGeometry(0.335, 0.013, 10, 64), ringB); r2.position.set(x, y, zb - 0.2); inner.add(r2);
+      const l = new TH.Mesh(new TH.CircleGeometry(0.36, 48), new TH.MeshBasicMaterial({ map: lensTexture(L.core) })); l.rotation.y = Math.PI; l.position.set(x, y, zb - 0.2); inner.add(l);
+      const l2 = new TH.Mesh(new TH.CircleGeometry(0.36, 48), lensCoat); l2.rotation.y = Math.PI; l2.position.set(x, y, zb - 0.206); inner.add(l2);
+      const hl = new TH.Mesh(new TH.TorusGeometry(0.5, 0.026, 10, 64), new TH.MeshBasicMaterial({ color: 0x00d4c8, transparent: true, opacity: 0, depthWrite: false, blending: TH.AdditiveBlending })); hl.position.set(x, y, zb - 0.23); inner.add(hl); lensRings.push(hl);
     });
     // power key (red accent), USB-C and SIM tray on the bottom edge. No physical volume keys: the Mate 30 Pro uses a touch volume control.
     const pwr = new TH.Mesh(new TH.BoxGeometry(0.07, 1.25, 0.34), new TH.MeshStandardMaterial({ color: 0xb8341f, metalness: 0.8, roughness: 0.32 })); pwr.position.set(W / 2 + 0.005, 3.2, 0.02); inner.add(pwr);
