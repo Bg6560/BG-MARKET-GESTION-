@@ -5,32 +5,57 @@
     <meta name="viewport" content="width=1920, height=1080" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <script src="assets/vendor/three.min.js"></script>
+    <script src="assets/vendor/phone3d.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0f14; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="31" data-width="1920" data-height="1080">
-      <div id="stage" data-composition-id="stage" data-composition-src="compositions/stage.html" data-start="0" data-duration="31" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="brand" data-composition-id="brand" data-composition-src="compositions/brand.html" data-start="0.8" data-duration="21.6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="4.4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="offer1" data-composition-id="offer1" data-composition-src="compositions/offer1.html" data-start="4.4" data-duration="6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="offer2" data-composition-id="offer2" data-composition-src="compositions/offer2.html" data-start="10.4" data-duration="5.3" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="demo" data-composition-id="demo" data-composition-src="compositions/demo.html" data-start="15.7" data-duration="6.7" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="pay" data-composition-id="pay" data-composition-src="compositions/pay.html" data-start="22.4" data-duration="4.6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="end" data-composition-id="end" data-composition-src="compositions/end.html" data-start="27" data-duration="4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="fx" data-composition-id="fx" data-composition-src="compositions/fx.html" data-start="0" data-duration="31" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="68.5" data-width="1920" data-height="1080">
+      <div id="stage" data-composition-id="stage" data-composition-src="compositions/stage.html" data-start="0" data-duration="68.5" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="brand" data-composition-id="brand" data-composition-src="compositions/brand.html" data-start="0.8" data-duration="60.6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="5.0" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="colors" data-composition-id="colors" data-composition-src="compositions/colors.html" data-start="5.0" data-duration="5.9" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="feat1" data-composition-id="feat1" data-composition-src="compositions/feat1.html" data-start="11.0" data-duration="3.2" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="feat2" data-composition-id="feat2" data-composition-src="compositions/feat2.html" data-start="14.2" data-duration="2.7" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="feat3" data-composition-id="feat3" data-composition-src="compositions/feat3.html" data-start="16.9" data-duration="2.4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="feat4" data-composition-id="feat4" data-composition-src="compositions/feat4.html" data-start="19.4" data-duration="3.3" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="feat5" data-composition-id="feat5" data-composition-src="compositions/feat5.html" data-start="22.75" data-duration="4.2" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="tour" data-composition-id="tour" data-composition-src="compositions/tour.html" data-start="26.8" data-duration="13.6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="offer1" data-composition-id="offer1" data-composition-src="compositions/offer1.html" data-start="40.4" data-duration="6.3" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="offer2" data-composition-id="offer2" data-composition-src="compositions/offer2.html" data-start="46.7" data-duration="5.6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="sealed" data-composition-id="sealed" data-composition-src="compositions/sealed.html" data-start="52.3" data-duration="2.4" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="pay" data-composition-id="pay" data-composition-src="compositions/pay.html" data-start="54.7" data-duration="6.9" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="end" data-composition-id="end" data-composition-src="compositions/end.html" data-start="61.6" data-duration="6.9" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="contour" data-composition-id="contour" data-composition-src="compositions/contour.html" data-start="0" data-duration="68.5" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="fx" data-composition-id="fx" data-composition-src="compositions/fx.html" data-start="0" data-duration="68.5" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
 
-      <audio id="mus" src="assets/audio/music.mp3" data-start="0" data-duration="30" data-volume="0.5" data-fade-in="0.4" data-fade-out="1.6" data-track-index="10"></audio>
-      <audio id="vo1" src="assets/audio/v_s1.mp3" data-start="0.4" data-duration="3.6" data-volume="1.15" data-track-index="11"></audio>
-      <audio id="vo2" src="assets/audio/v_s2.mp3" data-start="4.4" data-duration="5.85" data-volume="1.15" data-track-index="12"></audio>
-      <audio id="vo3" src="assets/audio/v_s3.mp3" data-start="10.4" data-duration="5.33" data-volume="1.15" data-track-index="13"></audio>
-      <audio id="vo4" src="assets/audio/v_s4.mp3" data-start="15.9" data-duration="2.35" data-volume="1.15" data-track-index="14"></audio>
-      <audio id="vo5" src="assets/audio/v_s5.mp3" data-start="22.4" data-duration="1.78" data-volume="1.15" data-track-index="15"></audio>
-      <audio id="vo6" src="assets/audio/v_s6.mp3" data-start="24.35" data-duration="2.64" data-volume="1.15" data-track-index="16"></audio>
-      <audio id="vo7" src="assets/audio/v_s7.mp3" data-start="27.2" data-duration="1.02" data-volume="1.15" data-track-index="17"></audio>
-      <audio id="vo8" src="assets/audio/v_s8.mp3" data-start="28.3" data-duration="1.59" data-volume="1.15" data-track-index="18"></audio>
+      <audio id="mus" src="assets/audio/music_final.mp3" data-start="0" data-duration="68.5" data-volume="0.34" data-fade-in="0.4" data-fade-out="3" data-track-index="10"></audio>
+      <audio id="vo" src="assets/audio/voice_final_n.mp3" data-start="1.0" data-volume="1" data-track-index="11"></audio>
+      <audio id="fx0" src="assets/audio/sfx/riser_impact.mp3" data-start="2.15" data-duration="2.04" data-volume="0.7" data-track-index="20"></audio>
+      <audio id="fx1" src="assets/audio/sfx/riser_impact.mp3" data-start="59.65" data-duration="2.04" data-volume="0.7" data-track-index="21"></audio>
+      <audio id="fx2" src="assets/audio/sfx/spin_zoom.mp3" data-start="5.9" data-duration="2.04" data-volume="0.55" data-track-index="22"></audio>
+      <audio id="fx3" src="assets/audio/sfx/spin_zoom.mp3" data-start="11.2" data-duration="2.04" data-volume="0.5" data-track-index="23"></audio>
+      <audio id="fx4" src="assets/audio/sfx/spin_zoom.mp3" data-start="15.8" data-duration="2.04" data-volume="0.5" data-track-index="24"></audio>
+      <audio id="fx5" src="assets/audio/sfx/whoosh_a.mp3" data-start="7.3" data-duration="1.04" data-volume="0.55" data-track-index="25"></audio>
+      <audio id="fx6" src="assets/audio/sfx/whoosh_b.mp3" data-start="8.3" data-duration="1.04" data-volume="0.55" data-track-index="26"></audio>
+      <audio id="fx7" src="assets/audio/sfx/whoosh_a.mp3" data-start="9.7" data-duration="1.04" data-volume="0.55" data-track-index="27"></audio>
+      <audio id="fx8" src="assets/audio/sfx/whoosh_b.mp3" data-start="14.15" data-duration="1.04" data-volume="0.55" data-track-index="28"></audio>
+      <audio id="fx9" src="assets/audio/sfx/whoosh_a.mp3" data-start="19.35" data-duration="1.04" data-volume="0.55" data-track-index="29"></audio>
+      <audio id="fx10" src="assets/audio/sfx/whoosh_b.mp3" data-start="27.0" data-duration="1.04" data-volume="0.55" data-track-index="30"></audio>
+      <audio id="fx11" src="assets/audio/sfx/whoosh_a.mp3" data-start="40.35" data-duration="1.04" data-volume="0.6" data-track-index="31"></audio>
+      <audio id="fx12" src="assets/audio/sfx/whoosh_b.mp3" data-start="46.65" data-duration="1.04" data-volume="0.6" data-track-index="32"></audio>
+      <audio id="fx13" src="assets/audio/sfx/whoosh_a.mp3" data-start="52.25" data-duration="1.04" data-volume="0.55" data-track-index="33"></audio>
+      <audio id="fx14" src="assets/audio/sfx/whoosh_b.mp3" data-start="54.85" data-duration="1.04" data-volume="0.55" data-track-index="34"></audio>
+      <audio id="fx15" src="assets/audio/sfx/whoosh_a.mp3" data-start="10.75" data-duration="1.04" data-volume="0.5" data-track-index="35"></audio>
+      <audio id="fx16" src="assets/audio/sfx/whoosh_b.mp3" data-start="22.4" data-duration="1.04" data-volume="0.5" data-track-index="36"></audio>
+      <audio id="fx17" src="assets/audio/sfx/ui_taps.mp3" data-start="23.9" data-duration="2.04" data-volume="0.55" data-track-index="37"></audio>
+      <audio id="fx18" src="assets/audio/sfx/ui_taps.mp3" data-start="30.4" data-duration="2.04" data-volume="0.45" data-track-index="38"></audio>
+      <audio id="fx19" src="assets/audio/sfx/ui_taps.mp3" data-start="33.75" data-duration="2.04" data-volume="0.45" data-track-index="39"></audio>
+      <audio id="fx20" src="assets/audio/sfx/ui_taps.mp3" data-start="39.55" data-duration="2.04" data-volume="0.45" data-track-index="40"></audio>
+      <audio id="fx21" src="assets/audio/sfx/shutter_unlock.mp3" data-start="34.85" data-duration="1.04" data-volume="0.55" data-track-index="41"></audio>
+      <audio id="fx22" src="assets/audio/sfx/shutter_unlock.mp3" data-start="22.3" data-duration="1.04" data-volume="0.5" data-track-index="42"></audio>
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });

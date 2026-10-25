@@ -1,0 +1,26 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.62); border:2px solid rgba(255,255,255,.14); border-radius:22px; }
+        #feat4-a { position:absolute; left:110px; top:840px; font-weight:900; font-size:66px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #feat4-b { position:absolute; left:110px; top:840px; font-weight:900; font-size:58px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+
+  </style>
+  <div id="root" data-composition-id="feat4" data-width="1920" data-height="1080">
+    <div id="feat4-a" class="clip plate" data-start="0.1" data-duration="1.75"><span class="w">DÉVERROUILLAGE </span><span class="w"><span class="t">FACIAL 3D</span> </span></div>
+    <div id="feat4-b" class="clip plate" data-start="1.85" data-duration="1.45"><span class="w">OU </span><span class="w">PAR </span><span class="w"><span class="o">EMPREINTE</span> </span><span class="w">SOUS </span><span class="w">L'ÉCRAN </span></div>
+
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#feat4-a .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 0.1);
+    tl.to("#feat4-a", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 1.61);
+    tl.fromTo("#feat4-b .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 1.85);
+    tl.to("#feat4-b", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 3.06);
+
+    window.__timelines["feat4"] = tl;
+  </script>
+</template>

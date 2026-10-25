@@ -4,24 +4,25 @@
     #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
     #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
     #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.62); border:2px solid rgba(255,255,255,.14); border-radius:22px; }
     
     #hook-l1 { position:absolute; left:120px; top:210px; font-weight:800; font-size:58px; white-space:nowrap; letter-spacing:-0.01em; }
     #hook-l2 { position:absolute; left:108px; top:280px; font-weight:900; font-size:215px; color:#FF6208; letter-spacing:-0.035em; line-height:1; white-space:nowrap; }
     #hook-l3 { position:absolute; left:124px; top:560px; font-weight:800; font-size:56px; white-space:nowrap; }
   </style>
   <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
-    <div id="hook-l1" class="clip" data-start="0" data-duration="4.1"><span class="w">LE </span><span class="w">HUAWEI </span><span class="w t">MATE </span><span class="w t">30 </span><span class="w t">PRO </span><span class="w">EN</span></div>
-    <div id="hook-l2" class="clip" data-start="0" data-duration="4.1"><span class="w" id="hook-promo">PROMO </span><span class="w" id="hook-bang">!</span></div>
-    <div id="hook-l3" class="clip" data-start="0" data-duration="4.1">CHEZ <span class="o">BG-MARKET</span></div>
+    <div id="hook-l1" class="clip" data-start="0" data-duration="4.8"><span class="w">LE </span><span class="w">HUAWEI </span><span class="w t">MATE </span><span class="w t">30 </span><span class="w t">PRO </span><span class="w">EN</span></div>
+    <div id="hook-l2" class="clip" data-start="0" data-duration="4.8"><span class="w" id="hook-promo">PROMO </span><span class="w" id="hook-bang">!</span></div>
+    <div id="hook-l3" class="clip" data-start="0" data-duration="4.8">CHEZ <span class="o">BG-MARKET</span></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
 
-    tl.fromTo("#hook-l1 .w", { opacity:0, filter:"blur(8px)" }, { opacity:1, filter:"blur(0px)", duration:0.16, ease:"power4.out", stagger:0.12 }, 0.4);
-    tl.fromTo("#hook-promo", { opacity:0, filter:"blur(26px)", x:-160 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.6, ease:"expo.out" }, 1.45);
-    tl.fromTo("#hook-bang", { opacity:0, scale:2.4, filter:"blur(10px)", transformOrigin:"50% 60%" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.35, ease:"back.out(1.6)" }, 1.95);
-    tl.fromTo("#hook-l3", { opacity:0, x:-60 }, { opacity:1, x:0, duration:0.5, ease:"expo.out" }, 2.5);
-    tl.to(["#hook-l1","#hook-l2","#hook-l3"], { opacity:0, x:-220, filter:"blur(16px)", duration:0.28, ease:"power3.in", stagger:0.04 }, 3.78);
+    tl.fromTo("#hook-l1 .w", { opacity:0, filter:"blur(8px)" }, { opacity:1, filter:"blur(0px)", duration:0.2, ease:"power4.out", stagger:0.13 }, 1.2);
+    tl.fromTo("#hook-promo", { opacity:0, filter:"blur(26px)", x:-160 }, { opacity:1, filter:"blur(0px)", x:0, duration:0.6, ease:"expo.out" }, 2.85);
+    tl.fromTo("#hook-bang", { opacity:0, scale:2.4, filter:"blur(10px)", transformOrigin:"50% 60%" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.35, ease:"back.out(1.6)" }, 3.3);
+    tl.fromTo("#hook-l3", { opacity:0, x:-60 }, { opacity:1, x:0, duration:0.5, ease:"expo.out" }, 3.8);
+    tl.to(["#hook-l1","#hook-l2","#hook-l3"], { opacity:0, x:-220, filter:"blur(16px)", duration:0.28, ease:"power3.in", stagger:0.04 }, 4.55);
     window.__timelines["hook"] = tl;
   </script>
 </template>

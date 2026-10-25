@@ -1,0 +1,62 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#fff; }
+    #root .t { color:#00D4C8; } #root .o { color:#FF6208; }
+    #root .w { display:inline-block; white-space:pre; }
+    #root .plate { background:rgba(11,15,20,.62); border:2px solid rgba(255,255,255,.14); border-radius:22px; }
+        #tour-t0 { position:absolute; left:110px; top:120px; font-weight:900; font-size:66px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t1 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t2 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t3 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t4 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t5 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t6 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t7 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t8 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t9 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+    #tour-t10 { position:absolute; left:110px; top:120px; font-weight:900; font-size:60px; letter-spacing:-0.02em; color:#fff; white-space:nowrap; text-align:left; padding:14px 30px; }
+
+  </style>
+  <div id="root" data-composition-id="tour" data-width="1920" data-height="1080">
+    <div id="tour-t0" class="clip plate" data-start="0.1" data-duration="0.55"><span class="w">INTERFACE </span><span class="w"><span class="t">EMUI</span> </span></div>
+    <div id="tour-t1" class="clip plate" data-start="0.7" data-duration="1.95"><span class="w">ÉCRAN </span><span class="w">D'ACCUEIL </span></div>
+    <div id="tour-t2" class="clip plate" data-start="2.75" data-duration="0.95"><span class="w">MENU </span><span class="w">PRINCIPAL </span></div>
+    <div id="tour-t3" class="clip plate" data-start="3.8" data-duration="0.8"><span class="w">PARAMÈTRES </span></div>
+    <div id="tour-t4" class="clip plate" data-start="4.7" data-duration="0.8"><span class="w">INFORMATIONS </span><span class="w">TÉLÉPHONE </span></div>
+    <div id="tour-t5" class="clip plate" data-start="5.6" data-duration="2.7"><span class="w">APPAREIL </span><span class="w">PHOTO </span></div>
+    <div id="tour-t6" class="clip plate" data-start="8.45" data-duration="0.95"><span class="w">GALERIE </span></div>
+    <div id="tour-t7" class="clip plate" data-start="9.5" data-duration="0.7"><span class="w">MUSIQUE </span></div>
+    <div id="tour-t8" class="clip plate" data-start="10.3" data-duration="0.75"><span class="w">VIDÉO </span></div>
+    <div id="tour-t9" class="clip plate" data-start="11.15" data-duration="0.75"><span class="w">THÈMES </span></div>
+    <div id="tour-t10" class="clip plate" data-start="12.0" data-duration="1.5"><span class="w">GESTIONNAIRE </span><span class="w">DU </span><span class="w">TÉLÉPHONE </span></div>
+
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#tour-t0 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 0.1);
+    tl.to("#tour-t0", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 0.41);
+    tl.fromTo("#tour-t1 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 0.7);
+    tl.to("#tour-t1", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 2.41);
+    tl.fromTo("#tour-t2 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 2.75);
+    tl.to("#tour-t2", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 3.46);
+    tl.fromTo("#tour-t3 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 3.8);
+    tl.to("#tour-t3", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 4.36);
+    tl.fromTo("#tour-t4 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 4.7);
+    tl.to("#tour-t4", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 5.26);
+    tl.fromTo("#tour-t5 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 5.6);
+    tl.to("#tour-t5", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 8.06);
+    tl.fromTo("#tour-t6 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 8.45);
+    tl.to("#tour-t6", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 9.16);
+    tl.fromTo("#tour-t7 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 9.5);
+    tl.to("#tour-t7", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 9.96);
+    tl.fromTo("#tour-t8 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 10.3);
+    tl.to("#tour-t8", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 10.81);
+    tl.fromTo("#tour-t9 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 11.15);
+    tl.to("#tour-t9", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 11.66);
+    tl.fromTo("#tour-t10 .w", { opacity:0, filter:"blur(10px)", y:22 }, { opacity:1, filter:"blur(0px)", y:0, duration:0.3, ease:"expo.out", stagger:0.07 }, 12.0);
+    tl.to("#tour-t10", { opacity:0, x:-90, filter:"blur(10px)", duration:0.22, ease:"power3.in" }, 13.26);
+
+    window.__timelines["tour"] = tl;
+  </script>
+</template>

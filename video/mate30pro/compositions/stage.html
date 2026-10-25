@@ -5,347 +5,127 @@
     #stage-canvas { position:absolute; left:0; top:0; width:1920px; height:1080px; }
   </style>
   <div id="root" data-composition-id="stage" data-width="1920" data-height="1080">
-    <div id="stage-bg" class="clip" data-start="0" data-duration="31"></div>
-    <canvas id="stage-canvas" class="clip" data-start="0" data-duration="31" width="1920" height="1080"></canvas>
+    <div id="stage-bg" class="clip" data-start="0" data-duration="68.5"></div>
+    <canvas id="stage-canvas" class="clip" data-start="0" data-duration="68.5" width="1920" height="1080"></canvas>
   </div>
   <script>
   (function () {
-    const TH = window.THREE;
-    const TAU = Math.PI * 2, DEG = Math.PI / 180;
-    // ---------- units: cm. Mate 30 Pro body 7.31 x 15.81 x 0.88 ----------
-    const W = 7.31, H = 15.81, D = 0.88, BX = 0.5, BZ = 0.38, RC = 0.95;
-    const COLORS = [
-      { name: "silver", img: "assets/huawei/mate30-pro-4g-design-pic-silver-2x.png", frame: 0xb7bbd8, ring: 0xc3c4e2, glow: 0x8fa4ff },
-      { name: "purple", img: "assets/huawei/mate30-pro-4g-design-pic-purple-2x.png", frame: 0x5d3166, ring: 0x6f3f78, glow: 0xc060ff },
-      { name: "green",  img: "assets/huawei/mate30-pro-4g-design-pic-green-2x.png",  frame: 0x0f8f86, ring: 0x1b968d, glow: 0x00e0c0 },
-      { name: "black",  img: "assets/huawei/mate30-pro-4g-design-pic-black-2x.png",  frame: 0x1a1c21, ring: 0x272a31, glow: 0xff9a55 },
-    ];
-    const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-    const sstep = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
-    const eio = (x) => { x = clamp(x, 0, 1); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2; };
-    const eout = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 4);
-    const lerp = (a, b, k) => a + (b - a) * k;
-    // keyframes: [[t, v, ease?], ...]; ease applies to the segment ending at that key
-    function K(keys, t) {
-      if (t <= keys[0][0]) return keys[0][1];
-      for (let i = 1; i < keys.length; i++) {
-        if (t <= keys[i][0]) {
-          const a = keys[i - 1], b = keys[i], u = (t - a[0]) / (b[0] - a[0]);
-          const f = b[2] || eio; return lerp(a[1], b[1], f(u));
-        }
-      }
-      return keys[keys.length - 1][1];
-    }
-    const loadImg = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-
-    // ---------- renderer ----------
+    const P = window.Phone3D, TH = P.TH, DEG = P.DEG, K = P.K, eio = P.eio, eout = P.eout, ein = P.ein, sstep = P.sstep, lerp = P.lerp, clamp = P.clamp;
+    const esin = (x) => 0.5 - 0.5 * Math.cos(Math.PI * clamp(x, 0, 1));
     const canvas = document.getElementById("stage-canvas");
-    const renderer = new TH.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(1); renderer.setSize(1920, 1080, false); renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = TH.SRGBColorSpace; renderer.toneMapping = TH.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-    const scene = new TH.Scene();
-    const camera = new TH.PerspectiveCamera(28, 1920 / 1080, 1, 400);
+    const rig = P.makeRig(canvas), scene = rig.scene, camera = rig.camera;
 
-    // environment: dark studio with soft strip lights
-    (function () {
-      const c = document.createElement("canvas"); c.width = 1024; c.height = 512; const g = c.getContext("2d");
-      g.fillStyle = "#06080c"; g.fillRect(0, 0, 1024, 512);
-      const grad = g.createLinearGradient(0, 0, 0, 512); grad.addColorStop(0, "#1c2733"); grad.addColorStop(.5, "#0a0e14"); grad.addColorStop(1, "#05070a");
-      g.fillStyle = grad; g.fillRect(0, 0, 1024, 512);
-      const strip = (x, y, w, h, col, blur) => { g.save(); g.filter = "blur(" + blur + "px)"; g.fillStyle = col; g.fillRect(x, y, w, h); g.restore(); };
-      strip(120, 60, 90, 360, "#ffffff", 10); strip(420, 20, 200, 60, "#bfeaff", 8); strip(760, 80, 70, 340, "#ffd9bf", 10);
-      strip(560, 300, 160, 40, "#00d4c8", 12); strip(0, 200, 60, 200, "#ff6208", 14); strip(940, 150, 70, 240, "#9fb8ff", 12);
-      const tex = new TH.CanvasTexture(c); tex.mapping = TH.EquirectangularReflectionMapping; tex.colorSpace = TH.SRGBColorSpace;
-      const pm = new TH.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(tex).texture; pm.dispose();
-    })();
-    const key = new TH.DirectionalLight(0xfff0e0, 2.2); key.position.set(-20, 25, 30); scene.add(key);
-    const rim = new TH.DirectionalLight(0x6fd8ff, 2.6); rim.position.set(25, 5, -25); scene.add(rim);
-    const rim2 = new TH.DirectionalLight(0xff7a30, 0.8); rim2.position.set(-25, -10, -20); scene.add(rim2);
-    scene.add(new TH.AmbientLight(0x6070a0, 0.25));
+    // ------------------------------------------------------------------ film script (seconds)
+    // 0 = back facing the camera, 180 = front. Colours: 0 silver, 1 black, 2 green, 3 purple.
+    const ANG = [[0, -52], [0.4, -52], [4.2, -14, eout], [5.9, 0, eio], [10.1, 1080, esin], [11.5, 1260, eio],
+      [13.4, 1274], [14.4, 1442, eio], [19.0, 1454], [19.9, 1618, eio], [27, 1626], [36, 1612], [40.2, 1620],
+      [41.6, 1802, eio], [46.4, 1832], [47.5, 2162, eio], [52.2, 2190], [53.3, 2340, eio], [55, 2352]];
+    const COLEVT = [[7.3, 7.8, 0, 1], [8.3, 8.8, 1, 2], [9.7, 10.2, 2, 3], [15.5, 16.1, 3, 2], [17.5, 18.1, 2, 1], [23.9, 24.5, 1, 0], [47.3, 47.9, 0, 1]];
+    const POSX = [[0, 7.4], [3.8, 7.4], [5.6, 0, eio], [40.4, 0], [41.5, -5.2, eio], [47.0, -5.2], [48.0, 5.2, eio], [52.6, 5.2], [54.8, 5.2], [90, 5.2]];
+    const POSY = [[0, -14], [0.6, -14], [2.2, 0, eout], [90, 0]];
+    const TILT = [[0, 18], [4.2, 6, eio], [8, 4], [11.5, 0, eio], [40, 0], [43, 8, eio], [50, 6], [53.5, 0, eio], [57, 6]];
+    const ROLL = [[0, 0], [5, 0], [6.5, -5, eio], [10, 3, eio], [11.5, 0, eio], [40, 0], [43, -3, eio], [50, 3], [53.5, 0, eio]];
+    const SCREEN_ON = [[0, 0], [5.5, 0], [5.9, 1, eout], [55, 1], [55.6, 0], [90, 0]];
+    // camera: tw = 1 follows a point on the phone (local cm), otherwise the product framing
+    const TW = [[0, 0], [10.9, 0], [11.6, 1, eio], [40.2, 1], [41.3, 0, eio], [90, 0]];
+    const TX = [[10.9, 0], [11.6, 3.0, eio], [12.6, 3.2], [13.6, 0.6, eio], [14.4, 0, eio], [19.4, 0], [22.9, 0], [23.8, 3.0, eio], [26.2, 3.0], [27.2, 0, eio], [90, 0]];
+    const TY = [[10.9, 0], [11.6, 5.5, eio], [12.7, -2.0, eio], [13.6, 7.0, eio], [14.4, 4.81, eio], [19.4, 4.81], [19.9, 2.6, eio], [22.9, 2.6], [23.8, 0.4, eio], [26.2, 0.4], [27.2, 0.2, eio], [31.4, 0.2], [33.0, -1.4, eio], [35.2, -0.6, eio], [36.0, 0.2, eio], [90, 0.2]];
+    const TZ = [[10.9, 0], [11.6, 0.4], [13.6, 0.4], [14.4, -0.6, eio], [19.4, -0.6], [19.9, 0.4, eio], [90, 0.4]];
+    const DIST = [[0, 52], [4.2, 38, eio], [5.9, 40, eio], [10.1, 33, eio], [10.9, 36, eio], [11.6, 11, eio], [13.1, 9.5], [13.9, 16, eio], [14.8, 13, eio], [15.8, 10, eio], [16.7, 9.6, eio], [18.7, 9.8],
+      [19.5, 19, eio], [22.7, 16, eio], [23.6, 17.5, eio], [26.5, 17.5, eio], [27.3, 33, eio], [29.4, 31, eio], [31.4, 27, eio], [32.4, 31, eio], [33.2, 25, eio], [35.0, 27, eio], [35.5, 32, eio], [40.2, 30, eio], [41.4, 36, eio], [52.5, 36], [54.6, 38, eio], [56.6, 60, eio], [90, 58]];
+    const OY = [[0, 0], [10.9, 0], [11.6, 52, eio], [13.0, 30, eio], [13.9, -8, eio], [14.6, -28, eio], [15.8, 30, eio], [17.0, 6, eio], [18.6, -6], [19.5, 0, eio], [22.9, 0], [23.8, 34, eio], [26.0, 28], [27.2, -10, eio],
+      [30.0, 12, eio], [33.0, -12, eio], [36.0, 10, eio], [40.2, -6, eio], [41.4, 0, eio], [90, 0]];
+    const OP = [[0, 0], [11.6, 8, eio], [13.6, -6, eio], [14.6, 18, eio], [15.8, -8, eio], [17, 4], [19.5, 0, eio], [27.2, 4, eio], [33, -4, eio], [38, 6, eio], [41.4, 0, eio], [90, 0]];
+    const FOV = [[0, 28], [10.9, 28], [11.6, 24, eio], [14.8, 26, eio], [16.7, 24, eio], [19.5, 28, eio], [90, 28]];
+    // on-screen content (official EMUI references) + subtle taps
+    const SCREENS = [[5.9, "lock"], [22.5, "home", "up", 0.5], [29.5, "menu", "up", 0.5], [30.6, "settings", "zoom", 0.45, 0.15, 0.23], [31.5, "about", "left", 0.4], [32.3, "camera", "zoom", 0.5, 0.5, 0.5],
+      [35.2, "gallery", "left", 0.4], [36.25, "music", "left", 0.35], [37.05, "video", "left", 0.35], [37.9, "themes", "left", 0.35], [38.75, "manager", "left", 0.35], [52.3, "lock", "fade", 0.5]];
+    const TAPS = [[23.95, 0.955, 0.55, 0.45], [24.42, 0.955, 0.55, 0.45], [30.45, 0.15, 0.23, 0.45], [31.3, 0.5, 0.93, 0.4], [33.8, 0.607, 0.698, 0.4], [34.4, 0.749, 0.698, 0.4], [34.9, 0.5, 0.9, 0.45],
+      [35.9, 0.19, 0.25, 0.45], [36.7, 0.5, 0.86, 0.45], [37.55, 0.27, 0.45, 0.45], [38.35, 0.5, 0.3, 0.45], [39.6, 0.5, 0.484, 0.5]];
+    const SLOTS = [-13.2, -4.4, 4.4, 13.2], LINEUP = 55.0;
 
-    // glow sprite behind the product, tinted with the current colour
-    const glowC = document.createElement("canvas"); glowC.width = glowC.height = 256; { const g = glowC.getContext("2d"); const r = g.createRadialGradient(128, 128, 0, 128, 128, 128); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(.4, "rgba(255,255,255,.35)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 256, 256); }
-    const glowMat = new TH.SpriteMaterial({ map: new TH.CanvasTexture(glowC), color: 0x8fa4ff, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, opacity: 0.5 });
-    const glow = new TH.Sprite(glowMat); glow.position.set(0, 0, -14); glow.scale.set(60, 60, 1); scene.add(glow);
-
-    // ---------- skin geometry that follows the rounded body profile ----------
-    function crossSection(sign, off) {
-      const pts = [], A = BX + off, B = BZ + off, hx = W / 2 - BX, zc = D / 2 - BZ, N = 14, F = 8;
-      for (let i = 0; i <= N; i++) { const p = (1 - i / N) * Math.PI / 2; pts.push([-hx - A * Math.sin(p), sign * (zc + B * Math.cos(p))]); }
-      for (let i = 1; i < F; i++) pts.push([-hx + (2 * hx) * i / F, sign * (D / 2 + off)]);
-      for (let i = 0; i <= N; i++) { const p = (i / N) * Math.PI / 2; pts.push([hx + A * Math.sin(p), sign * (zc + B * Math.cos(p))]); }
-      return pts;
+    function screenAt(t) {
+      let i = 0; for (let j = 0; j < SCREENS.length; j++) if (t >= SCREENS[j][0]) i = j;
+      const cur = SCREENS[i], prev = i > 0 ? SCREENS[i - 1] : null, d = cur[3] || 0.01, k = clamp((t - cur[0]) / d, 0, 1);
+      return { cur: cur[1], prev: prev ? prev[1] : null, k, tr: cur[2] || "fade", ax: cur[4] == null ? .5 : cur[4], ay: cur[5] == null ? .5 : cur[5] };
     }
-    function skinGeometry(sign, off, flipU) {
-      const cs = crossSection(sign, off), ny = 120, pos = [], uv = [], idx = [];
-      let tot = 0; const cum = [0]; for (let i = 1; i < cs.length; i++) { tot += Math.hypot(cs[i][0] - cs[i - 1][0], cs[i][1] - cs[i - 1][1]); cum.push(tot); }
-      for (let j = 0; j <= ny; j++) {
-        const v = j / ny, y = H / 2 - v * H;
-        // fold the top/bottom ends over the body bevel as well
-        let yy = y, dz = 0; const e = Math.abs(y) - (H / 2 - BX);
-        const cyy = Math.abs(y) - (H / 2 - RC), sq = cyy > 0 ? ((W / 2 - RC) + Math.sqrt(Math.max(0, RC * RC - cyy * cyy))) / (W / 2) : 1;
-        for (let i = 0; i < cs.length; i++) {
-          let x = cs[i][0], z = cs[i][1];
-          if (e > 0) { const p = Math.min(1, e / (BX + off)); const ang = p * Math.PI / 2; const ky = (BX + off) * Math.sin(ang); yy = Math.sign(y) * ((H / 2 - BX) + ky); const zk = (BZ + off) * (1 - Math.cos(ang)); z = z - Math.sign(z) * zk; }
-          x = x * sq; pos.push(x, yy, z); const u = cum[i] / tot; uv.push(flipU ? 1 - u : u, 1 - v);
+    function drawChip(g, u, v, label, on) {
+      const x = u * P.UIW, y = v * P.UIH; g.save(); g.fillStyle = on ? "rgba(255,255,255,0)" : "rgba(14,18,22,.92)"; g.beginPath(); g.arc(x, y, 49, 0, P.TAU); g.fill();
+      if (on) { g.strokeStyle = "#ffd54a"; g.lineWidth = 6; g.beginPath(); g.arc(x, y, 47, 0, P.TAU); g.stroke(); g.fillStyle = "rgba(14,18,22,.55)"; g.beginPath(); g.arc(x, y, 44, 0, P.TAU); g.fill(); }
+      g.fillStyle = on ? "#ffd54a" : "#fff"; g.font = "700 34px Montserrat"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(label, x, y + 2); g.restore();
+    }
+    function drawScreen(g, t) {
+      const w = P.UIW, h = P.UIH, s = screenAt(t); g.save(); g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
+      const k = s.k, e = eio(k);
+      if (s.prev && k < 1) {
+        if (s.tr === "up") { P.putScreen(g, s.prev, { y: -e * h * 0.12, s: 1 - 0.04 * e, dim: 0.45 * e }); P.putScreen(g, s.cur, { y: (1 - eout(k)) * h * 0.55, a: sstep(k * 2.2) }); }
+        else if (s.tr === "left") { P.putScreen(g, s.prev, { x: -e * w * 0.28, dim: 0.5 * e }); P.putScreen(g, s.cur, { x: (1 - eout(k)) * w }); }
+        else if (s.tr === "zoom") { P.putScreen(g, s.prev, { s: 1 + e * 0.5, ax: s.ax, ay: s.ay, a: 1 - sstep(k * 1.6), dim: 0.25 * e }); P.putScreen(g, s.cur, { s: lerp(0.12, 1, eout(k)), ax: s.ax, ay: s.ay, a: sstep(k * 2) }); }
+        else { P.putScreen(g, s.prev); P.putScreen(g, s.cur, { a: e }); }
+      } else {
+        // camera app: viewfinder zoom 1x -> 3x -> 5x with the chip moving (reference screen is 1x)
+        P.putScreen(g, s.cur);
+        if (s.cur === "camera") {
+          const z = t < 33.7 ? 1 : t < 34.3 ? lerp(1, 1.55, eio((t - 33.7) / 0.6)) : t < 34.85 ? lerp(1.55, 2.3, eio((t - 34.3) / 0.55)) : 2.3, img = P.SCR.camera;
+          if (z > 1.001) { g.save(); g.beginPath(); g.rect(0, h * 0.125, w, h * 0.545); g.clip(); const sy0 = img.height * 0.125, sh0 = img.height * 0.545; g.drawImage(img, 0, sy0 + sh0 * (0.5 - 0.5 / z), img.width, sh0 / z, 0, h * 0.125, w, h * 0.545); g.restore(); P.putScreen; g.drawImage(img, 0, img.height * 0.665, img.width, img.height * 0.07, 0, h * 0.665, w, h * 0.07); }
+          const sel = t < 33.7 ? 1 : t < 34.3 ? 2 : 3, U = [0.289, 0.46, 0.607, 0.749], L = ["0,6x", "1x", "3x", "5x"];
+          if (sel !== 1) { drawChip(g, U[1], 0.698, "1x", false); drawChip(g, U[sel], 0.698, L[sel], true); }
+          if (t > 34.95 && t < 35.3) { g.fillStyle = "rgba(255,255,255," + 0.32 * (1 - (t - 34.95) / 0.35) + ")"; g.fillRect(0, h * 0.125, w, h * 0.545); }
         }
+        if (s.cur === "about") { P.sweepBar(g, 0.43, clamp((t - 31.62) / 0.55, 0, 1), 74); P.sweepBar(g, 0.84, clamp((t - 31.95) / 0.5, 0, 1), 74); }
+        if (s.cur === "manager") { const q = clamp((t - 39.2) / 0.9, 0, 1); if (q > 0 && q < 1) { g.strokeStyle = "rgba(0,212,200," + 0.7 * Math.sin(Math.PI * q) + ")"; g.lineWidth = 8; g.beginPath(); g.arc(w * 0.5, h * 0.27, 185 + 16 * q, 0, P.TAU); g.stroke(); } }
       }
-      const nx = cs.length;
-      for (let j = 0; j < ny; j++) for (let i = 0; i < nx - 1; i++) {
-        const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
-        if (sign > 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c);
-      }
-      const g = new TH.BufferGeometry();
-      g.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2));
-      g.setIndex(idx); g.computeVertexNormals(); g.userData.total = tot; return g;
-    }
-    function roundedMask(w, h, rpx, fill) {
-      const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
-      g.fillStyle = "#000"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.beginPath();
-      const x = 2, y = 2, ww = w - 4, hh = h - 4; g.moveTo(x + rpx, y); g.arcTo(x + ww, y, x + ww, y + hh, rpx); g.arcTo(x + ww, y + hh, x, y + hh, rpx); g.arcTo(x, y + hh, x, y, rpx); g.arcTo(x, y, x + ww, y, rpx); g.closePath(); g.fill();
-      return c;
-    }
-
-    // ---------- the phone ----------
-    function createPhone(imgs, withUI) {
-      const grp = new TH.Group(), inner = new TH.Group(); grp.add(inner);
-      // body (metal frame with beveled edge)
-      const sh = new TH.Shape(), bw = W - 2 * BX, bh = H - 2 * BX, br = RC - BX, hx = bw / 2, hy = bh / 2;
-      sh.moveTo(-hx + br, -hy); sh.lineTo(hx - br, -hy); sh.absarc(hx - br, -hy + br, br, -Math.PI / 2, 0, false); sh.lineTo(hx, hy - br); sh.absarc(hx - br, hy - br, br, 0, Math.PI / 2, false); sh.lineTo(-hx + br, hy); sh.absarc(-hx + br, hy - br, br, Math.PI / 2, Math.PI, false); sh.lineTo(-hx, -hy + br); sh.absarc(-hx + br, -hy + br, br, Math.PI, Math.PI * 1.5, false);
-      const bodyGeo = new TH.ExtrudeGeometry(sh, { depth: D - 2 * BZ, bevelEnabled: true, bevelThickness: BZ, bevelSize: BX, bevelSegments: 10, curveSegments: 18, steps: 1 });
-      bodyGeo.translate(0, 0, -(D - 2 * BZ) / 2);
-      const bodyMat = new TH.MeshStandardMaterial({ color: COLORS[0].frame, metalness: 0.95, roughness: 0.28 });
-      inner.add(new TH.Mesh(bodyGeo, bodyMat));
-      // back skin (official colour render, composited per frame)
-      const bw_px = 600, bh_px = 1288; const backC = document.createElement("canvas"); backC.width = bw_px; backC.height = bh_px; const bg = backC.getContext("2d");
-      const backTex = new TH.CanvasTexture(backC); backTex.colorSpace = TH.SRGBColorSpace; backTex.anisotropy = 4;
-      const geoB = skinGeometry(-1, 0.004, true);
-      const maskB = roundedMask(600, 1288, 82); const maskTexB = new TH.CanvasTexture(maskB);
-      const backMat = new TH.MeshPhysicalMaterial({ map: backTex, metalness: 0.15, roughness: 0.34, clearcoat: 0.9, clearcoatRoughness: 0.12, envMapIntensity: 0.9, side: TH.DoubleSide });
-      const back = new TH.Mesh(geoB, backMat); inner.add(back);
-      // front glass + screen
-      const uiC = document.createElement("canvas"); uiC.width = 720; uiC.height = 1560; const uiTex = new TH.CanvasTexture(uiC); uiTex.colorSpace = TH.SRGBColorSpace; uiTex.anisotropy = 4;
-      const geoF = skinGeometry(1, 0.004, false);
-      const maskF = new TH.CanvasTexture(roundedMask(720, 1560, 96));
-      const screenMat = new TH.MeshPhysicalMaterial({ color: 0x020305, roughness: 0.06, metalness: 0.0, clearcoat: 0.7, clearcoatRoughness: 0.08, emissive: 0xffffff, emissiveMap: withUI ? uiTex : null, emissiveIntensity: 0.0, envMapIntensity: 0.55, side: TH.DoubleSide });
-      const front = new TH.Mesh(geoF, screenMat); inner.add(front);
-      // camera module (procedural, sharp when the camera dives in): ring, black glass, four lenses
-      const cy = H / 2 - 252 / 81.5, ringMat = new TH.MeshStandardMaterial({ color: COLORS[0].ring, metalness: 0.7, roughness: 0.3 });
-      const zb = -D / 2 - 0.004;
-      const ring = new TH.Mesh(new TH.CylinderGeometry(2.33, 2.36, 0.07, 72), ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(0, cy, zb - 0.035); inner.add(ring);
-      const glass = new TH.Mesh(new TH.CylinderGeometry(1.53, 1.55, 0.09, 72), new TH.MeshPhysicalMaterial({ color: 0x020203, metalness: 0.2, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.6 })); glass.rotation.x = Math.PI / 2; glass.position.set(0, cy, zb - 0.115); inner.add(glass);
-      const lensRim = new TH.MeshStandardMaterial({ color: 0x15171c, metalness: 0.9, roughness: 0.25 });
-      const lensGlass = new TH.MeshPhysicalMaterial({ color: 0x050a16, metalness: 0.1, roughness: 0.02, clearcoat: 1, clearcoatRoughness: 0.01, iridescence: 1, iridescenceIOR: 1.6, envMapIntensity: 2.2 });
-      [[-0.65, 0.71], [0.65, 0.71], [-0.65, -0.71], [0.65, -0.71]].forEach((p) => {
-        const r = new TH.Mesh(new TH.CylinderGeometry(0.52, 0.54, 0.12, 40), lensRim); r.rotation.x = Math.PI / 2; r.position.set(p[0], cy + p[1], zb - 0.16); inner.add(r);
-        const l = new TH.Mesh(new TH.CylinderGeometry(0.4, 0.4, 0.13, 40), lensGlass); l.rotation.x = Math.PI / 2; l.position.set(p[0], cy + p[1], zb - 0.175); inner.add(l);
-        const dot = new TH.Mesh(new TH.SphereGeometry(0.17, 20, 12), new TH.MeshBasicMaterial({ color: 0x1a4fb8 })); dot.scale.z = 0.25; dot.position.set(p[0], cy + p[1], zb - 0.245); inner.add(dot);
-      });
-      // power button (red accent) on the right side, USB-C and SIM tray on the bottom edge
-      const pwr = new TH.Mesh(new TH.BoxGeometry(0.07, 1.25, 0.34), new TH.MeshStandardMaterial({ color: 0xb8341f, metalness: 0.8, roughness: 0.32 }));
-      pwr.position.set(W / 2 + 0.005, 3.2, 0.02); inner.add(pwr);
-      const dark = new TH.MeshStandardMaterial({ color: 0x050506, metalness: 0.2, roughness: 0.6 });
-      const usb = new TH.Mesh(new TH.BoxGeometry(0.95, 0.07, 0.26), dark); usb.position.set(0, -H / 2 - 0.002, 0); inner.add(usb);
-      const sim = new TH.Mesh(new TH.BoxGeometry(0.9, 0.05, 0.05), dark); sim.position.set(-1.8, -H / 2 - 0.002, 0); inner.add(sim);
-      for (let i = 0; i < 6; i++) { const h = new TH.Mesh(new TH.CylinderGeometry(0.05, 0.05, 0.06, 10), dark); h.position.set(1.6 + i * 0.16, -H / 2 - 0.002, 0); inner.add(h); }
-      const frameMats = [bodyMat], ringMats = [ringMat];
-      let drawn = "";
-      function setColor(a, b, p, angle) {
-        const sig = a + "|" + b + "|" + p.toFixed(3); if (sig !== drawn) {
-          drawn = sig; const ia = imgs[a], ib = imgs[b];
-          bg.globalCompositeOperation = "source-over"; bg.fillStyle = "#" + COLORS[a].frame.toString(16).padStart(6, "0"); bg.fillRect(0, 0, bw_px, bh_px); if (ia) bg.drawImage(ia, 0, 0, bw_px, bh_px);
-          if (p > 0 && ib) {
-            const off = document.createElement("canvas"); off.width = bw_px; off.height = bh_px; const og = off.getContext("2d");
-            og.fillStyle = "#" + COLORS[b].frame.toString(16).padStart(6, "0"); og.fillRect(0, 0, bw_px, bh_px); og.drawImage(ib, 0, 0, bw_px, bh_px);
-            const edge = lerp(bh_px * 1.15, -bh_px * 0.15, p), soft = 140; og.globalCompositeOperation = "destination-in";
-            const gr = og.createLinearGradient(0, edge - soft, 0, edge + soft); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,1)"); og.fillStyle = gr; og.fillRect(0, 0, bw_px, bh_px);
-            bg.drawImage(off, 0, 0);
-            if (p < 1) { const hl = bg.createLinearGradient(0, edge - 40, 0, edge + 40); hl.addColorStop(0, "rgba(255,255,255,0)"); hl.addColorStop(.5, "rgba(210,255,252,0.85)"); hl.addColorStop(1, "rgba(255,255,255,0)"); bg.globalCompositeOperation = "lighter"; bg.fillStyle = hl; bg.fillRect(0, edge - 40, bw_px, 80); bg.globalCompositeOperation = "source-over"; }
-          }
-          backTex.needsUpdate = true;
-        }
-        const fa = new TH.Color(COLORS[a].frame), fb = new TH.Color(COLORS[b].frame); bodyMat.color.copy(fa).lerp(fb, p);
-        const ra = new TH.Color(COLORS[a].ring), rb = new TH.Color(COLORS[b].ring); ringMat.color.copy(ra).lerp(rb, p);
-      }
-      return { group: grp, inner, uiC, uiTex, screenMat, setColor, pwr };
-    }
-
-    // ---------- UI drawn on the phone screen ----------
-    const UI = { camImg: null };
-    function drawWallpaper(g, w, h, t) {
-      const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, "#0a1b2e"); gr.addColorStop(.5, "#0b2f3c"); gr.addColorStop(1, "#2a0f3a"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
-      for (let i = 0; i < 4; i++) { const cx = w * (0.2 + 0.25 * i) + Math.sin(t * 0.6 + i) * 30, cy = h * (0.3 + 0.15 * i) + Math.cos(t * 0.5 + i * 2) * 40; const r = g.createRadialGradient(cx, cy, 0, cx, cy, 380); const col = ["0,212,200", "255,98,8", "140,90,255", "0,170,255"][i]; r.addColorStop(0, "rgba(" + col + ",.55)"); r.addColorStop(1, "rgba(" + col + ",0)"); g.fillStyle = r; g.fillRect(0, 0, w, h); }
-    }
-    function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-    const APPS = [["Téléphone", "#2fbf71"], ["Messages", "#35a7ff"], ["Appareil photo", "#e8e8ee"], ["Galerie", "#ff8a3d"], ["Horloge", "#8a7bff"], ["Calendrier", "#ff5a6a"], ["Musique", "#ff5a9d"], ["Paramètres", "#9aa6b5"], ["Notes", "#ffd24a"], ["Fichiers", "#34c8c0"], ["Météo", "#59b7ff"], ["Contacts", "#ff9f43"]];
-    function drawUI(g, w, h, s) {
-      // s: {mode, t, p...}; modes: off, lock, home, camera, shade, settings
-      g.save(); g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
-      if (s.mode === "off") { g.restore(); return; }
-      const m = s.mode;
-      if (m === "lock") {
-        drawWallpaper(g, w, h, s.t);
-        g.fillStyle = "#fff"; g.textAlign = "center"; g.font = "300 190px Montserrat"; g.fillText("09:41", w / 2, 520); g.font = "500 40px Montserrat"; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText("Lundi", w / 2, 590);
-        g.fillStyle = "rgba(255,255,255,.55)"; rr(g, w / 2 - 70, h - 90 - s.up * 60, 140, 8, 4); g.fill();
-      }
-      if (m === "home" || m === "shade" || m === "settings") {
-        drawWallpaper(g, w, h, s.t);
-        const cols = 4, gx = 54, tile = 128, gapx = (w - gx * 2 - tile * cols) / (cols - 1), top = 260;
-        APPS.forEach((a, i) => { const cx = gx + (i % cols) * (tile + gapx), cy = top + Math.floor(i / cols) * 215; const k = sstep((s.t0 - i * 0.04) * 6); g.save(); g.globalAlpha = k; g.translate(cx + tile / 2, cy + tile / 2); g.scale(0.7 + 0.3 * k, 0.7 + 0.3 * k); g.fillStyle = a[1]; rr(g, -tile / 2, -tile / 2, tile, tile, 34); g.fill(); g.fillStyle = "rgba(255,255,255,.28)"; rr(g, -tile / 2 + 18, -tile / 2 + 18, tile - 36, tile - 36, 20); g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; g.font = "500 24px Montserrat"; g.fillText(a[0], 0, tile / 2 + 36); g.restore(); });
-        g.fillStyle = "rgba(255,255,255,.18)"; rr(g, 40, h - 200, w - 80, 150, 44); g.fill();
-        [0, 1, 2, 7].forEach((ai, i) => { g.fillStyle = APPS[ai][1]; rr(g, 70 + i * 156, h - 185, 118, 118, 32); g.fill(); });
-      }
-      if (m === "camera") {
-        g.fillStyle = "#050607"; g.fillRect(0, 0, w, h);
-        const vh = h * 0.72, vy = 130; g.save(); rr(g, 0, vy, w, vh, 0); g.clip();
-        if (UI.camImg) { const z = s.zoom; const ih = vh * z, iw = ih * (UI.camImg.width / UI.camImg.height); g.drawImage(UI.camImg, w / 2 - iw / 2 + s.pan * 40, vy + vh / 2 - ih / 2, iw, ih); }
-        g.restore();
-        g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 3, vy); g.lineTo(w / 3, vy + vh); g.moveTo(2 * w / 3, vy); g.lineTo(2 * w / 3, vy + vh); g.moveTo(0, vy + vh / 3); g.lineTo(w, vy + vh / 3); g.moveTo(0, vy + 2 * vh / 3); g.lineTo(w, vy + 2 * vh / 3); g.stroke();
-        g.fillStyle = "#fff"; g.beginPath(); g.arc(w / 2, h - 170, 66, 0, TAU); g.fill(); g.strokeStyle = "rgba(255,255,255,.9)"; g.lineWidth = 6; g.beginPath(); g.arc(w / 2, h - 170, 84, 0, TAU); g.stroke();
-        g.fillStyle = "rgba(255,255,255,.9)"; g.font = "600 30px Montserrat"; g.textAlign = "center"; g.fillText("PHOTO", w / 2, vy + vh + 56);
-        if (s.flash > 0) { g.fillStyle = "rgba(255,255,255," + (0.3 * s.flash) + ")"; g.fillRect(0, 0, w, h); }
-      }
-      if (m === "settings") {
-        const k = eout(s.sheet); g.save(); g.translate(0, (1 - k) * h); g.fillStyle = "#0e1217"; g.fillRect(0, 0, w, h);
-        g.fillStyle = "#fff"; g.textAlign = "left"; g.font = "700 64px Montserrat"; g.fillText("Paramètres", 60, 190);
-        ["Wi-Fi", "Bluetooth", "Écran", "Batterie", "Appareil photo", "Sécurité"].forEach((n, i) => { const y = 280 + i * 150, a = sstep((s.t0 - 0.2 - i * 0.08) * 5); g.globalAlpha = a; g.fillStyle = "rgba(255,255,255,.08)"; rr(g, 40, y, w - 80, 120, 26); g.fill(); g.fillStyle = ["#00d4c8", "#35a7ff", "#ff8a3d", "#2fbf71", "#e8e8ee", "#ff6208"][i]; rr(g, 70, y + 28, 64, 64, 18); g.fill(); g.fillStyle = "#fff"; g.font = "500 38px Montserrat"; g.fillText(n, 160, y + 76); g.fillStyle = "rgba(255,255,255,.4)"; g.fillText("›", w - 100, y + 76); });
-        g.restore(); g.globalAlpha = 1;
-      }
-      if (m === "shade") {
-        const k = eout(s.sheet); g.save(); g.translate(0, (k - 1) * h * 0.75); g.fillStyle = "rgba(14,18,23,.92)"; rr(g, 0, 0, w, h * 0.75, 0); g.fill();
-        g.fillStyle = "#fff"; g.font = "300 80px Montserrat"; g.textAlign = "left"; g.fillText("09:41", 60, 200);
-        [["Wi-Fi", "#00d4c8"], ["Bluetooth", "#35a7ff"], ["Lampe", "#ffd24a"], ["Rotation", "#8a7bff"], ["Avion", "#9aa6b5"], ["Silence", "#ff6208"]].forEach((n, i) => { const cx = 60 + (i % 3) * 215, cy = 300 + Math.floor(i / 3) * 230, on = i < 3 ? 1 : 0; g.fillStyle = on ? n[1] : "rgba(255,255,255,.12)"; rr(g, cx, cy, 190, 190, 48); g.fill(); g.fillStyle = on ? "#0b0f14" : "#fff"; g.font = "600 28px Montserrat"; g.textAlign = "center"; g.fillText(n[0], cx + 95, cy + 112); });
-        g.restore();
-      }
-      if (s.touch) { const tx = 360 + s.touch.x * 93.5, ty = 780 - s.touch.y * 98.7, k = s.touch.k; g.fillStyle = "rgba(255,255,255," + (0.28 * k) + ")"; g.beginPath(); g.arc(tx, ty, 34 + 26 * k, 0, TAU); g.fill(); }
-      // status bar + notch
-      if (m !== "off") { g.textAlign = "left"; g.fillStyle = "rgba(255,255,255,.95)"; g.font = "600 30px Montserrat"; if (m !== "lock") g.fillText("09:41", 56, 64); g.fillStyle = "#fff"; g.fillRect(w - 130, 38, 56, 24); g.fillRect(w - 72, 46, 5, 8); }
-      g.fillStyle = "#000"; g.beginPath(); g.moveTo(w * 0.31, 0); g.lineTo(w * 0.31, 24); g.quadraticCurveTo(w * 0.31, 74, w * 0.35, 74); g.lineTo(w * 0.65, 74); g.quadraticCurveTo(w * 0.69, 74, w * 0.69, 24); g.lineTo(w * 0.69, 0); g.closePath(); g.fill();
-      g.fillStyle = "#0a1220"; g.beginPath(); g.arc(w * 0.58, 36, 11, 0, TAU); g.fill();
+      // volume touch control on the curved right edge, face scan and fingerprint during the unlock
+      P.faceScan(g, (t - 19.9) / 1.2); P.fingerprint(g, (t - 21.2) / 1.25);
+      const vk = t < 24.45 ? 0 : t < 25.0 ? (t - 24.45) / 0.55 : t < 26.7 ? 1 : 1 - (t - 26.7) / 0.5; const lvl = t < 25.0 ? 0.5 : t < 25.7 ? lerp(0.5, 0.2, eio((t - 25.0) / 0.7)) : t < 26.5 ? lerp(0.2, 0.82, eio((t - 25.7) / 0.8)) : 0.82; P.volumePill(g, clamp(vk, 0, 1), lvl);
+      TAPS.forEach((tp) => { P.ripple(g, tp[1], tp[2], (t - tp[0]) / tp[3]); });
       g.restore();
     }
 
-    // ---------- the film's pose / camera / screen script ----------
-    // ang: 0 = back toward camera, 180 = front. Times are film seconds.
-    const ANG = [[0, -48], [0.5, -48], [3.6, -14, eout],
-      [4.4, -14], [6.0, 180, eio], [6.9, 262, eio], [8.2, 360, eio],
-      [10.0, 360], [11.2, 540, eio], [12.4, 625, eio], [13.6, 720, eio],
-      [15.0, 720], [15.9, 900, eio],
-      [22.4, 900], [23.8, 1080, eio], [30, 1080 + 40]];
-    const COLEVT = [[6.7, 8.3, 0, 1], [11.9, 13.5, 1, 2], [14.4, 15.9, 2, 3]];
-    const POSX = [[0, 7.4], [3.9, 7.4], [5.4, -5.2, eio], [10.0, -5.2], [11.2, 5.2, eio], [15.2, 5.2], [16.2, 0, eio], [40, 0]];
-    const POSY = [[0, -14], [0.6, -14], [2.2, 0, eout], [3.5, 0], [40, 0]];
-    const CAMD = [[0, 52], [3.6, 38, eio], [5.6, 40, eio], [7.2, 38, eio], [8.2, 27, eio], [9.4, 37, eio], [13.0, 38, eio], [13.9, 27, eio], [15.0, 38, eio], [15.8, 44, eio], [22.0, 44], [24.0, 50, eio], [26.0, 60, eio], [31, 58]];
-    const TILT = [[0, 18], [3.6, 6, eio], [8, 4], [14, 8], [16, 0, eio], [22, 0], [24, 10, eio], [28, 6]];
-    const ROLL = [[0, 0], [4, 0], [5.5, -4, eio], [10, 3, eio], [13, -3, eio], [16, 0, eio], [30, 0]];
-    const SCREEN_ON = [[0, 0], [5.4, 0], [6.1, 1, eout], [8.0, 1], [8.2, 0.0, eio], [10.8, 0.0], [11.3, 1, eout], [13.6, 1], [13.9, 0], [16.1, 0], [16.3, 1, eout], [23.6, 1], [24.2, 0], [40, 0]];
-    function uiAt(t) {
-      let s = { mode: "off", t, t0: 0, up: 0, sheet: 1, zoom: 1.25, pan: 0, flash: 0, touch: null };
-      if (t >= 5.8 && t < 8.6) { s.mode = "lock"; s.up = clamp((t - 6.8) / 1.0, 0, 1); }
-      else if (t >= 11.0 && t < 14.2) { s.mode = "lock"; s.up = clamp((t - 12.2) / 1, 0, 1); }
-      else if (t >= 16.2 && t < 24.4) {
-        if (t < 16.9) { s.mode = "lock"; s.up = clamp((t - 16.7) / 0.4, 0, 1); }
-        else if (t < 17.85) { s.mode = "home"; s.t0 = t - 16.9; }
-        else if (t < 20.55) { s.mode = "camera"; s.zoom = 1.12 + 0.55 * eio((t - 18.8) / 0.9); s.pan = Math.sin((t - 19) * 1.5); s.flash = t > 20.15 && t < 20.5 ? 1 - (t - 20.15) / 0.35 : 0; }
-        else if (t < 21.5) { s.mode = "shade"; s.t0 = t - 20.6; s.sheet = clamp((t - 20.65) / 0.45, 0, 1); }
-        else { s.mode = "settings"; s.t0 = t - 21.6; s.sheet = clamp((t - 21.55) / 0.5, 0, 1); }
-      }
-      return s;
-    }
-
-    // ---------- stylised hand (matte mannequin, rim-lit) ----------
-    const skin = new TH.MeshStandardMaterial({ color: 0x6c4330, roughness: 0.7, metalness: 0.0, envMapIntensity: 0.8 });
-    const nailM = new TH.MeshStandardMaterial({ color: 0xd9b7a3, roughness: 0.3 });
-    const handG = new TH.Group(); handG.visible = false; scene.add(handG);
-    const unitCyl = new TH.CylinderGeometry(1, 1, 1, 20, 1), unitSph = new TH.SphereGeometry(1, 24, 16);
-    function bone(r) { const m = new TH.Mesh(unitCyl, skin); m.scale.set(r, 1, r); handG.add(m); return m; }
-    function ball(r) { const m = new TH.Mesh(unitSph, skin); m.scale.set(r, r, r); handG.add(m); return m; }
-    const Y = new TH.Vector3(0, 1, 0);
-    function setBone(m, A, B) { const d = new TH.Vector3().subVectors(B, A), L = d.length(); m.position.copy(A).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(Y, d.clone().normalize()); m.scale.y = L; }
-    const hBones = { i1: bone(0.5), i2: bone(0.45), f: [0, 1, 2].map(() => [bone(0.48), bone(0.42)]), th: [bone(0.68), bone(0.6)] };
-    const hBalls = { j0: ball(0.58), j1: ball(0.52), tip: ball(0.5), f: [0, 1, 2].map(() => [ball(0.55), ball(0.48)]), th: [ball(0.66), ball(0.6)] };
-    const palm = ball(1); palm.scale.set(3.3, 3.0, 0.95); const wrist = bone(1.75), wristEnd = ball(1.85);
-    const nail = new TH.Mesh(unitSph, nailM); nail.scale.set(0.34, 0.5, 0.12); handG.add(nail);
-    const V = (x, y, z) => new TH.Vector3(x, y, z);
-    function ik(Kp, T, l1, l2, pole) {
-      const d = new TH.Vector3().subVectors(T, Kp); let L = d.length(); const maxL = l1 + l2 - 0.02; if (L > maxL) { d.setLength(maxL); L = maxL; }
-      const dir = d.clone().normalize(), a = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
-      const p = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize();
-      return Kp.clone().addScaledVector(dir, a).addScaledVector(p, h);
-    }
-    // fingertip script: [t, x, y, z] in cm (z = distance in front of the screen plane; ~1.0 = touching glass)
-    const HT = [[15.2, 10, -10, 4], [15.9, 4.7, 3.2, 0.25], [16.12, 3.95, 3.2, 0.25], [16.3, 4.8, 3.2, 0.7], [16.55, 0.2, -5.6, 2.4], [16.7, 0.2, -5.6, 1.0], [17.05, 0.2, -1.2, 1.0], [17.2, 0.2, -1.2, 2.6], [17.55, 0.86, 4.62, 2.6], [17.68, 0.86, 4.62, 1.0], [17.82, 0.86, 4.62, 2.6],
-      [18.5, 0.2, -1.5, 2.6], [18.8, -1.2, -1.0, 1.0], [19.5, 1.4, 0.8, 1.0], [19.8, 1.4, 0.8, 2.6], [20.05, 0, -6.18, 2.6], [20.15, 0, -6.18, 1.0], [20.3, 0, -6.18, 2.6],
-      [20.5, 0, 7.0, 2.4], [20.65, 0, 7.0, 1.0], [21.1, 0, 0.5, 1.0], [21.25, 0, -2, 2.6], [21.4, 0, -6.8, 2.2], [21.5, 0, -6.8, 1.0], [21.95, 0, 0, 1.0], [22.1, 0, 0.6, 2.6], [22.3, 0, 1.4, 2.4], [22.45, 0, 1.4, 1.0], [22.6, 0, 1.4, 2.6], [23.2, 10, -10, 4]];
-    const HX = HT.map((k) => [k[0], k[1]]), HY = HT.map((k) => [k[0], k[2]]), HZ = HT.map((k) => [k[0], k[3]]);
-    const sm = (x) => sstep(x);
-    function handState(t) {
-      if (t < 15.2 || t > 23.25) return null;
-      const f = (arr) => { for (let i = 1; i < arr.length; i++) if (t <= arr[i][0]) { const a = arr[i - 1], b = arr[i]; return lerp(a[1], b[1], sm((t - a[0]) / (b[0] - a[0]))); } return arr[arr.length - 1][1]; };
-      return { x: f(HX), y: f(HY), z: f(HZ) };
-    }
-    function updateHand(t) {
-      const hs = handState(t); if (!hs) { handG.visible = false; return null; }
-      handG.visible = true; const T = V(hs.x, hs.y, hs.z + 0.0), Kp = V(hs.x + 2.2, hs.y - 7.0, hs.z + 3.2 + Math.max(0, hs.z - 1) * 0.5);
-      if (hs.y < 3.3 && hs.x > 3.4) { /* power-button press: reach from the right */ Kp.set(hs.x + 5.6, hs.y - 5.2, 3.0); }
-      const J = ik(Kp, T, 4.4, 4.6, V(0, 0.15, 1));
-      setBone(hBones.i1, Kp, J); setBone(hBones.i2, J, T); hBalls.j0.position.copy(Kp); hBalls.j1.position.copy(J); hBalls.tip.position.copy(T);
-      const dir = new TH.Vector3().subVectors(T, J).normalize(); nail.position.copy(T).addScaledVector(dir, -0.15).add(V(0, 0, 0.42)); nail.quaternion.setFromUnitVectors(Y, dir);
-      // other three fingers curled towards the palm
-      for (let i = 0; i < 3; i++) {
-        const kn = Kp.clone().add(V(1.75 * (i + 1), -0.15 * (i + 1), -0.1)), mid = kn.clone().add(V(0.05, 0.6, -1.7)), tp = mid.clone().add(V(0, -1.7, -0.9));
-        setBone(hBones.f[i][0], kn, mid); setBone(hBones.f[i][1], mid, tp); hBalls.f[i][0].position.copy(mid); hBalls.f[i][1].position.copy(tp);
-      }
-      const th0 = Kp.clone().add(V(-1.3, -5.0, 0.3)), th1 = th0.clone().add(V(-0.7, 2.3, 0.9)), th2 = th1.clone().add(V(0.2, 1.7, 0.8));
-      setBone(hBones.th[0], th0, th1); setBone(hBones.th[1], th1, th2); hBalls.th[0].position.copy(th1); hBalls.th[1].position.copy(th2);
-      palm.position.copy(Kp).add(V(2.5, -3.9, -0.7)); palm.rotation.z = -0.08;
-      const w0 = Kp.clone().add(V(2.0, -8.3, -0.7)), w1 = Kp.clone().add(V(3.2, -17, -1.5)); setBone(wrist, w0, w1); wristEnd.position.copy(w0);
-      return hs;
-    }
-
-    // ---------- build ----------
+    // ------------------------------------------------------------------ build
     let phone, clones = [], imgs = [];
-    const SLOTS = [-13.2, -4.4, 4.4, 13.2];
     const ready = (async function () {
-      for (const c of COLORS) imgs.push(await loadImg(c.img));
-      UI.camImg = await loadImg("assets/ui/camera_sample.jpg");
-      phone = createPhone(imgs, true); scene.add(phone.group);
-      for (let i = 0; i < 4; i++) { const c = createPhone(imgs, false); c.setColor(i, i, 0); c.group.visible = false; scene.add(c.group); clones.push(c); }
+      for (const c of P.COLORS) imgs.push(await P.loadImg(c.img));
+      await P.loadScreens(["lock", "home", "menu", "settings", "about", "camera", "gallery", "music", "video", "themes", "manager"]);
+      phone = P.createPhone(imgs, true); scene.add(phone.group);
+      for (let i = 0; i < 4; i++) { const c = P.createPhone(imgs, false); c.setColor(i, i, 0); c.group.visible = false; scene.add(c.group); clones.push(c); }
       window.__stageReady = true;
     })();
     window.__hf = window.__hf || {}; window.__hf.buildReady = window.__hf.buildReady || {}; window.__hf.buildReady["stage"] = ready;
+    const tmpV = new TH.Vector3();
 
     function renderAt(t) {
       if (!phone) return;
-      let a = 0, b = 0, p = 0;
+      let a = 0, b = 0, p = 0, ci = 0;
       for (const e of COLEVT) { if (t >= e[1]) { a = e[3]; b = e[3]; p = 0; } else if (t >= e[0]) { a = e[2]; b = e[3]; p = eio((t - e[0]) / (e[1] - e[0])); } }
-      phone.setColor(a, b, p);
-      const colIdx = p > 0.5 ? b : a;
-      const ang = K(ANG, t), px = K(POSX, t), py = K(POSY, t), tilt = K(TILT, t), roll = K(ROLL, t);
-      phone.group.position.set(px, py, 0);
-      phone.inner.rotation.set(tilt * DEG, (ang + 180) * DEG, roll * DEG, "YXZ");
-      const on = K(SCREEN_ON, t); phone.screenMat.emissiveIntensity = 1.15 * on;
-      const hs = updateHand(t);
-      if (on > 0.001) { const s = uiAt(t); if (hs && hs.z < 1.35 && hs.x < 3.4 && s.mode !== "off") s.touch = { x: hs.x, y: hs.y, k: clamp((1.35 - hs.z) / 0.35, 0, 1) }; const g = phone.uiC.getContext("2d"); drawUI(g, 720, 1560, s); phone.uiTex.needsUpdate = true; }
+      phone.setColor(a, b, p); ci = p > 0.5 ? b : a;
+      const ang = K(ANG, t), px = K(POSX, t), py = K(POSY, t);
+      phone.group.position.set(px, py, 0); phone.inner.rotation.set(K(TILT, t) * DEG, (ang + 180) * DEG, K(ROLL, t) * DEG, "YXZ"); phone.group.updateMatrixWorld(true);
+      const on = K(SCREEN_ON, t); phone.screenMat.emissiveIntensity = 1.2 * on;
+      if (on > 0.001) { drawScreen(phone.uiC.getContext("2d"), t); phone.uiTex.needsUpdate = true; }
+      // four-lens highlight pulses (the 4 cameras of the Leica Quad Camera)
+      phone.lensRings.forEach((m, i) => { const q = (t - (17.0 + i * 0.32)) / 0.9, glowAll = clamp((t - 18.3) / 0.4, 0, 1) * (1 - clamp((t - 19.0) / 0.4, 0, 1)); m.material.opacity = (q > 0 && q < 1 ? Math.sin(Math.PI * q) : 0) * 0.95 + glowAll * 0.7; m.scale.setScalar(1 + 0.25 * clamp(q, 0, 1)); });
       // finale: the phone splits into the four official colours
-      const L = sstep((t - 24.0) / 1.6);
-      phone.group.visible = t < 24.0 + 0.05 || L <= 0;
+      const L = sstep((t - LINEUP) / 1.6);
+      phone.group.visible = t < LINEUP;
       clones.forEach((c, i) => {
-        c.group.visible = t >= 24.0;
-        if (t < 24.0) return;
-        const ki = sstep((t - 24.0 - 0.12 * (3 - i)) / 1.5), slot = SLOTS[i];
+        c.group.visible = t >= LINEUP; if (t < LINEUP) return;
+        const ki = sstep((t - LINEUP - 0.12 * (3 - i)) / 1.5), slot = SLOTS[i];
         c.group.position.set(lerp(px, slot, ki), lerp(py, -1.1 + 0.8 * Math.sin(t * 1.1 + i * 1.7), ki), lerp(0, -1.5 * Math.abs(i - 1.5), ki));
         const sway = (ang + 180) * (1 - ki) + (180 + 14 * Math.sin(t * 0.9 + i * 1.3) + (i - 1.5) * -4) * ki;
-        c.inner.rotation.set(lerp(tilt, 4 * Math.sin(t * 0.7 + i), ki) * DEG, sway * DEG, lerp(roll, 0, ki) * DEG, "YXZ");
-        c.group.scale.setScalar(lerp(1, 0.86, ki));
+        c.inner.rotation.set(lerp(K(TILT, t), 4 * Math.sin(t * 0.7 + i), ki) * DEG, sway * DEG, lerp(K(ROLL, t), 0, ki) * DEG, "YXZ"); c.group.scale.setScalar(lerp(1, 0.86, ki));
       });
-      if (t >= 24.0) phone.group.visible = false;
-      const d = K(CAMD, t), camsway = t > 15.6 && t < 23.4 ? 2.4 * Math.sin((t - 15.6) * 0.55) : 0;
-      camera.position.set(px * 0.3 + camsway, py * 0.4 + 0.5, d); camera.lookAt(px * 0.3 + camsway * 0.4, py * 0.4, 0);
-      key.position.set(-20 + 40 * Math.sin(t * 0.55), 25, 30); rim.position.set(25 * Math.cos(t * 0.4), 5 + 8 * Math.sin(t * 0.7), -25);
-      const gc = new TH.Color(t >= 24 ? 0x00d4c8 : COLORS[colIdx].glow); glowMat.color.lerp(gc, 0.25); glow.position.set(px * 0.9, py, -16);
-      glowMat.opacity = (0.34 + 0.14 * Math.sin(t * 0.9)) * (colIdx === 3 && t < 24 ? 0.6 : 1);
-      renderer.render(scene, camera);
+      // camera: orbit around a world point or a point on the phone
+      const wx = px * 0.3, wy = py * 0.4, tw = K(TW, t);
+      tmpV.set(K(TX, t), K(TY, t), K(TZ, t)); phone.inner.localToWorld(tmpV);
+      const tx = lerp(wx, tmpV.x, tw), ty = lerp(wy, tmpV.y, tw), tz = lerp(0, tmpV.z, tw);
+      const d = K(DIST, t), oy = K(OY, t) * DEG, op = K(OP, t) * DEG;
+      camera.position.set(tx + d * Math.sin(oy) * Math.cos(op), ty + d * Math.sin(op) + 0.4 * (1 - tw), tz + d * Math.cos(oy) * Math.cos(op));
+      camera.fov = K(FOV, t); camera.updateProjectionMatrix(); camera.lookAt(tx, ty, tz);
+      rig.key.position.set(-20 + 40 * Math.sin(t * 0.55), 25, 30); rig.rim.position.set(25 * Math.cos(t * 0.4), 5 + 8 * Math.sin(t * 0.7), -25);
+      rig.glowMat.color.lerp(new TH.Color(t >= LINEUP ? 0x00d4c8 : P.COLORS[ci].glow), 0.25); rig.glow.position.set(px * 0.9, py, -16);
+      rig.glowMat.opacity = (0.34 + 0.14 * Math.sin(t * 0.9)) * (ci === 1 && t < LINEUP ? 0.6 : 1);
+      rig.renderer.render(scene, camera);
     }
     window.__stageRender = renderAt;
     window.addEventListener("hf-seek", (e) => { renderAt(e.detail.time); });
