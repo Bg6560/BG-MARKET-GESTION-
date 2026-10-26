@@ -512,36 +512,75 @@ def build_team():
 def build_payoff():
     S, E = W('Vingt-et-une', 2) - 0.3, W('BG-MARKET-GESTION,', 1, 80) - 0.2
     L, D = host('payoff', S, E)
+    # beats: Serge asks, the report opens, then sold / best seller / stock / invoices, Serge sees it all, "tu peux rentrer"
     tq, tr, ta, to, trn = L(W('Bon.', 1, 74, 's')), L(W('réponse')), L(W('Ah', 1, 78, 's')), L(W('Oui')), L(W('rentrer'))
     qe = L(W('?', 1, 76, 's')) + 0.5
-    b1, j1 = bubble('po-q', 'SERGE', 'Bon. Combien on a vendu aujourd\'hui ?', 60, 330, 620, tq - 0.1, qe)
-    b2, j2 = bubble('po-a', 'SERGE', 'Ah… c\'est tout ?', 120, 330, 460, ta - 0.1, to + 0.2)
-    ans = f'''<div id="po-ans" class="clip card" data-start="{r(tr - 0.2)}" data-duration="{r(D - tr + 0.2)}"><div class="po-i">{ic('cart', 54, '#04222A', 2.2)}</div><em>Ventes du jour</em><b id="po-v">0 F</b><span>Bénéfice <i>+58 500 F</i> · 6 commandes</span></div>'''
-    body = f'''    <div id="po-clock" class="clip" data-start="0" data-duration="{r(tr)}"><span>21</span><i>:</i><span>00</span></div>
+    span = (ta - tr) - 0.2
+    t_sold, t_rank, t_stock, t_inv = tr + 0.15, tr + span * 0.25, tr + span * 0.5, tr + span * 0.75
+    b1, j1 = bubble('po-q', 'SERGE', 'Bon… qu\'est-ce qui s\'est passé aujourd\'hui ?', 60, 300, 640, tq - 0.1, qe)
+    b2, j2 = bubble('po-a', 'SERGE', 'Ah… je vois toute ma boutique.', 470, 470, 560, ta - 0.1, to + 0.2)
+    sellers = [('employe_face.png', 'Yannick', '8 ventes', '245 000 F', 100, '#00D4C8'), ('', 'Awa', '4 ventes', '160 000 F', 65, '#1AA3E8'), ('vendeur2_face.png', 'Arnaud', '2 ventes', '80 000 F', 33, '#8A9BA8')]
+    rank = ''.join(f'<div class="po-sl">{f'<img src="assets/people/{f}" alt="" />' if f else '<span class="po-av">' + n[0] + '</span>'}<div class="po-sn"><b>{n}<em>{c}</em></b><div class="po-bar"><i style="--w:{w}%;--c:{col}"></i></div></div><strong>{v}</strong>{"<span class=po-cr>1er</span>" if k == 0 else ""}</div>' for k, (f, n, c, v, w, col) in enumerate(sellers))
+    stock = [('Galaxy A16', '1 restant', '#FF6208'), ('iPhone 13', 'Rupture', '#E5484D'), ('Redmi Note 13', '12 en stock', '#2DBE60')]
+    stk = ''.join(f'<div class="po-st"><span style="background:{c}"></span><b>{n}</b><em style="color:{c}">{t}</em></div>' for n, t, c in stock)
+    rep = f"""<div id="po-rep" class="clip" data-start="{r(tr - 0.25)}" data-duration="{r(D - tr + 0.25)}">
+      <div class="po-hd"><div><em>Rapport du jour</em><b>Lundi · 21:00</b></div><span class="po-live"><i></i>En direct</span></div>
+      <div class="po-sec" id="po-s1"><div class="po-k"><em>Ventes</em><b id="po-v">0 F</b></div><div class="po-k"><em>Bénéfice</em><b class="o">+96 500 F</b></div><div class="po-k"><em>Ventes</em><b>14</b></div></div>
+      <div class="po-sec" id="po-s2"><h4>Meilleurs vendeurs</h4>{rank}</div>
+      <div class="po-sec" id="po-s3"><h4>Stock</h4>{stk}</div>
+      <div class="po-sec" id="po-s4"><h4>Factures</h4><div class="po-inv"><b>13</b><em>validées</em><b class="o">1</b><em>en attente</em></div><div class="po-log"><i>18:42</i> Yannick · Galaxy A56 · 245 000 F</div></div>
+    </div>"""
+    body = f"""    <div id="po-clock" class="clip" data-start="0" data-duration="{r(tr)}"><span>21</span><i>:</i><span>00</span></div>
     <img id="po-serge" class="clip cut" data-start="0" data-duration="{D}" src="{SERGE}" alt="Serge (illustration)" />
-    {ans}
-{b1}{b2}'''
-    caps = [kin('po-k1', 'C\'est tout.', 210, 110, to, trn - 0.05, color='#fff'),
-            kin('po-k2', 'Tu peux <span class="t">rentrer.</span>', 210, 110, trn - 0.2, D, color='#fff')]
+    {rep}
+{b1}{b2}"""
+    caps = [kin('po-k1', 'Il supervise <span class="t">tout.</span>', 120, 84, to, trn - 0.05, color='#fff'),
+            kin('po-k2', 'Tu peux <span class="t">rentrer.</span>', 120, 96, trn - 0.2, D, color='#fff')]
     body += ''.join(b for b, c, j in caps)
-    css = ''.join(c for b, c, j in caps) + '''
+    css = ''.join(c for b, c, j in caps) + """
     #po-clock { position:absolute; left:0; right:0; top:120px; text-align:center; font-size:230px; font-weight:900; color:#fff; font-variant-numeric:tabular-nums; }
     #po-clock i { font-style:normal; color:#3DF2E6; margin:0 8px; }
-    #po-serge { left:470px; top:560px; height:1060px; width:auto; }
-    #po-ans { left:80px; top:700px; width:620px; padding:34px 38px; border:3px solid #00D4C8; }
-    .po-i { width:92px; height:92px; border-radius:26px; background:linear-gradient(180deg,#22E3D6,#00B3A9); display:flex; align-items:center; justify-content:center; }
-    #po-ans em { display:block; font-style:normal; margin-top:18px; font-size:34px; font-weight:800; color:#4A5D72; }
-    #po-ans b { display:block; font-size:96px; font-weight:900; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
-    #po-ans span { display:block; font-size:28px; font-weight:700; color:#4A5D72; } #po-ans i { font-style:normal; color:#FF6208; font-weight:900; }'''
-    js = ''.join(j for b, c, j in caps) + j1 + j2 + f'''
+    #po-serge { left:560px; top:700px; height:980px; width:auto; }
+    #po-rep { position:absolute; left:50px; top:330px; width:700px; padding:30px; border-radius:40px; background:#0E1522; border:2px solid rgba(61,242,230,.35); box-shadow:0 40px 100px rgba(0,0,0,.5), 0 0 0 10px rgba(14,21,34,.35); color:#fff; }
+    .po-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .po-hd em { display:block; font-style:normal; font-size:26px; font-weight:700; color:#8FA3B8; } .po-hd b { font-size:40px; font-weight:900; }
+    .po-live { display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:20px; background:rgba(45,190,96,.15); color:#3BE07A; font-size:22px; font-weight:800; }
+    .po-live i { width:12px; height:12px; border-radius:50%; background:#3BE07A; }
+    .po-sec { margin-top:16px; padding:20px 22px; border-radius:24px; background:#151F2E; border:1px solid rgba(255,255,255,.07); }
+    .po-sec h4 { margin:0 0 12px; font-size:24px; font-weight:800; color:#8FA3B8; letter-spacing:.02em; }
+    #po-s1 { display:flex; gap:12px; padding:14px; background:transparent; border:0; }
+    .po-k { flex:1; padding:18px; border-radius:20px; background:#151F2E; border:1px solid rgba(255,255,255,.07); }
+    .po-k em { display:block; font-style:normal; font-size:22px; font-weight:700; color:#8FA3B8; } .po-k b { display:block; margin-top:6px; font-size:36px; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .po-k b.o, .po-inv b.o { color:#FF8A3D; }
+    .po-sl { position:relative; display:flex; align-items:center; gap:16px; padding:10px 0; }
+    .po-sl img { width:64px; height:64px; border-radius:50%; object-fit:cover; background:#0B2235; border:3px solid #22324A; }
+    .po-av { width:64px; height:64px; border-radius:50%; background:#1AA3E8; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:#fff; }
+    .po-sl:first-of-type img { border-color:#3DF2E6; }
+    .po-sn { flex:1; } .po-sn b { display:flex; gap:12px; align-items:baseline; font-size:28px; font-weight:800; } .po-sn em { font-style:normal; font-size:22px; color:#8FA3B8; font-weight:700; }
+    .po-bar { margin-top:8px; height:12px; border-radius:6px; background:#22324A; overflow:hidden; } .po-bar i { display:block; height:100%; width:var(--w); background:var(--c); border-radius:6px; transform-origin:left; }
+    .po-sl strong { font-size:28px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .po-cr { position:absolute; left:36px; top:-8px; padding:3px 10px; border-radius:10px; background:#3DF2E6; color:#04222A; font-size:18px; font-weight:900; }
+    .po-st { display:flex; align-items:center; gap:14px; padding:9px 0; font-size:28px; } .po-st span { width:14px; height:14px; border-radius:50%; } .po-st b { flex:1; font-weight:800; } .po-st em { font-style:normal; font-weight:900; }
+    .po-inv { display:flex; align-items:baseline; gap:10px; } .po-inv b { font-size:52px; font-weight:900; } .po-inv em { font-style:normal; font-size:26px; font-weight:700; color:#8FA3B8; margin-right:18px; }
+    .po-log { margin-top:10px; font-size:24px; font-weight:700; color:#CFE0EE; } .po-log i { font-style:normal; color:#3DF2E6; margin-right:8px; }"""
+    js = ''.join(j for b, c, j in caps) + j1 + j2 + f"""
     tl.fromTo("#po-clock span", {{ opacity:0, y:-80 }}, {{ opacity:1, y:0, duration:0.6, ease:"expo.out", stagger:0.12 }}, 0.1);
     tl.fromTo("#po-serge", {{ x:400, opacity:0 }}, {{ x:0, opacity:1, duration:0.8, ease:"expo.out" }}, 0.2);
     tl.to("#po-clock", {{ opacity:0, y:-60, duration:0.3 }}, {r(tr - 0.3)});
-    tl.fromTo("#po-ans", {{ scale:0.5, opacity:0, y:120 }}, {{ scale:1, opacity:1, y:0, duration:0.6, ease:"back.out(1.5)" }}, {r(tr - 0.2)});
-    count("#po-v", 0, 485000, {r(tr)}, 1.0, "", " F");
-    tl.to("#po-ans", {{ y:300, scale:0.9, duration:0.5, ease:"power3.inOut" }}, {r(to - 0.3)});
+    tl.fromTo("#po-rep", {{ y:900, rotation:-4, opacity:0 }}, {{ y:0, rotation:0, opacity:1, duration:0.7, ease:"expo.out" }}, {r(tr - 0.25)});
+    tl.set(".po-sec", {{ opacity:0 }}, 0);
+    tl.fromTo(".po-live i", {{ opacity:1 }}, {{ opacity:0.2, duration:0.5, yoyo:true, repeat:{int(D * 1.5)}, ease:"sine.inOut" }}, {r(tr)});"""
+    for sel, t in [('#po-s1', t_sold), ('#po-s2', t_rank), ('#po-s3', t_stock), ('#po-s4', t_inv)]:
+        js += f"""
+    tl.fromTo("{sel}", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.45, ease:"expo.out" }}, {r(t)});
+    tl.fromTo("{sel}", {{ boxShadow:"0 0 0 0 rgba(61,242,230,0)" }}, {{ boxShadow:"0 0 0 4px rgba(61,242,230,.55)", duration:0.25, yoyo:true, repeat:1 }}, {r(t + 0.3)});"""
+    js += f"""
+    count("#po-v", 0, 485000, {r(t_sold)}, 1.0, "", " F");
+    tl.fromTo(".po-bar i", {{ scaleX:0 }}, {{ scaleX:1, duration:0.7, ease:"expo.out", stagger:0.12 }}, {r(t_rank + 0.15)});
+    tl.fromTo(".po-cr", {{ scale:0 }}, {{ scale:1, duration:0.35, ease:"back.out(2)" }}, {r(t_rank + 0.6)});
+    tl.fromTo(".po-st", {{ x:-40, opacity:0 }}, {{ x:0, opacity:1, duration:0.35, stagger:0.1, ease:"expo.out" }}, {r(t_stock + 0.1)});
     tl.to("#po-serge", {{ x:700, opacity:0, duration:0.9, ease:"power2.in" }}, {r(trn + 0.3)});
-    tl.to("#po-ans", {{ opacity:0, duration:0.4 }}, {r(D - 0.45)});'''
+    tl.to("#po-rep", {{ y:-40, opacity:0, duration:0.4 }}, {r(D - 0.45)});"""
     write('payoff', scene('payoff', body, css, js))
 
 

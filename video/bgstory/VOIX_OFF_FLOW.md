@@ -64,15 +64,16 @@ Générer 2 ou 3 prises par clip, garder la meilleure, m'envoyer les fichiers no
 | N15 | Calm and clear, steady pace. | Arnaud, l'administrateur, valide les factures et compare les fournisseurs. |
 | N16 | Small pause after "Et Serge ?". "Il voit tout." with quiet pride. Softer and slower at the end. | Et Serge ? Il voit tout. Même sur son ordinateur, à la maison. |
 
-### 6. Le retour à 21 h (ton : doux, apaisé, émouvant)
+### 6. Le retour à 21 h : le patron supervise tout (ton : doux, apaisé, rassurant)
 
 | Clip | Direction du clip (à coller) | Texte |
 |---|---|---|
 | N17 | Quiet, slow, echoing the beginning. Pause after "heures,". | Vingt-et-une heures, le soir. |
-| S03 | Same words as before, but calm and relaxed this time, almost smiling. | Bon. Combien on a vendu aujourd'hui ? |
-| N18 | Very soft and gentle, reassuring, slow. | La réponse est déjà là. |
-| S04 | Surprised and relieved, a small laugh. Pause after "Ah…". | Ah… c'est tout ? |
-| N19 | Warm smile in the voice, tender. Pause after "C'est tout.". "Tu peux rentrer." very soft, like a friend. | Oui, Serge. C'est tout. Tu peux rentrer. |
+| S03 | Calm and curious, not stressed this time. | Bon… qu'est-ce qui s'est passé aujourd'hui ? |
+| N18 | Soft and reassuring. Pause after "Tout est là.", then list slowly, a short pause between each part. | Tout est là. Ce qui a été vendu… qui a le mieux vendu… |
+| N18b | Same calm list, continuing. Slow down on the end. | ce qui reste en stock… et chaque facture, validée ou en attente. |
+| S04 | Surprised and relieved, a small laugh. Pause after "Ah…". | Ah… je vois toute ma boutique. |
+| N19 | Warm smile in the voice, tender. Pause after "Oui, Serge.". "Tu peux rentrer." very soft, like a friend. | Oui, Serge. Tu supervises tout, même de loin. Tu peux rentrer. |
 
 ### 7. Pour vous (ton : chaleureux, convaincu, sans vendre)
 
