@@ -164,12 +164,12 @@
     #bg-night { position:absolute; inset:0; background:radial-gradient(120% 80% at 50% 25%, #16324F 0%, #0B1F33 60%, #071524 100%); opacity:0; }
   </style>
   <div id="root" data-composition-id="bg" data-width="1080" data-height="1920">
-    <div id="bg-base" class="clip" data-start="0" data-duration="108.0"></div>
-    <div id="bg-b1" class="clip blob" data-start="0" data-duration="108.0"></div>
-    <div id="bg-b2" class="clip blob" data-start="0" data-duration="108.0"></div>
-    <div id="bg-b3" class="clip blob" data-start="0" data-duration="108.0"></div>
-    <div id="bg-grid" class="clip" data-start="0" data-duration="108.0"></div>
-    <div id="bg-night" class="clip" data-start="0" data-duration="108.0"></div>
+    <div id="bg-base" class="clip" data-start="0" data-duration="193.0"></div>
+    <div id="bg-b1" class="clip blob" data-start="0" data-duration="193.0"></div>
+    <div id="bg-b2" class="clip blob" data-start="0" data-duration="193.0"></div>
+    <div id="bg-b3" class="clip blob" data-start="0" data-duration="193.0"></div>
+    <div id="bg-grid" class="clip" data-start="0" data-duration="193.0"></div>
+    <div id="bg-night" class="clip" data-start="0" data-duration="193.0"></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -178,14 +178,14 @@
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
     const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
 
-    tl.to("#bg-b1", { x:-380, y:480, duration:54.0, ease:"sine.inOut", yoyo:true, repeat:1 }, 0);
-    tl.to("#bg-b2", { x:520, y:-560, duration:54.0, ease:"sine.inOut", yoyo:true, repeat:1 }, 0);
-    tl.to("#bg-b3", { x:-420, y:-300, scale:1.5, duration:36.0, ease:"sine.inOut", yoyo:true, repeat:2 }, 0);
-    tl.fromTo("#bg-grid", { y:0 }, { y:180, duration:108.0, ease:"none" }, 0);
+    tl.to("#bg-b1", { x:-380, y:480, duration:96.5, ease:"sine.inOut", yoyo:true, repeat:1 }, 0);
+    tl.to("#bg-b2", { x:520, y:-560, duration:96.5, ease:"sine.inOut", yoyo:true, repeat:1 }, 0);
+    tl.to("#bg-b3", { x:-420, y:-300, scale:1.5, duration:64.33333333333333, ease:"sine.inOut", yoyo:true, repeat:2 }, 0);
+    tl.fromTo("#bg-grid", { y:0 }, { y:180, duration:193.0, ease:"none" }, 0);
     tl.to("#bg-night", { opacity:0.94, duration:1.2, ease:"power2.inOut" }, 4.4);
-    tl.to("#bg-night", { opacity:0, duration:1.4, ease:"power2.inOut" }, 34.15);
-    tl.to("#bg-night", { opacity:0.94, duration:1.2, ease:"power2.inOut" }, 71.75);
-    tl.to("#bg-night", { opacity:0, duration:1.4, ease:"power2.inOut" }, 82.25);
+    tl.to("#bg-night", { opacity:0, duration:1.4, ease:"power2.inOut" }, 51.62);
+    tl.to("#bg-night", { opacity:0.94, duration:1.2, ease:"power2.inOut" }, 104.02);
+    tl.to("#bg-night", { opacity:0, duration:1.4, ease:"power2.inOut" }, 159.59);
     window.__timelines["bg"] = tl;
   </script>
 </template>

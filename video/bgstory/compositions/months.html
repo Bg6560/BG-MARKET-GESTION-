@@ -168,12 +168,12 @@
     #mo-cl { position:absolute; inset:0; }
   </style>
   <div id="root" data-composition-id="months" data-width="1080" data-height="1920">
-    <div id="mo-cal" class="clip" data-start="0" data-duration="3.22"><div class="mo-p" id="mo-p0"><em>AOÛT</em><b>26</b></div><div class="mo-p" id="mo-p1"><em>SEPT</em><b>26</b></div><div class="mo-p" id="mo-p2"><em>OCT</em><b>26</b></div></div>
-    <div id="mo-q" class="clip cap big" data-start="3.07" data-duration="1.61">« Demain,<br><span class="t">je m'organise.</span> »</div>
-    <div id="mo-st" class="clip" data-start="5.38" data-duration="2.91"><div class="mo-c" id="mo-c0" style="top:1180px;left:300px;transform:rotate(3deg)"><b>CAHIER 1</b></div><div class="mo-c" id="mo-c1" style="top:1134px;left:330px;transform:rotate(-3deg)"><b>CAHIER 2</b></div><div class="mo-c" id="mo-c2" style="top:1088px;left:300px;transform:rotate(3deg)"><b>CAHIER 3</b></div><div class="mo-c" id="mo-c3" style="top:1042px;left:330px;transform:rotate(-3deg)"><b>CAHIER 4</b></div><div class="mo-c" id="mo-c4" style="top:996px;left:300px;transform:rotate(3deg)"><b>CAHIER 5</b></div><div class="mo-c" id="mo-c5" style="top:950px;left:330px;transform:rotate(-3deg)"><b>CAHIER 6</b></div></div>
-    <div id="mo-cl" class="clip" data-start="6.23" data-duration="2.06"><div class="bub l" style="left:60px;top:560px;width:520px;font-size:34px"><em>CLIENT</em>Vous avez l'iPhone 13 ?</div><div class="bub r" style="left:480px;top:800px;width:540px;font-size:34px"><em>CLIENT</em>C'est combien, le A56 ?</div></div>
-    <div id="mo-k1" class="clip cap big" data-start="0.37" data-duration="2.8"><span class="w">3 </span><span class="w">mois. </span></div>
-    <div id="mo-k2" class="clip cap big" data-start="4.78" data-duration="3.51"><span class="w">Sauf </span><span class="w">que </span><span class="w"><span class="o">demain…</span> </span></div>
+    <div id="mo-cal" class="clip" data-start="0" data-duration="5.03"><div class="mo-p" id="mo-p0"><em>AOÛT</em><b>26</b></div><div class="mo-p" id="mo-p1"><em>SEPT</em><b>26</b></div><div class="mo-p" id="mo-p2"><em>OCT</em><b>26</b></div></div>
+    <div id="mo-q" class="clip cap big" data-start="4.88" data-duration="3.06">« Demain,<br><span class="t">je m'organise.</span> »</div>
+    <div id="mo-st" class="clip" data-start="8.64" data-duration="4.61"><div class="mo-c" id="mo-c0" style="top:1180px;left:300px;transform:rotate(3deg)"><b>CAHIER 1</b></div><div class="mo-c" id="mo-c1" style="top:1134px;left:330px;transform:rotate(-3deg)"><b>CAHIER 2</b></div><div class="mo-c" id="mo-c2" style="top:1088px;left:300px;transform:rotate(3deg)"><b>CAHIER 3</b></div><div class="mo-c" id="mo-c3" style="top:1042px;left:330px;transform:rotate(-3deg)"><b>CAHIER 4</b></div><div class="mo-c" id="mo-c4" style="top:996px;left:300px;transform:rotate(3deg)"><b>CAHIER 5</b></div><div class="mo-c" id="mo-c5" style="top:950px;left:330px;transform:rotate(-3deg)"><b>CAHIER 6</b></div></div>
+    <div id="mo-cl" class="clip" data-start="9.63" data-duration="3.62"><div class="bub l" style="left:60px;top:560px;width:520px;font-size:34px"><em>CLIENT</em>Vous avez l'iPhone 13 ?</div><div class="bub r" style="left:480px;top:800px;width:540px;font-size:34px"><em>CLIENT</em>C'est combien, le A56 ?</div></div>
+    <div id="mo-k1" class="clip cap big" data-start="0.57" data-duration="4.41"><span class="w">3 </span><span class="w">mois. </span></div>
+    <div id="mo-k2" class="clip cap big" data-start="8.04" data-duration="5.21"><span class="w">Sauf </span><span class="w">que </span><span class="w"><span class="o">demain…</span> </span></div>
 
   </div>
   <script>
@@ -182,22 +182,22 @@
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
     const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
-    tl.fromTo("#mo-k1 .w", { opacity:0, y:120, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.37);
-    tl.to("#mo-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.85);
-    tl.fromTo("#mo-k2 .w", { opacity:0, y:48, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 4.78);
-    tl.to("#mo-k2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 7.97);
+    tl.fromTo("#mo-k1 .w", { opacity:0, y:120, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.57);
+    tl.to("#mo-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 4.66);
+    tl.fromTo("#mo-k2 .w", { opacity:0, y:48, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 8.04);
+    tl.to("#mo-k2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 12.93);
 
-    tl.fromTo("#mo-cal", { y:200, opacity:0 }, { y:0, opacity:1, duration:0.6, ease:"expo.out" }, 0.47);
+    tl.fromTo("#mo-cal", { y:200, opacity:0 }, { y:0, opacity:1, duration:0.6, ease:"expo.out" }, 0.67);
     tl.set("#mo-p0", { zIndex:3 }, 0);
-    tl.to("#mo-p0", { rotationX:-100, y:-120, opacity:0, duration:0.45, ease:"power2.in" }, 1.17);
+    tl.to("#mo-p0", { rotationX:-100, y:-120, opacity:0, duration:0.45, ease:"power2.in" }, 1.37);
     tl.set("#mo-p1", { zIndex:2 }, 0);
-    tl.to("#mo-p1", { rotationX:-100, y:-120, opacity:0, duration:0.45, ease:"power2.in" }, 1.77);
+    tl.to("#mo-p1", { rotationX:-100, y:-120, opacity:0, duration:0.45, ease:"power2.in" }, 1.97);
     tl.set("#mo-p2", { zIndex:1 }, 0);
-    tl.fromTo("#mo-q", { opacity:0, scale:0.9 }, { opacity:1, scale:1, duration:0.5, ease:"expo.out" }, 3.07);
-    tl.to("#mo-q", { opacity:0, y:-60, duration:0.3, ease:"power2.in" }, 4.63);
-    tl.fromTo(".mo-c", { y:-900, opacity:0 }, { y:0, opacity:1, duration:0.45, ease:"power3.in", stagger:0.35 }, 5.38);
-    tl.from("#mo-cl .bub", { opacity:0, scale:0.6, duration:0.4, stagger:0.5, ease:"back.out(1.6)" }, 6.23);
-    tl.to(["#mo-st", "#mo-cl"], { opacity:0, y:80, duration:0.35, ease:"power2.in" }, 7.91);
+    tl.fromTo("#mo-q", { opacity:0, scale:0.9 }, { opacity:1, scale:1, duration:0.5, ease:"expo.out" }, 4.88);
+    tl.to("#mo-q", { opacity:0, y:-60, duration:0.3, ease:"power2.in" }, 7.89);
+    tl.fromTo(".mo-c", { y:-900, opacity:0 }, { y:0, opacity:1, duration:0.45, ease:"power3.in", stagger:0.47 }, 8.64);
+    tl.from("#mo-cl .bub", { opacity:0, scale:0.6, duration:0.4, stagger:0.5, ease:"back.out(1.6)" }, 9.63);
+    tl.to(["#mo-st", "#mo-cl"], { opacity:0, y:80, duration:0.35, ease:"power2.in" }, 12.87);
     window.__timelines["months"] = tl;
   </script>
 </template>

@@ -13,7 +13,7 @@ B.V0 = 0.0
 DATA = json.load(open(os.path.join(ROOT, 'assets/audio/words.json')))
 WORDS = [w for w in DATA['words'] if w['text'] not in ('direct,',)]
 VO_END = WORDS[-1]['end']
-DUR = 108.0
+DUR = 193.0
 INK, TEAL_D, NAVY = '#0B1F33', '#00A99F', '#0B1F33'
 
 
@@ -93,7 +93,7 @@ ARNAUD = 'assets/people/vendeur2.png'      # orange tee: Arnaud, administrator
 
 # ------------------------------------------------------------------ stage: light gradient + night tint
 def build_bg():
-    nights = [(4.4, W('Chez') - 0.3), (W('Vingt-et-une', 2) - 0.5, W("Oui") + 1.6)]
+    nights = [(4.4, W('Chez') - 0.3), (W('Vingt-et-une', 2) - 0.5, W('BG-MARKET-GESTION,', 1, 155) - 0.9)]
     body = f'''    <div id="bg-base" class="clip" data-start="0" data-duration="{DUR}"></div>
     <div id="bg-b1" class="clip blob" data-start="0" data-duration="{DUR}"></div>
     <div id="bg-b2" class="clip blob" data-start="0" data-duration="{DUR}"></div>
@@ -164,10 +164,10 @@ def build_subs():
 
 # ------------------------------------------------------------------ A. Serge, 21:00, the question
 def build_intro():
-    S, E = 0.0, W('Le', 1, 12.8) - 0.1
+    S, E = 0.0, W('Le', 1, 16) - 0.1
     L, D = host('intro', S, E)
     t21 = W('vingt-et-une')
-    tq = W('Bon', 1, 9, 's')
+    tq = W('Bon', 1, 12, 's')
     q_end = W('?', 1, tq) + 0.5
     b1, j1 = bubble('in-q', 'SERGE', 'Bon… combien on a vendu aujourd\'hui ?', 70, 330, 640, L(tq) - 0.1, L(q_end) + 0.1)
     body = f'''    <img id="in-serge" class="clip cut" data-start="0" data-duration="{D}" src="{SERGE}" alt="Serge (illustration)" />
@@ -201,18 +201,20 @@ def build_intro():
 
 # ------------------------------------------------------------------ B. three totals, a stock nobody knows, the lost invoice
 def build_chaos():
-    S, E = W('Le', 1, 12.8) - 0.2, W('Ça') - 0.1
+    S, E = W('Le', 1, 16) - 0.2, W('Ça') - 0.1
     L, D = host('chaos', S, E)
     tc, tw, tk = L(W('cahier')), L(W('WhatsApp')), L(W('caisse'))
-    tg, tq2 = L(W('Galaxy')), L(W('Yannick', 1, 22, 's'))
+    tg, tq2 = L(W('Galaxy')), L(W('Yannick', 1, 30, 's'))
     cards = f'''    <div id="ch-nb" class="clip card chc" data-start="{r(tc - 0.15)}" data-duration="{r(tg - tc + 0.6)}"><em>{ic('doc', 30, '#4A5D72')} Le cahier</em><b>Total : <span class="o">478 000 F</span></b></div>
     <div id="ch-wa" class="clip card chc" data-start="{r(tw - 0.15)}" data-duration="{r(tg - tw + 0.6)}"><em>{ic('wa', 32)} WhatsApp</em><b>« 490 000 je crois »</b></div>
     <div id="ch-ca" class="clip card chc" data-start="{r(tk - 0.15)}" data-duration="{r(tg - tk + 0.6)}"><em>{ic('card', 30, '#4A5D72')} La caisse</em><b>Total : <span class="o">512 000 F</span></b></div>
-    <div id="ch-ne" class="clip" data-start="{r(L(W('encore', 1, 16.5)) - 0.1)}" data-duration="{r(tg - L(W('encore', 1, 16.5)) + 0.5)}">≠</div>
+    <div id="ch-ne" class="clip" data-start="{r(L(W('encore', 1, 16)) - 0.1)}" data-duration="{r(tg - L(W('encore', 1, 16)) + 0.5)}">≠</div>
     <div id="ch-st" class="clip card" data-start="{r(tg - 0.2)}" data-duration="{r(tq2 - tg + 0.3)}"><div id="ch-ph">{a16_svg(300, 420)}</div><div id="ch-tx"><b>Galaxy A16</b><i>Reste en stock</i><strong id="ch-n">1</strong></div><div id="ch-sh"></div></div>
 '''
     b2, j2 = bubble('ch-q', 'SERGE → YANNICK', 'Yannick ! La facture de Koffi… tu l\'as envoyée ?', 80, 560, 760, tq2 - 0.1, D)
-    cards += b2 + f'''    <div id="ch-typ" class="clip" data-start="{r(tq2 + 1.6)}" data-duration="{r(D - tq2 - 1.6)}"><img src="assets/people/employe_face.png" alt="" /><span><i></i><i></i><i></i></span></div>
+    ty = L(W('Euh…', 1, 30, 'y'))
+    b3, j3 = bubble('ch-y', 'YANNICK', 'Euh… je crois, patron !', 380, 1060, 560, ty - 0.1, D, 'r')
+    cards += b2 + b3 + f'''    <div id="ch-typ" class="clip" data-start="{r(tq2 + 1.6)}" data-duration="{r(D - tq2 - 1.6)}"><img src="assets/people/employe_face.png" alt="" /><span><i></i><i></i><i></i></span></div>
 '''
     caps = [kin('ch-k1', 'Personne ne sait <span class="t">vraiment.</span>', 260, 64, L(W('Personne')), tq2 - 0.1, color='#fff')]
     body = cards + ''.join(b for b, c, j in caps)
@@ -232,13 +234,13 @@ def build_chaos():
     #ch-typ img { width:110px; height:110px; border-radius:50%; border:5px solid #00D4C8; object-fit:cover; background:#0E2235; }
     #ch-typ span { display:flex; gap:10px; padding:26px 30px; border-radius:30px; background:#fff; }
     #ch-typ span i { width:18px; height:18px; border-radius:50%; background:#9AA8B8; }'''
-    js = ''.join(j for b, c, j in caps) + j2
+    js = ''.join(j for b, c, j in caps) + j2 + j3
     for sel, t, rot, dx in [('#ch-nb', tc, -5, -600), ('#ch-wa', tw, 4, 600), ('#ch-ca', tk, -3, -600)]:
         js += f'''
     tl.fromTo("{sel}", {{ x:{dx}, rotation:{rot * 3}, opacity:0 }}, {{ x:0, rotation:{rot}, opacity:1, duration:0.6, ease:"expo.out" }}, {r(t - 0.15)});
     tl.to("{sel}", {{ y:-260, scale:0.7, opacity:0, duration:0.45, ease:"power2.in" }}, {r(tg - 0.15)});'''
     js += f'''
-    tl.fromTo("#ch-ne", {{ scale:0, rotation:-30 }}, {{ scale:1, rotation:0, duration:0.45, ease:"back.out(2)" }}, {r(L(W('encore', 1, 16.5)) - 0.1)});
+    tl.fromTo("#ch-ne", {{ scale:0, rotation:-30 }}, {{ scale:1, rotation:0, duration:0.45, ease:"back.out(2)" }}, {r(L(W('encore', 1, 16)) - 0.1)});
     tl.to("#ch-ne", {{ opacity:0, duration:0.3 }}, {r(tg - 0.2)});
     tl.fromTo("#ch-st", {{ scale:0.6, opacity:0 }}, {{ scale:1, opacity:1, duration:0.6, ease:"expo.out" }}, {r(tg - 0.2)});
     tl.fromTo("#ch-ph svg", {{ x:-260, rotation:-14, scale:0.8 }}, {{ x:0, rotation:0, scale:1, duration:0.9, ease:"expo.out" }}, {r(tg - 0.1)});
@@ -246,11 +248,12 @@ def build_chaos():
     tl.fromTo("#ch-sh", {{ x:-300 }}, {{ x:1200, duration:0.9, ease:"power2.inOut" }}, {r(tg + 0.5)});'''
     seq = ['1', '0', '?', '1', '0', '?']
     for i, v in enumerate(seq):
-        js += f'\n    tl.set("#ch-n", {{ textContent:"{v}" }}, {r(L(W("un…", 1, 19)) + i * 0.32)});'
+        js += f'\n    tl.set("#ch-n", {{ textContent:"{v}" }}, {r(L(W("un…", 1, 16)) + i * 0.32)});'
     js += f'''
     tl.to("#ch-st", {{ scale:0.85, opacity:0, duration:0.35, ease:"power2.in" }}, {r(tq2 - 0.15)});
     tl.fromTo("#ch-typ", {{ opacity:0, y:30 }}, {{ opacity:1, y:0, duration:0.4 }}, {r(tq2 + 1.6)});
-    tl.fromTo("#ch-typ span i", {{ y:0 }}, {{ y:-12, duration:0.25, yoyo:true, repeat:5, ease:"sine.inOut", stagger:0.12 }}, {r(tq2 + 1.7)});'''
+    tl.fromTo("#ch-typ span i", {{ y:0 }}, {{ y:-12, duration:0.25, yoyo:true, repeat:5, ease:"sine.inOut", stagger:0.12 }}, {r(tq2 + 1.7)});
+    tl.to("#ch-typ span", {{ opacity:0, duration:0.2 }}, {r(ty - 0.2)});'''
     write('chaos', scene('chaos', body, css, js))
 
 
@@ -299,7 +302,7 @@ def build_months():
 
 # ------------------------------------------------------------------ D. the turn: we built ours
 def build_turn():
-    S, E = W('Chez') - 0.15, W('Le', 1, 41) - 0.15
+    S, E = W('Chez') - 0.15, W('Le', 1, 60) - 0.15
     L, D = host('turn', S, E)
     tv, tg = L(W('Voici')), L(W('BG-MARKET-GESTION.'))
     ph = phone('tu-ph', 1.0, dash_phone('tup'), 'left:327px;top:900px;')
@@ -307,7 +310,7 @@ def build_turn():
     <div id="tu-g" class="clip cap big" data-start="{r(tg - 0.1)}" data-duration="{r(D - tg + 0.1)}">BG-MARKET-<span class="o">GESTION</span></div>
     <div id="tu-phw" class="clip" data-start="{r(tv)}" data-duration="{r(D - tv)}">{ph}</div>
 '''
-    caps = [kin('tu-k1', 'On a connu <span class="t">exactement ça.</span>', 760, 64, L(W('on', 1, 35)), L(W('Alors')) - 0.05, weight=800),
+    caps = [kin('tu-k1', 'On a connu <span class="t">exactement ça.</span>', 760, 64, L(W('on', 1, 38)), L(W('Alors')) - 0.05, weight=800),
             kin('tu-k2', 'Alors on a construit', 740, 64, L(W('Alors')), tv - 0.05, weight=800),
             kin('tu-k3', '<span class="o">notre propre application.</span>', 830, 64, L(W('notre')), tv - 0.05, weight=800)]
     body += ''.join(b for b, c, j in caps)
@@ -327,7 +330,7 @@ def build_turn():
 
 # ------------------------------------------------------------------ E. a day with the app (phone)
 def build_phone():
-    S, E = W('Le', 1, 41) - 0.2, W('Yannick,', 1, 60, 'n') - 0.1
+    S, E = W('Le', 1, 60) - 0.2, W('Yannick,', 1, 87, 'n') - 0.1
     L, D = host('phone', S, E)
     s, p = 1.42, 'pd'
     taps = ''.join(f'<div class="tap" id="{p}tap{i}" style="left:{x}px;top:{y}px"></div>' for i, (x, y) in enumerate([(195, 792), (100, 545), (195, 712)]))
@@ -336,8 +339,8 @@ def build_phone():
     inner = dash_phone(p) + ov % (20, sheet_create(p)) + form_commande(p) + ov % (70, toast) + precommande_screen(p) + taps
     ph = phone('pd-phone', s, inner, 'left:250px;top:610px;')
     tm, tv, tb, to = L(W('matin')), L(W('ventes,')), L(W('bénéfice')), L(W("l'objectif"))
-    tcl, tpl, tcli, ttel, tpx = L(W('client', 1, 47)), L(W('plus')), L(W('client,')), L(W('téléphone,')), L(W('prix.'))
-    tinv, twa, tpre, tac, tsol = L(W('facture', 1, 51)), L(W("l'envoie")), L(W('précommande')), L(W("L'acompte")), L(W('solde.'))
+    tcl, tpl, tcli, ttel, tpx = L(W('client', 1, 60)), L(W('plus')), L(W('client,')), L(W('téléphone,')), L(W('prix.'))
+    tinv, twa, tpre, tac, tsol = L(W('facture', 1, 60)), L(W("l'envoie")), L(W('précommande')), L(W("L'acompte")), L(W('solde.'))
     tsav, tst = L(W('réparation')), L(W('stock…'))
     inv = invoice_paper(p).replace('__S__', str(r(tinv - 0.1))).replace('__D__', str(r(tpre - tinv + 0.4)))
     share = f'''<div id="pd-share" class="clip" data-start="{r(twa - 0.2)}" data-duration="{r(tpre - twa + 0.6)}">
@@ -415,8 +418,8 @@ def build_phone():
     tl.fromTo("#{p}inv", {{ y:500, scale:0.3, rotation:-8, opacity:0 }}, {{ y:0, scale:1, rotation:0, opacity:1, duration:0.7, ease:"expo.out" }}, {r(tinv - 0.1)});
     tl.to("#{p}inv", {{ y:-300, scale:0.6, duration:0.5, ease:"power3.inOut" }}, {r(twa - 0.25)});
     tl.fromTo("#pd-share", {{ y:300, opacity:0 }}, {{ y:0, opacity:1, duration:0.45, ease:"expo.out" }}, {r(twa - 0.2)});
-    tap("#pd-tapS", {r(L(W('WhatsApp.', 1, 52)) + 0.2)});
-    tl.to("#pd-send", {{ scale:0.85, duration:0.1, yoyo:true, repeat:1 }}, {r(L(W('WhatsApp.', 1, 52)) + 0.2)});
+    tap("#pd-tapS", {r(L(W('WhatsApp.', 1, 60)) + 0.2)});
+    tl.to("#pd-send", {{ scale:0.85, duration:0.1, yoyo:true, repeat:1 }}, {r(L(W('WhatsApp.', 1, 60)) + 0.2)});
     tl.to(["#{p}inv", "#pd-share"], {{ x:-1100, opacity:0, duration:0.45, ease:"power3.in", stagger:0.05 }}, {r(tpre - 0.1)});
     tl.to("#pd-phone", {{ opacity:1, scale:1, duration:0.4 }}, {r(tpre - 0.05)});
     tl.to("#{p}pre", {{ x:0, duration:0.45, ease:"expo.out" }}, {r(tpre)});
@@ -447,9 +450,9 @@ def build_phone():
 
 # ------------------------------------------------------------------ F. the team: Yannick, Arnaud, Serge
 def build_team():
-    S, E = W('Yannick,', 1, 60, 'n') - 0.2, W('Vingt-et-une', 2) - 0.2
+    S, E = W('Yannick,', 1, 87, 'n') - 0.2, W('Vingt-et-une', 2) - 0.2
     L, D = host('team', S, E)
-    tA, tS = L(W('Arnaud')), L(W('Serge', 1, 68))
+    tA, tS = L(W('Arnaud')), L(W('Serge', 1, 87.5))
     tsans, tval, tfo, tord = L(W('sans')), L(W('valide')), L(W('fournisseurs.')), L(W('ordinateur'))
     ph = phone('tm-ph', 0.98, dash_employe('tme'), 'left:610px;top:520px;')
     lpA = laptop('tm-lpa', 0.72, dk_factures('tma'), 'left:28px;top:400px;')
@@ -510,83 +513,148 @@ def build_team():
 
 # ------------------------------------------------------------------ G. 21:00 again — the answer
 def build_payoff():
-    S, E = W('Vingt-et-une', 2) - 0.3, W('BG-MARKET-GESTION,', 1, 80) - 0.2
+    S, E = W('Vingt-et-une', 2) - 0.3, W('BG-MARKET-GESTION,', 1, 155) - 0.2
     L, D = host('payoff', S, E)
-    # beats: Serge asks, the report opens, then sold / best seller / stock / invoices, Serge sees it all, "tu peux rentrer"
-    tq, tr, ta, to, trn = L(W('Bon.', 1, 74, 's')), L(W('réponse')), L(W('Ah', 1, 78, 's')), L(W('Oui')), L(W('rentrer'))
-    qe = L(W('?', 1, 76, 's')) + 0.5
-    span = (ta - tr) - 0.2
-    t_sold, t_rank, t_stock, t_inv = tr + 0.15, tr + span * 0.25, tr + span * 0.5, tr + span * 0.75
-    b1, j1 = bubble('po-q', 'SERGE', 'Bon… qu\'est-ce qui s\'est passé aujourd\'hui ?', 60, 300, 640, tq - 0.1, qe)
-    b2, j2 = bubble('po-a', 'SERGE', 'Ah… je vois toute ma boutique.', 470, 470, 560, ta - 0.1, to + 0.2)
+    def T(word, n=1, after=None, spk=None):
+        return L(W(word, n, S if after is None else after, spk))
+    # dialogue beats (all from the voice): Serge asks, Arnaud answers from the report, Serge congratulates, then stock and invoices
+    t_soir = T('soir.')
+    t_q1, t_a1 = T('Arnaud…', spk='s'), T('Tout', spk='a')
+    t_q2, t_a2 = T('qui', spk='s'), T('Yannick.', spk='a')
+    t_bra, t_awa, t_mer = T('Yannick', spk='s'), T('Awa', spk='s'), T('Merci', spk='y')
+    t_q3, t_a3 = T('stock', spk='s'), T('reste', spk='a')
+    t_q4, t_a4 = T('factures', spk='s'), T('Treize', spk='a')
+    t_nf, t_qv, t_qs, t_qm, t_loin = T('Serge', spk='n', after=W('Treize')), T('vend…', spk='n', after=W('Treize')), T('sort…'), T('manque.'), T('loin.')
+    t_bon, t_oui, t_ren = T('Bon…', spk='s', after=W('loin.')), T('Oui', spk='n', after=W('loin.')), T('rentrer.', spk='n', after=W('loin.'))
+    a_end = lambda w, spk: L(next(x['end'] for x in WORDS if x['spk'] == spk and x['start'] >= W(w, 1, S, spk) and x['text'][-1] in '.?!'))
+    bubs = [('po-b1', 'SERGE', 'Arnaud… alors, cette journée ?', 50, 300, 640, t_q1, t_a1 + 0.2, 'l'),
+            ('po-b2', 'ARNAUD', 'Tout est là, patron.', 470, 300, 520, t_a1, t_a1 + 2.0, 'r'),
+            ('po-b3', 'SERGE', 'Et qui a le mieux vendu ?', 40, 70, 600, t_q2 - 0.1, t_a2 + 0.6, 'l'),
+            ('po-b4', 'SERGE', 'Yannick ! Bravo, mon petit. Tu as bien travaillé aujourd\'hui.', 40, 80, 700, t_bra - 0.1, t_awa - 0.1, 'l'),
+            ('po-b5', 'SERGE', 'Et Awa aussi, beau travail.', 40, 80, 560, t_awa - 0.1, t_mer + 0.1, 'l'),
+            ('po-b6', 'YANNICK', 'Merci, patron !', 600, 640, 420, t_mer - 0.1, t_q3 + 0.2, 'r'),
+            ('po-b7', 'SERGE', 'Et le stock ?', 40, 70, 420, t_q3 - 0.1, t_a3 + 1.2, 'l'),
+            ('po-b8', 'SERGE', 'Et les factures ?', 40, 70, 480, t_q4 - 0.1, t_a4 + 1.2, 'l'),
+            ('po-b9', 'SERGE', 'Bon… on peut rentrer.', 80, 520, 560, t_bon - 0.1, t_oui + 0.3, 'l')]
+    bh, bj = '', ''
+    for bb in bubs:
+        h, j = bubble(*bb); bh += h; bj += j
     sellers = [('employe_face.png', 'Yannick', '8 ventes', '245 000 F', 100, '#00D4C8'), ('', 'Awa', '4 ventes', '160 000 F', 65, '#1AA3E8'), ('vendeur2_face.png', 'Arnaud', '2 ventes', '80 000 F', 33, '#8A9BA8')]
-    rank = ''.join(f'<div class="po-sl">{f'<img src="assets/people/{f}" alt="" />' if f else '<span class="po-av">' + n[0] + '</span>'}<div class="po-sn"><b>{n}<em>{c}</em></b><div class="po-bar"><i style="--w:{w}%;--c:{col}"></i></div></div><strong>{v}</strong>{"<span class=po-cr>1er</span>" if k == 0 else ""}</div>' for k, (f, n, c, v, w, col) in enumerate(sellers))
+    rank = ''.join(f'<div class="po-sl" id="po-sl{k}">{f"<img src=assets/people/{f} alt=\"\" />" if f else "<span class=po-av>" + n[0] + "</span>"}<div class="po-sn"><b>{n}<em>{c}</em></b><div class="po-bar"><i style="--w:{w}%;--c:{col}"></i></div></div><strong>{v}</strong>{"<span class=po-cr>1er</span>" if k == 0 else ""}</div>' for k, (f, n, c, v, w, col) in enumerate(sellers))
     stock = [('Galaxy A16', '1 restant', '#FF6208'), ('iPhone 13', 'Rupture', '#E5484D'), ('Redmi Note 13', '12 en stock', '#2DBE60')]
-    stk = ''.join(f'<div class="po-st"><span style="background:{c}"></span><b>{n}</b><em style="color:{c}">{t}</em></div>' for n, t, c in stock)
-    rep = f"""<div id="po-rep" class="clip" data-start="{r(tr - 0.25)}" data-duration="{r(D - tr + 0.25)}">
-      <div class="po-hd"><div><em>Rapport du jour</em><b>Lundi · 21:00</b></div><span class="po-live"><i></i>En direct</span></div>
-      <div class="po-sec" id="po-s1"><div class="po-k"><em>Ventes</em><b id="po-v">0 F</b></div><div class="po-k"><em>Bénéfice</em><b class="o">+96 500 F</b></div><div class="po-k"><em>Ventes</em><b>14</b></div></div>
+    stk = ''.join(f'<div class="po-st" id="po-st{k}"><span style="background:{c}"></span><b>{n}</b><em style="color:{c}">{t}</em></div>' for k, (n, t, c) in enumerate(stock))
+    rep = f"""<div id="po-rep" class="clip" data-start="{r(t_a1 - 0.3)}" data-duration="{r(t_bon - t_a1 + 0.3)}">
+      <div class="po-hd"><div><em>Rapport du jour · Arnaud</em><b>Lundi · 21:00</b></div><span class="po-live"><i></i>En direct</span></div>
+      <div class="po-sec" id="po-s1"><div class="po-k"><em>Ventes</em><b id="po-v">0 F</b></div><div class="po-k"><em>Bénéfice</em><b class="o">+96 500 F</b></div><div class="po-k"><em>Ventes</em><b id="po-n">0</b></div></div>
       <div class="po-sec" id="po-s2"><h4>Meilleurs vendeurs</h4>{rank}</div>
-      <div class="po-sec" id="po-s3"><h4>Stock</h4>{stk}</div>
-      <div class="po-sec" id="po-s4"><h4>Factures</h4><div class="po-inv"><b>13</b><em>validées</em><b class="o">1</b><em>en attente</em></div><div class="po-log"><i>18:42</i> Yannick · Galaxy A56 · 245 000 F</div></div>
+      <div class="po-sec" id="po-s3"><h4>Stock</h4>{stk}<div class="po-tag" id="po-fo">{ic('check', 26, '#04222A', 3)} Fournisseur prévenu</div></div>
+      <div class="po-sec" id="po-s4"><h4>Factures</h4><div class="po-inv"><b>13</b><em>validées</em><b class="o">1</b><em>en attente</em></div><div class="po-log"><i>À vérifier</i> demain matin · Arnaud</div></div>
     </div>"""
-    body = f"""    <div id="po-clock" class="clip" data-start="0" data-duration="{r(tr)}"><span>21</span><i>:</i><span>00</span></div>
-    <img id="po-serge" class="clip cut" data-start="0" data-duration="{D}" src="{SERGE}" alt="Serge (illustration)" />
+    loupe = f'<div id="po-lp" class="clip" data-start="{r(t_a2)}" data-duration="{r(t_a4 + 3.5 - t_a2)}"><i></i></div>'
+    body = f"""    <div id="po-stage" class="clip" data-start="0" data-duration="{D}">
+      <div id="po-clock"><div><span>21</span><i>:</i><span>00</span></div><em>LE SOIR</em></div>
+      <img id="po-serge" class="cut" src="{SERGE}" alt="Serge (illustration)" />
+      <img id="po-arn" class="cut" src="{ARNAUD}" alt="Arnaud (illustration)" />
+    </div>
+    <div id="po-bravo" class="clip" data-start="{r(t_bra - 0.3)}" data-duration="{r(t_q3 - t_bra + 0.6)}"><div id="po-bw">Bravo.</div><img id="po-yan" class="cut" src="{YANNICK}" alt="Yannick (illustration)" /><div id="po-awa" class="chip"><span class="po-av">A</span> Awa · 4 ventes · <b class="t">beau travail</b></div></div>
     {rep}
-{b1}{b2}"""
-    caps = [kin('po-k1', 'Il supervise <span class="t">tout.</span>', 120, 84, to, trn - 0.05, color='#fff'),
-            kin('po-k2', 'Tu peux <span class="t">rentrer.</span>', 120, 96, trn - 0.2, D, color='#fff')]
+    {loupe}
+{bh}"""
+    caps = [kin('po-k1', 'Il ne devine <span class="t">plus.</span>', 90, 78, t_nf - 0.1, t_loin - 0.1, color='#fff'),
+            kin('po-k2', 'Même <span class="t">de loin.</span>', 90, 78, t_loin - 0.1, t_bon - 0.1, color='#fff'),
+            kin('po-k3', 'Tu peux <span class="t">rentrer.</span>', 260, 110, t_ren - 0.3, D, color='#fff')]
     body += ''.join(b for b, c, j in caps)
     css = ''.join(c for b, c, j in caps) + """
-    #po-clock { position:absolute; left:0; right:0; top:120px; text-align:center; font-size:230px; font-weight:900; color:#fff; font-variant-numeric:tabular-nums; }
+    #po-stage { position:absolute; inset:0; transform-origin:50% 60%; }
+    #po-clock { position:absolute; left:0; right:0; top:110px; text-align:center; color:#fff; }
+    #po-clock div { font-size:230px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
     #po-clock i { font-style:normal; color:#3DF2E6; margin:0 8px; }
-    #po-serge { left:560px; top:700px; height:980px; width:auto; }
-    #po-rep { position:absolute; left:50px; top:330px; width:700px; padding:30px; border-radius:40px; background:#0E1522; border:2px solid rgba(61,242,230,.35); box-shadow:0 40px 100px rgba(0,0,0,.5), 0 0 0 10px rgba(14,21,34,.35); color:#fff; }
+    #po-clock em { display:block; margin-top:10px; font-style:normal; font-size:30px; font-weight:800; letter-spacing:.5em; color:#8FA3B8; }
+    #po-serge { left:-60px; top:640px; height:1180px; width:auto; }
+    #po-arn { left:520px; top:690px; height:1120px; width:auto; }
+    #po-bravo { position:absolute; inset:0; }
+    #po-bw { position:absolute; left:0; right:0; top:330px; text-align:center; font-size:300px; font-weight:900; letter-spacing:-.05em; color:#00D4C8; opacity:.9; }
+    #po-yan { left:230px; top:560px; height:1260px; width:auto; }
+    #po-awa { left:250px; top:1540px; }
+    .po-av { width:64px; height:64px; border-radius:50%; background:#1AA3E8; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:#fff; flex:none; }
+    #po-rep { position:absolute; left:160px; top:240px; width:760px; padding:30px; border-radius:40px; background:#0E1522; border:2px solid rgba(61,242,230,.35); box-shadow:0 40px 100px rgba(0,0,0,.5), 0 0 0 10px rgba(14,21,34,.35); color:#fff; transform-origin:50% 0; }
     .po-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
     .po-hd em { display:block; font-style:normal; font-size:26px; font-weight:700; color:#8FA3B8; } .po-hd b { font-size:40px; font-weight:900; }
     .po-live { display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:20px; background:rgba(45,190,96,.15); color:#3BE07A; font-size:22px; font-weight:800; }
     .po-live i { width:12px; height:12px; border-radius:50%; background:#3BE07A; }
-    .po-sec { margin-top:16px; padding:20px 22px; border-radius:24px; background:#151F2E; border:1px solid rgba(255,255,255,.07); }
-    .po-sec h4 { margin:0 0 12px; font-size:24px; font-weight:800; color:#8FA3B8; letter-spacing:.02em; }
+    .po-sec { position:relative; margin-top:16px; padding:20px 22px; border-radius:24px; background:#151F2E; border:1px solid rgba(255,255,255,.07); }
+    .po-sec h4 { margin:0 0 12px; font-size:24px; font-weight:800; color:#8FA3B8; }
     #po-s1 { display:flex; gap:12px; padding:14px; background:transparent; border:0; }
     .po-k { flex:1; padding:18px; border-radius:20px; background:#151F2E; border:1px solid rgba(255,255,255,.07); }
-    .po-k em { display:block; font-style:normal; font-size:22px; font-weight:700; color:#8FA3B8; } .po-k b { display:block; margin-top:6px; font-size:36px; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .po-k em { display:block; font-style:normal; font-size:22px; font-weight:700; color:#8FA3B8; } .po-k b { display:block; margin-top:6px; font-size:38px; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
     .po-k b.o, .po-inv b.o { color:#FF8A3D; }
-    .po-sl { position:relative; display:flex; align-items:center; gap:16px; padding:10px 0; }
+    .po-sl { position:relative; display:flex; align-items:center; gap:16px; padding:10px 0; transform-origin:30% 50%; }
     .po-sl img { width:64px; height:64px; border-radius:50%; object-fit:cover; background:#0B2235; border:3px solid #22324A; }
-    .po-av { width:64px; height:64px; border-radius:50%; background:#1AA3E8; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:#fff; }
-    .po-sl:first-of-type img { border-color:#3DF2E6; }
+    #po-sl0 img { border-color:#3DF2E6; }
     .po-sn { flex:1; } .po-sn b { display:flex; gap:12px; align-items:baseline; font-size:28px; font-weight:800; } .po-sn em { font-style:normal; font-size:22px; color:#8FA3B8; font-weight:700; }
     .po-bar { margin-top:8px; height:12px; border-radius:6px; background:#22324A; overflow:hidden; } .po-bar i { display:block; height:100%; width:var(--w); background:var(--c); border-radius:6px; transform-origin:left; }
     .po-sl strong { font-size:28px; font-weight:900; font-variant-numeric:tabular-nums; }
     .po-cr { position:absolute; left:36px; top:-8px; padding:3px 10px; border-radius:10px; background:#3DF2E6; color:#04222A; font-size:18px; font-weight:900; }
-    .po-st { display:flex; align-items:center; gap:14px; padding:9px 0; font-size:28px; } .po-st span { width:14px; height:14px; border-radius:50%; } .po-st b { flex:1; font-weight:800; } .po-st em { font-style:normal; font-weight:900; }
+    .po-st { display:flex; align-items:center; gap:14px; padding:9px 0; font-size:28px; transform-origin:20% 50%; } .po-st span { width:14px; height:14px; border-radius:50%; } .po-st b { flex:1; font-weight:800; } .po-st em { font-style:normal; font-weight:900; }
+    .po-tag { position:absolute; right:20px; top:14px; display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:16px; background:#3DF2E6; color:#04222A; font-size:22px; font-weight:900; }
     .po-inv { display:flex; align-items:baseline; gap:10px; } .po-inv b { font-size:52px; font-weight:900; } .po-inv em { font-style:normal; font-size:26px; font-weight:700; color:#8FA3B8; margin-right:18px; }
-    .po-log { margin-top:10px; font-size:24px; font-weight:700; color:#CFE0EE; } .po-log i { font-style:normal; color:#3DF2E6; margin-right:8px; }"""
-    js = ''.join(j for b, c, j in caps) + j1 + j2 + f"""
-    tl.fromTo("#po-clock span", {{ opacity:0, y:-80 }}, {{ opacity:1, y:0, duration:0.6, ease:"expo.out", stagger:0.12 }}, 0.1);
-    tl.fromTo("#po-serge", {{ x:400, opacity:0 }}, {{ x:0, opacity:1, duration:0.8, ease:"expo.out" }}, 0.2);
-    tl.to("#po-clock", {{ opacity:0, y:-60, duration:0.3 }}, {r(tr - 0.3)});
-    tl.fromTo("#po-rep", {{ y:900, rotation:-4, opacity:0 }}, {{ y:0, rotation:0, opacity:1, duration:0.7, ease:"expo.out" }}, {r(tr - 0.25)});
+    .po-log { margin-top:10px; font-size:24px; font-weight:700; color:#CFE0EE; } .po-log i { font-style:normal; color:#FF8A3D; margin-right:8px; font-weight:900; }
+    #po-lp { position:absolute; left:0; top:0; width:250px; height:250px; margin:-125px 0 0 -125px; border-radius:50%; border:10px solid #fff; box-shadow:0 20px 60px rgba(0,0,0,.45), inset 0 0 0 2px rgba(11,31,51,.2); background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.22), rgba(255,255,255,0) 60%); z-index:80; }
+    #po-lp i { position:absolute; left:205px; top:205px; width:110px; height:26px; border-radius:13px; background:#0B1F33; transform:rotate(45deg); transform-origin:0 50%; }"""
+    js = ''.join(j for b, c, j in caps) + bj + f"""
+    tl.fromTo("#po-clock div span", {{ opacity:0, y:-80 }}, {{ opacity:1, y:0, duration:0.6, ease:"expo.out", stagger:0.12 }}, 0.1);
+    tl.fromTo("#po-clock em", {{ opacity:0, letterSpacing:"1.2em" }}, {{ opacity:1, letterSpacing:"0.5em", duration:0.9, ease:"expo.out" }}, {r(t_soir - 0.1)});
+    tl.fromTo("#po-serge", {{ x:-500, opacity:0 }}, {{ x:0, opacity:1, duration:0.9, ease:"expo.out" }}, 0.2);
+    tl.to("#po-clock", {{ opacity:0, y:-80, duration:0.4, ease:"power2.in" }}, {r(t_q1 - 0.3)});
+    tl.fromTo("#po-arn", {{ x:600, opacity:0 }}, {{ x:0, opacity:1, duration:0.9, ease:"expo.out" }}, {r(t_q1 + 0.2)});
+    tl.fromTo("#po-stage", {{ scale:1 }}, {{ scale:1.06, duration:{r(t_a1 - t_q1)}, ease:"sine.inOut" }}, {r(t_q1)});
+    tl.to("#po-stage", {{ scale:0.92, y:260, filter:"blur(6px)", opacity:0.55, duration:0.8, ease:"power3.inOut" }}, {r(t_a1 + 0.3)});
+    tl.fromTo("#po-rep", {{ y:1100, rotation:-5, opacity:0 }}, {{ y:0, rotation:0, opacity:1, duration:0.9, ease:"expo.out" }}, {r(t_a1 + 0.3)});
     tl.set(".po-sec", {{ opacity:0 }}, 0);
-    tl.fromTo(".po-live i", {{ opacity:1 }}, {{ opacity:0.2, duration:0.5, yoyo:true, repeat:{int(D * 1.5)}, ease:"sine.inOut" }}, {r(tr)});"""
-    for sel, t in [('#po-s1', t_sold), ('#po-s2', t_rank), ('#po-s3', t_stock), ('#po-s4', t_inv)]:
+    tl.fromTo(".po-live i", {{ opacity:1 }}, {{ opacity:0.2, duration:0.5, yoyo:true, repeat:{int(D * 1.5)}, ease:"sine.inOut" }}, {r(t_a1)});
+    tl.fromTo("#po-s1", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.5, ease:"expo.out" }}, {r(t_a1 + 1.0)});
+    count("#po-v", 0, 485000, {r(T('Quatre') - 0.1)}, 1.6, "", " F");
+    count("#po-n", 0, 14, {r(T('quatorze'))}, 0.6, "", "");
+    tl.fromTo("#po-s2", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.5, ease:"expo.out" }}, {r(t_q2)});
+    tl.fromTo(".po-bar i", {{ scaleX:0 }}, {{ scaleX:1, duration:0.8, ease:"expo.out", stagger:0.12 }}, {r(t_q2 + 0.3)});
+    tl.fromTo(".po-cr", {{ scale:0 }}, {{ scale:1, duration:0.35, ease:"back.out(2)" }}, {r(t_a2)});
+    tl.fromTo("#po-lp", {{ x:900, y:1300, scale:0.6, opacity:0 }}, {{ x:330, y:640, scale:1, opacity:1, duration:0.7, ease:"expo.out" }}, {r(t_a2)});
+    tl.to("#po-sl0", {{ scale:1.12, duration:0.5, ease:"expo.out" }}, {r(t_a2 + 0.2)});
+    tl.to(["#po-rep", "#po-lp"], {{ x:"-=1200", opacity:0, filter:"blur(8px)", duration:0.6, ease:"power3.in" }}, {r(t_bra - 0.4)});
+    tl.set("#po-sl0", {{ scale:1 }}, {r(t_bra + 0.3)});
+    tl.fromTo("#po-bw", {{ scale:1.6, opacity:0, letterSpacing:"0.1em" }}, {{ scale:1, opacity:0.9, letterSpacing:"-0.05em", duration:0.9, ease:"expo.out" }}, {r(t_bra - 0.2)});
+    tl.fromTo("#po-yan", {{ y:900 }}, {{ y:0, duration:0.9, ease:"expo.out" }}, {r(t_bra - 0.1)});
+    tl.to("#po-yan", {{ scale:1.05, transformOrigin:"50% 20%", duration:{r(t_q3 - t_bra)}, ease:"sine.inOut" }}, {r(t_bra + 0.8)});
+    tl.fromTo("#po-awa", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.6, ease:"expo.out" }}, {r(t_awa)});
+    tl.to("#po-bravo", {{ opacity:0, scale:0.9, filter:"blur(8px)", duration:0.5, ease:"power2.in" }}, {r(t_q3 - 0.1)});
+    tl.to(["#po-rep", "#po-lp"], {{ x:0, opacity:1, filter:"blur(0px)", duration:0.7, ease:"expo.out" }}, {r(t_q3 + 0.15)});
+    tl.set("#po-lp", {{ opacity:0 }}, {r(t_q3 + 0.15)});
+    tl.fromTo("#po-s3", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.5, ease:"expo.out" }}, {r(t_q3 + 0.4)});
+    tl.fromTo(".po-st", {{ x:-40, opacity:0 }}, {{ x:0, opacity:1, duration:0.35, stagger:0.1, ease:"expo.out" }}, {r(t_q3 + 0.5)});
+    tl.fromTo("#po-lp", {{ x:900, y:1400, opacity:0 }}, {{ x:300, y:1020, opacity:1, duration:0.7, ease:"expo.out" }}, {r(t_a3 + 0.3)});
+    tl.to("#po-st0", {{ scale:1.12, duration:0.5, ease:"expo.out" }}, {r(t_a3 + 0.4)});
+    tl.fromTo("#po-fo", {{ scale:0, opacity:0 }}, {{ scale:1, opacity:1, duration:0.4, ease:"back.out(2)" }}, {r(T('fournisseur') - 0.1)});
+    tl.to("#po-st0", {{ scale:1, duration:0.4 }}, {r(t_q4 - 0.3)});
+    tl.fromTo("#po-s4", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.5, ease:"expo.out" }}, {r(t_q4)});
+    tl.to("#po-lp", {{ x:430, y:1240, duration:0.6, ease:"power3.inOut" }}, {r(T('Une', spk='a') - 0.1)});
+    tl.to("#po-lp", {{ x:1300, opacity:0, duration:0.5, ease:"power2.in" }}, {r(t_nf - 0.3)});
+    tl.to("#po-rep", {{ scale:0.86, y:180, duration:1.0, ease:"power3.inOut" }}, {r(t_nf - 0.2)});"""
+    for sel, t in [('#po-s2', t_qv), ('#po-s1', t_qs), ('#po-s3', t_qm)]:
         js += f"""
-    tl.fromTo("{sel}", {{ opacity:0, y:50 }}, {{ opacity:1, y:0, duration:0.45, ease:"expo.out" }}, {r(t)});
-    tl.fromTo("{sel}", {{ boxShadow:"0 0 0 0 rgba(61,242,230,0)" }}, {{ boxShadow:"0 0 0 4px rgba(61,242,230,.55)", duration:0.25, yoyo:true, repeat:1 }}, {r(t + 0.3)});"""
+    tl.fromTo("{sel}", {{ boxShadow:"0 0 0 0 rgba(61,242,230,0)" }}, {{ boxShadow:"0 0 0 5px rgba(61,242,230,.7)", duration:0.3, yoyo:true, repeat:1 }}, {r(t - 0.05)});"""
     js += f"""
-    count("#po-v", 0, 485000, {r(t_sold)}, 1.0, "", " F");
-    tl.fromTo(".po-bar i", {{ scaleX:0 }}, {{ scaleX:1, duration:0.7, ease:"expo.out", stagger:0.12 }}, {r(t_rank + 0.15)});
-    tl.fromTo(".po-cr", {{ scale:0 }}, {{ scale:1, duration:0.35, ease:"back.out(2)" }}, {r(t_rank + 0.6)});
-    tl.fromTo(".po-st", {{ x:-40, opacity:0 }}, {{ x:0, opacity:1, duration:0.35, stagger:0.1, ease:"expo.out" }}, {r(t_stock + 0.1)});
-    tl.to("#po-serge", {{ x:700, opacity:0, duration:0.9, ease:"power2.in" }}, {r(trn + 0.3)});
-    tl.to("#po-rep", {{ y:-40, opacity:0, duration:0.4 }}, {r(D - 0.45)});"""
+    tl.to("#po-rep", {{ scale:0.5, y:-120, x:150, opacity:0.0, duration:0.8, ease:"power3.inOut" }}, {r(t_bon - 0.5)});
+    tl.to("#po-stage", {{ scale:1, y:0, filter:"blur(0px)", opacity:1, duration:0.8, ease:"power3.out" }}, {r(t_bon - 0.5)});
+    tl.to("#po-arn", {{ x:700, opacity:0, duration:0.8, ease:"power2.in" }}, {r(t_bon - 0.5)});
+    tl.to("#po-serge", {{ x:260, duration:1.0, ease:"power3.inOut" }}, {r(t_bon - 0.4)});
+    tl.to("#po-stage", {{ scale:1.08, duration:{r(D - t_oui)}, ease:"sine.inOut" }}, {r(t_oui)});
+    tl.to("#po-serge", {{ x:900, opacity:0, duration:0.9, ease:"power2.in" }}, {r(t_ren + 0.4)});"""
     write('payoff', scene('payoff', body, css, js))
 
 
 # ------------------------------------------------------------------ H. yours: your rules, your roles, your brand
 def build_perso():
-    S, E = W('BG-MARKET-GESTION,', 1, 80) - 0.3, W('Derrière') - 0.15
+    S, E = W('BG-MARKET-GESTION,', 1, 155) - 0.3, W('Derrière') - 0.15
     L, D = host('perso', S, E)
     mk = phone('ps-mk', 0.98, B.generic_app('gx'), 'left:328px;top:460px;')
     trades = [('store', 'Boutique', TEAL, 'Boutique'), ('pill', 'Pharmacie', GREEN, 'pharmacie'), ('utensils', 'Restaurant', '#E0A100', 'restaurant'), ('cart', 'Supermarché', ORANGE, 'supermarché')]
@@ -596,13 +664,13 @@ def build_perso():
     chips = [('Vos règles', 'règles,'), ('Vos rôles', 'rôles…'), ('Votre marque', 'marque.')]
     ch = ''.join(f'<div class="ps-c" id="ps-c{i}">{n}</div>' for i, (n, w) in enumerate(chips))
     body = f'''    <div id="ps-mkw" class="clip" data-start="{r(L(W('vôtre')) - 0.2)}" data-duration="{r(D - L(W('vôtre')) + 0.2)}">{mk}<div id="ps-lab">Maquette d'illustration</div></div>
-    <div id="ps-tw" class="clip" data-start="{r(L(W('Boutique', 1, 88)) - 0.2)}" data-duration="{r(D - L(W('Boutique', 1, 88)) + 0.2)}">{tiles}</div>
-    <div id="ps-cw" class="clip" data-start="{r(L(W('règles,')) - 0.2)}" data-duration="{r(L(W('Boutique', 1, 88)) - L(W('règles,')) + 0.3)}">{ch}</div>
+    <div id="ps-tw" class="clip" data-start="{r(L(W('Boutique', 1, 155)) - 0.2)}" data-duration="{r(D - L(W('Boutique', 1, 155)) + 0.2)}">{tiles}</div>
+    <div id="ps-cw" class="clip" data-start="{r(L(W('règles,')) - 0.2)}" data-duration="{r(L(W('Boutique', 1, 155)) - L(W('règles,')) + 0.3)}">{ch}</div>
     <div id="ps-au" class="clip chip" data-start="{r(L(W("l'audit")) - 0.2)}" data-duration="{r(D - L(W("l'audit")) + 0.2)}">{ic('clip', 36, TEAL_D)} 1. Audit <span style="color:#9AA8B8">→</span> {ic('phone', 36, ORANGE)} 2. Votre application</div>
 '''
     caps = [kin('ps-k1', 'L\'application <span class="t">de notre boutique.</span>', 220, 62, 0.3, L(W('vôtre')) - 0.1, weight=800),
-            kin('ps-k2', 'La vôtre ?', 200, 110, L(W('vôtre')) - 0.1, L(W('Boutique', 1, 88)) - 0.1),
-            kin('ps-k3', 'On la construit <span class="o">pour vous.</span>', 200, 76, L(W('construit', 1, 92)) - 0.3, D)]
+            kin('ps-k2', 'La vôtre ?', 200, 110, L(W('vôtre')) - 0.1, L(W('Boutique', 1, 155)) - 0.1),
+            kin('ps-k3', 'On la construit <span class="o">pour vous.</span>', 200, 76, L(W('construit', 1, 155)) - 0.3, D)]
     body += ''.join(b for b, c, j in caps)
     css = ''.join(c for b, c, j in caps) + '''
     #ps-mkw, #ps-tw, #ps-cw { position:absolute; inset:0; }
@@ -623,9 +691,9 @@ def build_perso():
     tl.fromTo("#ps-mk", {{ y:900, rotation:6 }}, {{ y:0, rotation:0, duration:0.8, ease:"expo.out" }}, {r(L(W('vôtre')) - 0.2)});'''
     for i, (n, w) in enumerate(chips):
         js += f'\n    tl.fromTo("#ps-c{i}", {{ x:-400, opacity:0 }}, {{ x:0, opacity:1, duration:0.4, ease:"expo.out" }}, {r(L(W(w)) - 0.15)});'
-    js += f'\n    tl.to("#ps-cw", {{ opacity:0, x:-200, duration:0.3 }}, {r(L(W("Boutique", 1, 88)) - 0.2)});'
+    js += f'\n    tl.to("#ps-cw", {{ opacity:0, x:-200, duration:0.3 }}, {r(L(W("Boutique", 1, 155)) - 0.2)});'
     for i, (k, n, c, w) in enumerate(trades):
-        t0 = L(W(w, 1, 88)) - 0.1
+        t0 = L(W(w, 1, 155)) - 0.1
         dx = -420 if i % 2 == 0 else 420
         js += f'''
     tl.fromTo("#ps-t{i}", {{ x:{dx}, rotation:{-10 if i % 2 == 0 else 10}, opacity:0 }}, {{ x:0, rotation:{-3 if i % 2 == 0 else 3}, opacity:1, duration:0.7, ease:"expo.out" }}, {r(t0)});
@@ -633,7 +701,7 @@ def build_perso():
     tl.fromTo("#ps-t{i} .ps-gl", {{ x:-160 }}, {{ x:340, duration:0.8, ease:"power2.inOut" }}, {r(t0 + 0.45)});
     tl.to("#ps-t{i}", {{ y:-10, duration:1.4, yoyo:true, repeat:1, ease:"sine.inOut" }}, {r(t0 + 0.7)});'''
     for i, col in enumerate(['#FF3B6B', '#2DBE60', '#E0A100', '#FF6208', '#00A8E8']):
-        js += f'\n    tl.set("#ps-mk", {{ "--acc":"{col}" }}, {r(L(W("Boutique", 1, 88)) + i * 0.5)});'
+        js += f'\n    tl.set("#ps-mk", {{ "--acc":"{col}" }}, {r(L(W("Boutique", 1, 155)) + i * 0.5)});'
     js += f'''
     tl.fromTo("#ps-au", {{ y:60, opacity:0 }}, {{ y:0, opacity:1, duration:0.45, ease:"expo.out" }}, {r(L(W("l'audit")) - 0.2)});
     tl.to(["#ps-mkw", "#ps-tw", "#ps-au", "#ps-k3"], {{ opacity:0, y:-60, duration:0.35, ease:"power2.in" }}, {r(D - 0.38)});'''
@@ -642,7 +710,7 @@ def build_perso():
 
 # ------------------------------------------------------------------ I. founder
 def build_founder():
-    S, E = W('Derrière') - 0.2, W('Et', 1, 97.5) - 0.1
+    S, E = W('Derrière') - 0.2, W('Et', 1, W('fondateur.')) - 0.1
     L, D = host('founder', S, E)
     tn = L(W('Gnohité'))
     body = f'''    <div id="fd-man" class="clip" data-start="0" data-duration="{D}"><div id="fd-ring"></div><img src="assets/people/founder_round.jpg" alt="Gnohité Djôlo, fondateur de BG-MARKET" /></div>
@@ -664,7 +732,7 @@ def build_founder():
 
 # ------------------------------------------------------------------ J. the question to you + end card
 def build_end():
-    S = W('Et', 1, 97.5) - 0.15
+    S = W('Et', 1, W('fondateur.')) - 0.15
     L, D = host('end', S, DUR)
     tw = L(W('Écrivez-nous'))
     body = f'''    <div id="en-q" class="clip cap big" data-start="0.1" data-duration="{r(tw - 0.05)}"><span class="w">Et vous…</span><br><span class="w">ce soir, vous savez</span><br><span class="w o">combien</span><br><span class="w o">vous avez vendu ?</span></div>
@@ -760,10 +828,10 @@ def plan_sfx():
         if HOSTS[n][0] > 0.5:
             s.append(('soft_whoosh', HOSTS[n][0] - 0.25, 0.45))
     s += [('notif', W('WhatsApp') + 0.1, 0.35), ('paper', W('cahier') - 0.1, 0.5), ('tap', W('caisse'), 0.4),
-          ('notif', W('Yannick', 1, 22, 's') + 1.6, 0.3), ('paper', W('trois') + 0.6, 0.45), ('riser_impact', W('Voici') + 0.3, 0.3),
+          ('notif', W('Yannick', 1, 30, 's') + 1.6, 0.3), ('paper', W('trois') + 0.6, 0.45), ('riser_impact', W('Voici') + 0.3, 0.3),
           ('tap', W('plus'), 0.55), ('typing', W('client,'), 0.4), ('typing', W('téléphone,'), 0.35), ('success', W('prix.') + 0.45, 0.45),
-          ('tap', W('WhatsApp.', 1, 52) + 0.2, 0.5), ('success', W('solde.') + 0.3, 0.45), ('notif', W('prévient'), 0.45),
-          ('tap', W('valide') - 0.05, 0.5), ('success', W('valide'), 0.4), ('success', W('réponse') + 0.9, 0.5), ('success', W('Écrivez-nous') + 0.5, 0.4)]
+          ('tap', W('WhatsApp.', 1, 60) + 0.2, 0.5), ('success', W('solde.') + 0.3, 0.45), ('notif', W('prévient'), 0.45),
+          ('tap', W('valide') - 0.05, 0.5), ('success', W('valide'), 0.4), ('success', W('Tout', 1, 108, 'a') + 1.3, 0.5), ('tap', W('Yannick.', 1, 108, 'a') + 0.1, 0.4), ('success', W('Bravo,') , 0.5), ('notif', W('reste', 1, 108, 'a') + 0.6, 0.4), ('success', W('prévenu.') - 0.2, 0.4), ('tap', W('Treize') + 0.1, 0.4), ('success', W('Écrivez-nous') + 0.5, 0.4)]
     return s
 
 

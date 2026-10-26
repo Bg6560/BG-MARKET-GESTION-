@@ -163,8 +163,8 @@
     #fd-plate span { display:block; margin-top:6px; font-size:42px; font-weight:800; color:#FF6208; }
   </style>
   <div id="root" data-composition-id="founder" data-width="1080" data-height="1920">
-    <div id="fd-man" class="clip" data-start="0" data-duration="3.13"><div id="fd-ring"></div><img src="assets/people/founder_round.jpg" alt="Gnohité Djôlo, fondateur de BG-MARKET" /></div>
-    <div id="fd-plate" class="clip card" data-start="1.22" data-duration="1.91"><b>GNOHITÉ DJÔLO</b><span>Fondateur de BG-MARKET</span></div>
+    <div id="fd-man" class="clip" data-start="0" data-duration="5.16"><div id="fd-ring"></div><img src="assets/people/founder_round.jpg" alt="Gnohité Djôlo, fondateur de BG-MARKET" /></div>
+    <div id="fd-plate" class="clip card" data-start="2.23" data-duration="2.93"><b>GNOHITÉ DJÔLO</b><span>Fondateur de BG-MARKET</span></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -174,9 +174,9 @@
     const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
 
     tl.fromTo("#fd-man", { opacity:0, scale:0.6 }, { opacity:1, scale:1, duration:0.8, ease:"expo.out" }, 0.0);
-    tl.fromTo("#fd-ring", { rotation:0 }, { rotation:160, duration:3.13, ease:"none" }, 0.0);
-    tl.fromTo("#fd-plate", { y:150, opacity:0 }, { y:0, opacity:1, duration:0.5, ease:"expo.out" }, 1.22);
-    tl.to(["#fd-man", "#fd-plate"], { opacity:0, scale:0.9, duration:0.35, ease:"power2.in" }, 2.75);
+    tl.fromTo("#fd-ring", { rotation:0 }, { rotation:160, duration:5.16, ease:"none" }, 0.0);
+    tl.fromTo("#fd-plate", { y:150, opacity:0 }, { y:0, opacity:1, duration:0.5, ease:"expo.out" }, 2.23);
+    tl.to(["#fd-man", "#fd-plate"], { opacity:0, scale:0.9, duration:0.35, ease:"power2.in" }, 4.78);
     window.__timelines["founder"] = tl;
   </script>
 </template>
