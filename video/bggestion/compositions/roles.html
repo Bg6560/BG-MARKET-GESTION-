@@ -159,9 +159,9 @@
     .rl-c b { display:block; font-size:50px; font-weight:900; margin-top:6px; } .rl-c span { display:block; font-size:28px; color:#9FB0C2; margin-top:8px; font-weight:600; }
   </style>
   <div id="root" data-composition-id="roles" data-width="1080" data-height="1920">
-    <div id="rl-wrap" class="clip" data-start="0" data-duration="2.85"><div class="rl-c" id="rl-c0" style="top:560px;border-color:#00D4C8"><img src="assets/people/employe_face.png" style="border-color:#00D4C8" alt="" /><div><em style="color:#00D4C8">Employé</em><b>Yannick K.</b><span>Vend · suit ses propres ventes</span></div></div><div class="rl-c" id="rl-c1" style="top:940px;border-color:#3B9BFF"><img src="assets/people/admin_face.png" style="border-color:#3B9BFF" alt="" /><div><em style="color:#3B9BFF">Administrateur</em><b>Arnaud B.</b><span>Valide · stock · fournisseurs</span></div></div><div class="rl-c" id="rl-c2" style="top:1320px;border-color:#FF6208"><img src="assets/people/founder_round.jpg" style="border-color:#FF6208" alt="" /><div><em style="color:#FF6208">Patron</em><b>Gnohité Djôlo</b><span>Voit tout · décide des droits</span></div></div></div>
-    <div id="rl-k1" class="clip cap big" data-start="0.73" data-duration="2.12"><span class="w">Chacun </span><span class="w">voit </span></div>
-    <div id="rl-k2" class="clip cap big" data-start="1.51" data-duration="1.34"><span class="w"><span class="t">ce qu'il doit voir.</span> </span></div>
+    <div id="rl-wrap" class="clip" data-start="0" data-duration="3.26"><div class="rl-c" id="rl-c0" style="top:560px;border-color:#00D4C8"><img src="assets/people/employe_face.png" style="border-color:#00D4C8" alt="" /><div><em style="color:#00D4C8">Employé</em><b>Yannick K.</b><span>Vend · suit ses propres ventes</span></div></div><div class="rl-c" id="rl-c1" style="top:940px;border-color:#3B9BFF"><img src="assets/people/admin_face.png" style="border-color:#3B9BFF" alt="" /><div><em style="color:#3B9BFF">Administrateur</em><b>Arnaud B.</b><span>Valide · stock · fournisseurs</span></div></div><div class="rl-c" id="rl-c2" style="top:1320px;border-color:#FF6208"><img src="assets/people/founder_round.jpg" style="border-color:#FF6208" alt="" /><div><em style="color:#FF6208">Patron</em><b>Gnohité Djôlo</b><span>Voit tout · décide des droits</span></div></div></div>
+    <div id="rl-k1" class="clip cap big" data-start="0.73" data-duration="2.53"><span class="w">Chacun </span><span class="w">voit </span></div>
+    <div id="rl-k2" class="clip cap big" data-start="1.51" data-duration="1.75"><span class="w"><span class="t">ce qu'il doit voir.</span> </span></div>
 
   </div>
   <script>
@@ -171,13 +171,13 @@
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
     const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
     tl.fromTo("#rl-k1 .w", { opacity:0, y:55, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.73);
-    tl.to("#rl-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.53);
+    tl.to("#rl-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.94);
     tl.fromTo("#rl-k2 .w", { opacity:0, y:42, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 1.51);
-    tl.to("#rl-k2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.53);
+    tl.to("#rl-k2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.94);
 
     tl.fromTo(".rl-c", { x:1100, opacity:0 }, { x:0, opacity:1, duration:0.6, ease:"expo.out", stagger:0.35 }, 0.25);
-    tl.to("#rl-c1, #rl-c2", { opacity:0.3, x:-200, duration:0.4, ease:"power2.in" }, 2.35);
-    tl.to("#rl-c0", { scale:1.15, opacity:0, y:300, duration:0.45, ease:"power2.in" }, 2.4);
+    tl.to("#rl-c1, #rl-c2", { opacity:0.3, x:-200, duration:0.4, ease:"power2.in" }, 2.76);
+    tl.to("#rl-c0", { scale:1.15, opacity:0, y:300, duration:0.45, ease:"power2.in" }, 2.81);
     window.__timelines["roles"] = tl;
   </script>
 </template>

@@ -9,6 +9,30 @@ OUT = os.path.join(ROOT, 'compositions')
 V0 = 4.5
 WORDS = [w for w in json.load(open(os.path.join(ROOT, 'assets/audio/words.json')))['words'] if w['type'] == 'word' and not w['text'].startswith('[') and not w['text'].endswith(']')]
 VO_END = V0 + WORDS[-1]['end']
+
+
+def _anchors():
+    import difflib
+    old = [w for w in json.load(open(os.path.join(ROOT, 'assets/audio/words_take2.json')))['words'] if w['type'] == 'word' and not w['text'].startswith('[') and not w['text'].endswith(']')]
+    nz = lambda x: x.lower().strip('…,.?!:;«» ')
+    a, b = [nz(w['text']) for w in old], [nz(w['text']) for w in WORDS]
+    pts = [(0.0, 0.0)]
+    for blk in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks():
+        for k in range(blk.size):
+            pts.append((V0 + old[blk.a + k]['start'], V0 + WORDS[blk.b + k]['start']))
+    pts.append((V0 + old[-1]['end'] + 30, V0 + WORDS[-1]['end'] + 30))
+    return sorted(set(pts))
+
+
+ANCH = _anchors()
+
+
+def M(t):
+    """Map a film time authored against the first voice take to the current voice."""
+    for (x0, y0), (x1, y1) in zip(ANCH, ANCH[1:]):
+        if x0 <= t <= x1:
+            return round(y0 + (t - x0) * (y1 - y0) / max(x1 - x0, 1e-6), 2)
+    return round(t, 2)
 DUR = round(VO_END + 5.6, 2)
 
 
@@ -17,8 +41,9 @@ def norm(x):
 
 
 def W(word, n=1, after=0.0):
-    """Film time of the n-th spoken word starting with `word` (after film time `after`)."""
+    """Film time of the n-th spoken word starting with `word` (after film time `after`, authored on the first take)."""
     k = 0
+    after = M(after)
     for w in WORDS:
         t = V0 + w['start']
         if t < after:
@@ -342,8 +367,9 @@ HOSTS = {}
 
 
 def host(name, s, e):
+    s, e = M(s), (e if e == DUR else M(e))
     HOSTS[name] = (r(s), r(e))
-    return lambda t: r(t - s)
+    return lambda t: r(t - s), r(e - s)
 
 
 # ---------- background (whole film)
@@ -373,7 +399,7 @@ def build_bg():
 
 # ---------- 0. logo intro
 def build_intro():
-    L = host('intro', 0, 5.0)
+    L, HD = host('intro', 0, 5.0)
     body = '''    <video id="in-logo" class="clip" data-start="0" data-duration="5.0" src="assets/brand/logo_anim.webm" muted playsinline></video>'''
     css = '#in-logo { position:absolute; left:0; top:656px; width:1080px; height:608px; }'
     js = '''
@@ -385,7 +411,7 @@ def build_intro():
 # ---------- 1. hook: morphing tile (unique businesses) -> phone outline
 def build_hook():
     S = 4.5
-    L = host('hook', S, 11.15)
+    L, HD = host('hook', S, 11.15)
     icons = ['store', 'pill', 'utensils', 'cart', 'bag', 'phone']
     ico = ''.join(f'<div class="hk-i" id="hk-i{i}">{ic(n, 150, "#fff", 1.6)}</div>' for i, n in enumerate(icons))
     b1, c1, j1 = kin('hk-l1', 'Votre activité…', 250, 96, L(W('Votre')), L(W('Alors')) + 0.2)
@@ -426,7 +452,7 @@ def build_hook():
 # ---------- 2. the need: notebook / WhatsApp / stock chaos
 def build_besoin():
     S = 11.0
-    L = host('besoin', S, 21.6)
+    L, HD = host('besoin', S, 21.6)
     note = '''<div class="bs-tag">Ventes notées dans un cahier</div>
       <div class="nb-line"><s>12/10 Galaxy A16 ........ 95 000</s></div><div class="nb-line">13/10 iPhone 11 ..... 140 000 (avance ?)</div>
       <div class="nb-line">14/10 Écouteurs x2 ........ ??? </div><div class="nb-line">15/10 Client Koffi — payé ? </div><div class="nb-line">Total semaine = ...... </div>'''
@@ -476,18 +502,18 @@ def build_besoin():
 # ---------- 3. reveal: BG-MARKET -> BG-MARKET-GESTION -> devices
 def build_reveal():
     S = 21.5
-    L = host('reveal', S, 31.55)
+    L, HD = host('reveal', S, 31.55)
     tv = L(W('Voici'))
     tdev = L(W('téléphone'))
     b1, c1, j1 = kin('rv-l1', 'On a commencé… <span class="t">par nous-mêmes.</span>', 980, 64, L(W('on', 1, 22)), r(tv + 0.1), weight=800)
-    b2, c2, j2 = kin('rv-l2', 'L\'application qui organise <span class="o">notre boutique</span>', 560, 50, L(W("L'application")), 10.05, weight=700)
+    b2, c2, j2 = kin('rv-l2', 'L\'application qui organise <span class="o">notre boutique</span>', 560, 50, L(W("L'application")), HD, weight=700)
     devices = (phone('rv-ph', 0.56, dash_phone('rvp'), 'left:770px;top:1250px;') +
                tablet('rv-tb', 0.37, mini_dk('rvt'), 'left:60px;top:1390px;') +
                laptop('rv-lp', 0.64, mini_dk('rvl'), 'left:104px;top:700px;'))
-    body = f'''    <img id="rv-logo" class="clip" data-start="{L(W('Chez')) - 0.1}" data-duration="{r(10.05 - L(W('Chez')) + 0.1)}" src="assets/brand/logo_bg_market.png" alt="BG MARKET" />
-    <div id="rv-ttl" class="clip cap big" data-start="{tv}" data-duration="{r(10.05 - tv)}"><span class="w">BG-MARKET</span><br><span class="w o" id="rv-g">GESTION</span></div>
+    body = f'''    <img id="rv-logo" class="clip" data-start="{L(W('Chez')) - 0.1}" data-duration="{r(HD - L(W('Chez')) + 0.1)}" src="assets/brand/logo_bg_market.png" alt="BG MARKET" />
+    <div id="rv-ttl" class="clip cap big" data-start="{tv}" data-duration="{r(HD - tv)}"><span class="w">BG-MARKET</span><br><span class="w o" id="rv-g">GESTION</span></div>
 {b1}{b2}
-    <div id="rv-dev" class="clip" data-start="{r(tdev - 0.2)}" data-duration="{r(10.05 - tdev + 0.2)}">{devices}
+    <div id="rv-dev" class="clip" data-start="{r(tdev - 0.2)}" data-duration="{r(HD - tdev + 0.2)}">{devices}
       <div class="rv-dl" id="rv-d1" style="left:800px;top:1795px">Téléphone</div><div class="rv-dl" id="rv-d2" style="left:180px;top:1745px">Tablette</div><div class="rv-dl" id="rv-d3" style="left:430px;top:1270px">Ordinateur</div></div>'''
     css = c1 + c2 + '''
     #rv-logo { position:absolute; left:110px; top:560px; width:860px; height:auto; }
@@ -505,8 +531,8 @@ def build_reveal():
     tl.from("#rv-d1", {{ opacity:0, y:20, duration:0.3 }}, {r(tdev + 0.3)});
     tl.from("#rv-d2", {{ opacity:0, y:20, duration:0.3 }}, {r(L(W('tablette')) + 0.3)});
     tl.from("#rv-d3", {{ opacity:0, y:20, duration:0.3 }}, {r(L(W('ordinateur')) + 0.3)});
-    tl.to("#rv-dev", {{ opacity:0, scale:1.15, filter:"blur(14px)", duration:0.4, ease:"power2.in" }}, 9.65);
-    tl.to(["#rv-ttl"], {{ opacity:0, y:-60, duration:0.35, ease:"power2.in" }}, 9.65);'''
+    tl.to("#rv-dev", {{ opacity:0, scale:1.15, filter:"blur(14px)", duration:0.4, ease:"power2.in" }}, {r(HD - 0.4)});
+    tl.to(["#rv-ttl"], {{ opacity:0, y:-60, duration:0.35, ease:"power2.in" }}, {r(HD - 0.4)});'''
     write('reveal', scene('reveal', body, css, js))
 
 
@@ -533,7 +559,7 @@ def precommande_screen(p):
 # ---------- 4+5. phone: dashboard tour, sale, invoice, pre-order
 def build_phone():
     S = 31.4
-    L = host('phone', S, 53.05)
+    L, HD = host('phone', S, 53.05)
     s = 1.42
     p = 'pd'
     taps = ''.join(f'<div class="tap" id="{p}tap{i}" style="left:{x}px;top:{y}px"></div>' for i, (x, y) in enumerate([(195, 792), (100, 545), (195, 712), (195, 712)]))
@@ -563,9 +589,9 @@ def build_phone():
     caps.append(kin('pd-c5', 'Une vente,', 200, 104, L(W('Un', 1, 40)), tinv - 0.1))
     caps.append(kin('pd-c6', 'Client · <span class="t">Téléphone</span> · <span class="o">Prix</span>', 340, 62, L(W('client,')), tinv - 0.1, weight=800))
     caps.append(kin('pd-c7', 'La facture <span class="o">suit…</span>', 230, 96, tinv, tpre - 0.05))
-    caps.append(kin('pd-c8', 'Précommandes', 190, 100, tpre, 21.65))
-    caps.append(kin('pd-c9', 'Chaque acompte, <span class="t">jusqu\'au solde.</span>', 320, 60, L(W('garde')), 21.65, weight=800))
-    body = f'''    <div id="pd-wrap" class="clip" data-start="0" data-duration="21.65">{ph}</div>
+    caps.append(kin('pd-c8', 'Précommandes', 190, 100, tpre, HD))
+    caps.append(kin('pd-c9', 'Chaque acompte, <span class="t">jusqu\'au solde.</span>', 320, 60, L(W('garde')), HD, weight=800))
+    body = f'''    <div id="pd-wrap" class="clip" data-start="0" data-duration="{HD}">{ph}</div>
     {w1}{w2}{inv}{btns}{share}
 ''' + ''.join(b for b, c, j in caps)
     css = ''.join(c for b, c, j in caps) + '''
@@ -662,27 +688,27 @@ def build_phone():
     count("#{p}pr", 200000, 0, {L(W('solde.'))}, 0.7, "", " F");
     tl.to("#{p}ptag", {{ opacity:0, duration:0.2 }}, {L(W('solde.')) + 0.4});
     tl.to("#{p}ptag2", {{ opacity:1, duration:0.2 }}, {L(W('solde.')) + 0.4});
-    tl.to("#pd-phone", {{ scale:0.5, y:-300, opacity:0, filter:"blur(12px)", duration:0.5, ease:"power3.in" }}, 21.15);'''
+    tl.to("#pd-phone", {{ scale:0.5, y:-300, opacity:0, filter:"blur(12px)", duration:0.5, ease:"power3.in" }}, {r(HD - 0.5)});'''
     write('phone', scene('phone', body, css, js))
 
 
 # ---------- 6. follow-up: SAV / stock / suppliers widget grid
 def build_suivi():
     S = 52.95
-    L = host('suivi', S, 62.05)
+    L, HD = host('suivi', S, 62.05)
     steps = ['Déposé', 'En réparation', 'Prêt', 'Restitué']
     st = ''.join(f'<div class="sv-n" id="sv-n{i}"><i>{ic("check", 26, "#04222A", 3.2)}</i><span>{n}</span></div>' for i, n in enumerate(steps))
     tsav = L(W('SAV'))
     tst = L(W('stock', 1, 56))
     tfo = L(W('fournisseurs', 1, 58))
-    body = f'''    <div id="sv-a" class="clip glass sv-t" data-start="{r(tsav - 0.2)}" data-duration="{r(9.1 - tsav + 0.2)}">
+    body = f'''    <div id="sv-a" class="clip glass sv-t" data-start="{r(tsav - 0.2)}" data-duration="{r(HD - tsav + 0.2)}">
       <div class="sv-h"><span class="sv-ic" style="background:rgba(245,192,74,.15);color:#F5C04A">{ic('wrench', 34)}</span><div><b>SAV-034 · Mariam Diallo</b><em>Tecno Spark 20 · Écran fissuré</em></div><span class="sv-tag" id="sv-tag">Déposé</span></div>
       <div class="sv-st"><div class="sv-line"><i id="sv-fill"></i></div>{st}</div></div>
-    <div id="sv-b" class="clip glass sv-t" data-start="{r(tst - 0.2)}" data-duration="{r(9.1 - tst + 0.2)}">
+    <div id="sv-b" class="clip glass sv-t" data-start="{r(tst - 0.2)}" data-duration="{r(HD - tst + 0.2)}">
       <div class="sv-h"><span class="sv-ic" style="background:rgba(255,98,8,.15);color:#FF8A3D">{ic('alert', 34)}</span><div><b>Stock bas</b><em>Seuil d'alerte : 2</em></div></div>
       <div class="sv-r">Samsung Galaxy A16 128 Go <span class="tg o">1 restant</span></div><div class="sv-r">iPhone 14 128 Go <span class="tg r">Rupture</span></div></div>
-    <div id="sv-bell" class="clip glass" data-start="{r(tst - 0.1)}" data-duration="{r(9.1 - tst + 0.1)}"><div id="sv-bi">{ic('bell', 84, '#fff', 1.8)}</div><b>2</b></div>
-    <div id="sv-c" class="clip glass sv-t" data-start="{r(tfo - 0.25)}" data-duration="{r(9.1 - tfo + 0.25)}">
+    <div id="sv-bell" class="clip glass" data-start="{r(tst - 0.1)}" data-duration="{r(HD - tst + 0.1)}"><div id="sv-bi">{ic('bell', 84, '#fff', 1.8)}</div><b>2</b></div>
+    <div id="sv-c" class="clip glass sv-t" data-start="{r(tfo - 0.25)}" data-duration="{r(HD - tfo + 0.25)}">
       <div class="sv-h"><span class="sv-ic" style="background:rgba(0,212,200,.15);color:#00D4C8">{ic('factory', 34)}</span><div><b>Prix fournisseurs</b><em>Samsung Galaxy A56 · 256 Go</em></div><span class="sv-an" id="sv-an">Analyser</span></div>
       <div class="sv-body"><div class="sv-paste" id="sv-paste">Galaxy A56 256Go - 228.000<br>A56 256 Go : 221k<br>Galaxy A56 256Go | 226 500 F</div>
       <div class="sv-fr" id="sv-f0"><span>Fournisseur Plateau</span><b>228 000 F</b></div>
@@ -692,7 +718,7 @@ def build_suivi():
 '''
     caps = [kin('sv-k1', 'Le SAV, <span class="t">étape par étape.</span>', 160, 70, tsav, tst - 0.05),
             kin('sv-k2', 'Le stock <span class="o">vous prévient.</span>', 160, 70, tst, tfo - 0.05),
-            kin('sv-k3', 'Le meilleur prix <span class="t">fournisseur.</span>', 160, 66, tfo, 9.1)]
+            kin('sv-k3', 'Le meilleur prix <span class="t">fournisseur.</span>', 160, 66, tfo, HD)]
     body += ''.join(b for b, c, j in caps)
     css = ''.join(c for b, c, j in caps) + '''
     .sv-t { position:absolute; left:60px; width:960px; padding:30px 34px; }
@@ -751,21 +777,21 @@ def build_suivi():
     tl.from("#sv-best", {{ scale:0, duration:0.4, ease:"back.out(3)" }}, {r(L(W('meilleur.', 1, 61)))});
     tl.to("#sv-f1", {{ boxShadow:"0 0 40px rgba(0,212,200,.55)", duration:0.4, yoyo:true, repeat:1 }}, {r(L(W('meilleur.', 1, 61)))});
     tl.to("#sv-mg", {{ opacity:1, duration:0.4 }}, {r(L(W('meilleur.', 1, 61)) + 0.2)});
-    tl.to(["#sv-a", "#sv-b", "#sv-bell", "#sv-c"], {{ opacity:0, y:-80, filter:"blur(10px)", duration:0.4, stagger:0.05, ease:"power2.in" }}, 8.6);'''
+    tl.to(["#sv-a", "#sv-b", "#sv-bell", "#sv-c"], {{ opacity:0, y:-80, filter:"blur(10px)", duration:0.4, stagger:0.05, ease:"power2.in" }}, {r(HD - 0.5)});'''
     write('suivi', scene('suivi', body, css, js))
 
 
 # ---------- 7. roles intro
 def build_roles():
     S = 61.95
-    L = host('roles', S, 64.8)
+    L, HD = host('roles', S, 64.8)
     people = [('employe', 'Employé', 'Yannick K.', 'Vend · suit ses propres ventes', TEAL), ('admin', 'Administrateur', 'Arnaud B.', 'Valide · stock · fournisseurs', '#3B9BFF'),
               ('founder_r', 'Patron', 'Gnohité Djôlo', 'Voit tout · décide des droits', ORANGE)]
     cards = ''.join(f'<div class="rl-c" id="rl-c{i}" style="top:{560 + i * 380}px;border-color:{c}"><img src="assets/people/{'founder_round.jpg' if n == 'founder_r' else n + '_face.png'}" style="border-color:{c}" alt="" />'
                     f'<div><em style="color:{c}">{role}</em><b>{nm}</b><span>{d}</span></div></div>' for i, (n, role, nm, d, c) in enumerate(people))
-    b1, c1, j1 = kin('rl-k1', 'Chacun voit', 190, 110, L(W('chacun')) - 0.3, 2.85)
-    b2, c2, j2 = kin('rl-k2', '<span class="t">ce qu\'il doit voir.</span>', 320, 84, L(W('voit', 1, 63)), 2.85)
-    body = f'    <div id="rl-wrap" class="clip" data-start="0" data-duration="2.85">{cards}</div>\n' + b1 + b2
+    b1, c1, j1 = kin('rl-k1', 'Chacun voit', 190, 110, L(W('chacun')) - 0.3, HD)
+    b2, c2, j2 = kin('rl-k2', '<span class="t">ce qu\'il doit voir.</span>', 320, 84, L(W('voit', 1, 63)), HD)
+    body = f'    <div id="rl-wrap" class="clip" data-start="0" data-duration="{HD}">{cards}</div>\n' + b1 + b2
     css = c1 + c2 + '''
     #rl-wrap { position:absolute; inset:0; }
     .rl-c { position:absolute; left:80px; width:920px; height:320px; border-radius:36px; border:2px solid; background:linear-gradient(180deg,rgba(20,32,48,.9),rgba(9,14,24,.92)); display:flex; align-items:center; gap:40px; padding:0 40px; box-shadow:0 30px 60px rgba(0,0,0,.45); }
@@ -774,30 +800,30 @@ def build_roles():
     .rl-c b { display:block; font-size:50px; font-weight:900; margin-top:6px; } .rl-c span { display:block; font-size:28px; color:#9FB0C2; margin-top:8px; font-weight:600; }'''
     js = j1 + j2 + '''
     tl.fromTo(".rl-c", { x:1100, opacity:0 }, { x:0, opacity:1, duration:0.6, ease:"expo.out", stagger:0.35 }, 0.25);
-    tl.to("#rl-c1, #rl-c2", { opacity:0.3, x:-200, duration:0.4, ease:"power2.in" }, 2.35);
-    tl.to("#rl-c0", { scale:1.15, opacity:0, y:300, duration:0.45, ease:"power2.in" }, 2.4);'''
+    tl.to("#rl-c1, #rl-c2", { opacity:0.3, x:-200, duration:0.4, ease:"power2.in" }, ''' + str(r(HD - 0.5)) + ''');
+    tl.to("#rl-c0", { scale:1.15, opacity:0, y:300, duration:0.45, ease:"power2.in" }, ''' + str(r(HD - 0.45)) + ''');'''
     write('roles', scene('roles', body, css, js))
 
 
 # ---------- 8. employee
 def build_employe():
     S = 64.65
-    L = host('employe', S, 70.4)
+    L, HD = host('employe', S, 70.4)
     ph = phone('em-ph', 1.0, dash_employe('em'), 'left:600px;top:560px;')
     tsans = L(W('sans'))
     tsa = L(W('Sa'))
-    prod = f'''<div id="em-prod" class="clip glass" data-start="{r(tsans - 0.2)}" data-duration="{r(5.75 - tsans + 0.2)}">
+    prod = f'''<div id="em-prod" class="clip glass" data-start="{r(tsans - 0.2)}" data-duration="{r(HD - tsans + 0.2)}">
       <div class="em-h"><span>{ic('phone', 34, TEAL)}</span><div><b>Samsung Galaxy A56</b><em>256 Go · 8 Go RAM · Neuf</em></div></div>
       <div class="em-r"><span>Prix de vente</span><b>245 000 F</b></div>
       <div class="em-r"><span>Prix d'achat</span><b class="em-hid"><i>221 000 F</i>{ic('lock', 30, ORANGE, 2.4)}</b></div>
       <div class="em-note">Masqué pour l'employé</div></div>'''
-    fac = f'''<div id="em-fac" class="clip glass" data-start="{r(tsa - 0.2)}" data-duration="{r(5.75 - tsa + 0.2)}">
+    fac = f'''<div id="em-fac" class="clip glass" data-start="{r(tsa - 0.2)}" data-duration="{r(HD - tsa + 0.2)}">
       <span class="em-fi">{ic('receipt', 34, TEAL)}</span><div><b>FAC-129 · Koffi Yao</b><em>245 000 F · par Yannick K.</em></div><span id="em-tag">À valider</span></div>'''
-    b1, c1, j1 = kin('em-k1', 'Il vend, et suit', 220, 76, L(W("L'employé")) + 0.3, 5.75)
-    b2, c2, j2 = kin('em-k2', '<span class="t">ses propres ventes.</span>', 312, 70, L(W('propres')) - 0.2, 5.75)
+    b1, c1, j1 = kin('em-k1', 'Il vend, et suit', 220, 76, L(W("L'employé")) + 0.3, HD)
+    b2, c2, j2 = kin('em-k2', '<span class="t">ses propres ventes.</span>', 312, 70, L(W('propres')) - 0.2, HD)
     body = f'''    <div id="em-lab" class="clip lab" data-start="0.05" data-duration="5.7">L'EMPLOYÉ</div>
-    <img id="em-man" class="clip" data-start="0" data-duration="5.75" src="assets/people/employe.png" alt="Employé (illustration)" />
-    <div id="em-phw" class="clip" data-start="0" data-duration="5.75">{ph}</div>
+    <img id="em-man" class="clip" data-start="0" data-duration="{HD}" src="assets/people/employe.png" alt="Employé (illustration)" />
+    <div id="em-phw" class="clip" data-start="0" data-duration="{HD}">{ph}</div>
     {prod}{fac}
 {b1}{b2}'''
     css = c1 + c2 + '''
@@ -824,26 +850,26 @@ def build_employe():
     tl.to("#em-prod", {{ y:-120, scale:0.92, opacity:0.75, duration:0.45, ease:"power2.inOut" }}, {r(tsa - 0.3)});
     tl.fromTo("#em-fac", {{ y:200, opacity:0 }}, {{ y:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(tsa - 0.2)});
     tl.fromTo("#em-tag", {{ boxShadow:"0 0 0 rgba(255,98,8,0)" }}, {{ boxShadow:"0 0 30px rgba(255,98,8,.7)", duration:0.4, yoyo:true, repeat:3 }}, {r(L(W('validation.')) - 0.2)});
-    tl.to(["#em-man", "#em-phw", "#em-prod", "#em-fac", "#em-lab"], {{ opacity:0, x:-120, duration:0.35, ease:"power2.in", stagger:0.03 }}, 5.35);'''
+    tl.to(["#em-man", "#em-phw", "#em-prod", "#em-fac", "#em-lab"], {{ opacity:0, x:-120, duration:0.35, ease:"power2.in", stagger:0.03 }}, {r(HD - 0.4)});'''
     write('employe', scene('employe', body, css, js))
 
 
 # ---------- 9. administrator
 def build_admin():
     S = 70.2
-    L = host('admin', S, 74.05)
+    L, HD = host('admin', S, 74.05)
     lp = laptop('ad-lp', 0.72, dk_factures('ad'), 'left:28px;top:420px;')
     tv = L(W('valide…'))
     # Valider button of row 0 sits around (1150, 236) in desktop units -> screen
     cx, cy = r(28 + 14 + 1135 * 0.72), r(420 + 14 + 252 * 0.72)
     body = f'''    <div id="ad-lab" class="clip lab" data-start="0.05" data-duration="3.8">L'ADMINISTRATEUR</div>
-    <img id="ad-man" class="clip" data-start="0" data-duration="3.85" src="assets/people/admin.png" alt="Administrateur (illustration)" />
-    <div id="ad-lpw" class="clip" data-start="0" data-duration="3.85">{lp}<div class="cur" id="ad-cur" style="left:{cx}px;top:{cy}px">{CURSOR}</div><div class="tap" id="ad-tap" style="left:{cx}px;top:{cy}px"></div></div>
-    <div id="ad-ch1" class="clip ad-chip" data-start="{r(L(W('stock', 1, 72)) - 0.1)}" data-duration="{r(3.85 - L(W('stock', 1, 72)) + 0.1)}">{ic('alert', 34, ORANGE)} Stock bas · 2 produits</div>
-    <div id="ad-ch2" class="clip ad-chip" data-start="{r(L(W('fournisseurs.', 1, 72)) - 0.1)}" data-duration="{r(3.85 - L(W('fournisseurs.', 1, 72)) + 0.1)}">{ic('factory', 34, TEAL)} Fournisseurs · prix comparés</div>
+    <img id="ad-man" class="clip" data-start="0" data-duration="{HD}" src="assets/people/admin.png" alt="Administrateur (illustration)" />
+    <div id="ad-lpw" class="clip" data-start="0" data-duration="{HD}">{lp}<div class="cur" id="ad-cur" style="left:{cx}px;top:{cy}px">{CURSOR}</div><div class="tap" id="ad-tap" style="left:{cx}px;top:{cy}px"></div></div>
+    <div id="ad-ch1" class="clip ad-chip" data-start="{r(L(W('stock', 1, 72)) - 0.1)}" data-duration="{r(HD - L(W('stock', 1, 72)) + 0.1)}">{ic('alert', 34, ORANGE)} Stock bas · 2 produits</div>
+    <div id="ad-ch2" class="clip ad-chip" data-start="{r(L(W('fournisseurs.', 1, 72)) - 0.1)}" data-duration="{r(HD - L(W('fournisseurs.', 1, 72)) + 0.1)}">{ic('factory', 34, TEAL)} Fournisseurs · prix comparés</div>
 '''
-    b1, c1, j1 = kin('ad-k1', 'Il <span class="t">valide</span>, surveille', 200, 70, 0.25, 3.85)
-    b2, c2, j2 = kin('ad-k2', 'le stock et les fournisseurs.', 290, 54, L(W('surveille')), 3.85, weight=800)
+    b1, c1, j1 = kin('ad-k1', 'Il <span class="t">valide</span>, surveille', 200, 70, 0.25, HD)
+    b2, c2, j2 = kin('ad-k2', 'le stock et les fournisseurs.', 290, 54, L(W('surveille')), HD, weight=800)
     body += b1 + b2
     css = c1 + c2 + '''
     #ad-lab { top:110px; }
@@ -864,15 +890,15 @@ def build_admin():
     tl.fromTo("#adr0", {{ backgroundColor:"rgba(60,203,127,.0)" }}, {{ backgroundColor:"rgba(60,203,127,.16)", duration:0.3, yoyo:true, repeat:1 }}, {r(tv)});
     tl.fromTo("#ad-ch1", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(L(W('stock', 1, 72)) - 0.1)});
     tl.fromTo("#ad-ch2", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(L(W('fournisseurs.', 1, 72)) - 0.1)});
-    tl.to(["#ad-lab", "#ad-lpw", "#ad-man", "#ad-ch1", "#ad-ch2", "#ad-k1", "#ad-k2"], {{ opacity:0, x:120, duration:0.3, ease:"power2.in", stagger:0.02 }}, 3.5);'''
+    tl.to(["#ad-lab", "#ad-lpw", "#ad-man", "#ad-ch1", "#ad-ch2", "#ad-k1", "#ad-k2"], {{ opacity:0, x:120, duration:0.3, ease:"power2.in", stagger:0.02 }}, {r(HD - 0.35)});'''
     write('admin', scene('admin', body, css, js))
 
 
 # ---------- 10. boss
 def build_patron():
     S = 73.95
-    L = host('patron', S, 81.45)
-    D = 7.5
+    L, HD = host('patron', S, 81.45)
+    D = HD
     tb = L(W('bénéfice', 1, 75))
     tp = L(W('performance'))
     tm = L(W('bilan'))
@@ -951,8 +977,8 @@ def generic_app(p):
 # ---------- 11. customisation: our example -> your rules -> process -> your app
 def build_perso():
     S = 81.35
-    L = host('perso', S, 97.35)
-    D = 16.0
+    L, HD = host('perso', S, 97.35)
+    D = HD
     tv = L(W('Votre', 1, 84))
     ta = L(W('Après'))
     trades = [('store', 'Boutique', TEAL, 'Boutique'), ('cart', 'Supermarché', ORANGE, 'supermarché'), ('pill', 'Pharmacie', GREEN, 'pharmacie'),
@@ -1022,8 +1048,8 @@ def build_perso():
 # ---------- 12. founder
 def build_founder():
     S = 97.25
-    L = host('founder', S, 103.4)
-    D = 6.15
+    L, HD = host('founder', S, 103.4)
+    D = HD
     tn = L(W('Gnohité'))
     b1, c1, j1 = kin('fd-k1', 'Derrière BG-MARKET…', 190, 78, 0.05, D)
     body = f'''    <div id="fd-halo" class="clip" data-start="0" data-duration="{D}"></div>
@@ -1052,8 +1078,9 @@ def build_founder():
 # ---------- 13. end card
 def build_end():
     S = 103.3
-    L = host('end', S, DUR)
-    D = r(DUR - S)
+    L, HD = host('end', S, DUR)
+    S = M(S)
+    D = HD
     tw = L(W('Écrivez-nous'))
     body = f'''    <video id="en-anim" class="clip" data-start="0" data-duration="6.0" src="assets/brand/logo_anim.webm" muted playsinline></video>
     <img id="en-logo" class="clip" data-start="5.95" data-duration="{r(D - 5.95)}" src="assets/brand/logo_final.png" alt="BG-MARKET, Technologie pour tous" />
@@ -1079,7 +1106,7 @@ CUTS = []
 
 
 def build_fx():
-    times = [4.75, 11.0, 21.5, 31.45, 53.0, 62.0, 64.65, 70.25, 73.95, 81.4, 97.3, 103.35]
+    times = [M(t) for t in [4.75, 11.0, 21.5, 31.45, 53.0, 62.0, 64.65, 70.25, 73.95, 81.4, 97.3, 103.35]]
     CUTS.extend(times)
     streaks = ''.join(f'<div id="fx-s{i}" class="clip fxs" data-start="{r(t - 0.35)}" data-duration="0.95"><i></i></div>' for i, t in enumerate(times))
     js = ''.join(f'''
@@ -1109,7 +1136,7 @@ def build_index():
     aud = (f'    <audio id="a-music" class="clip" data-start="0" data-duration="{DUR}" src="assets/audio/music_bed.mp3" data-volume="1"></audio>\n'
            f'    <audio id="a-voice" class="clip" data-start="{V0}" data-duration="{r(VO_END - V0 + 0.3)}" src="assets/audio/voice.mp3" data-volume="1"></audio>\n'
            f'    <audio id="a-logo1" class="clip" data-start="0" data-duration="6" src="assets/brand/logo_anim_audio.mp3" data-volume="0.9"></audio>\n'
-           f'    <audio id="a-logo2" class="clip" data-start="103.3" data-duration="6" src="assets/brand/logo_anim_audio.mp3" data-volume="0.4"></audio>\n')
+           f'    <audio id="a-logo2" class="clip" data-start="{M(103.3)}" data-duration="6" src="assets/brand/logo_anim_audio.mp3" data-volume="0.4"></audio>\n')
     for i, (n, t, v) in enumerate(SFX):
         aud += f'    <audio id="a-sfx{i}" class="clip" data-start="{t}" data-duration="2" src="assets/audio/sfx/{n}.mp3" data-volume="{v}"></audio>\n'
     html = f'''<!doctype html>
@@ -1138,9 +1165,9 @@ def build_index():
 
 
 def plan_sfx():
-    for t in [4.75, 21.5, 31.45, 62.0, 81.4, 97.3]:
+    for t in [M(x) for x in [4.75, 21.5, 31.45, 62.0, 81.4, 97.3]]:
         sfx('soft_whoosh', t - 0.3, 0.55)
-    for t in [11.0, 53.0, 64.65, 70.25, 73.95]:
+    for t in [M(x) for x in [11.0, 53.0, 64.65, 70.25, 73.95]]:
         sfx('whoosh_a', t - 0.35, 0.3)
     sfx('paper', W('Des') - 0.1, 0.6)
     sfx('notif', W('des', 1, 12.5) + 0.4, 0.45)
