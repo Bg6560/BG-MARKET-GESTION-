@@ -204,7 +204,7 @@
     const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
-    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }, at); };
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
     tl.fromTo("#sv-k1 .w", { opacity:0, y:35, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.27);
     tl.to("#sv-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 3.34);
     tl.fromTo("#sv-k2 .w", { opacity:0, y:35, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 3.71);

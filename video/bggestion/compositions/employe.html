@@ -190,7 +190,7 @@
       <div class="em-h"><span><svg class="ico " viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#00D4C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><div><b>Samsung Galaxy A56</b><em>256 Go · 8 Go RAM · Neuf</em></div></div>
       <div class="em-r"><span>Prix de vente</span><b>245 000 F</b></div>
       <div class="em-r"><span>Prix d'achat</span><b class="em-hid"><i>221 000 F</i><svg class="ico " viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#FF6208" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></b></div>
-      <div class="em-note">Masqué pour l'employé</div></div><div id="em-fac" class="clip glass" data-start="-11.63" data-duration="17.38">
+      <div class="em-note">Masqué pour l'employé</div></div><div id="em-fac" class="clip glass" data-start="3.81" data-duration="1.94">
       <span class="em-fi"><svg class="ico " viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#00D4C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h4"/></svg></span><div><b>FAC-129 · Koffi Yao</b><em>245 000 F · par Yannick K.</em></div><span id="em-tag">À valider</span></div>
     <div id="em-k1" class="clip cap big" data-start="0.39" data-duration="5.36"><span class="w">Il </span><span class="w">vend, </span><span class="w">et </span><span class="w">suit </span></div>
     <div id="em-k2" class="clip cap big" data-start="1.45" data-duration="4.3"><span class="w"><span class="t">ses propres ventes.</span> </span></div>
@@ -201,7 +201,7 @@
     const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
-    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }, at); };
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
     tl.fromTo("#em-k1 .w", { opacity:0, y:38, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.39);
     tl.to("#em-k1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 5.43);
     tl.fromTo("#em-k2 .w", { opacity:0, y:35, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 1.45);
@@ -213,8 +213,8 @@
     tl.to("#em-man", { y:-14, duration:2.6, yoyo:true, repeat:1, ease:"sine.inOut" }, 0.8);
     tl.fromTo("#em-prod", { y:300, opacity:0, scale:0.9 }, { y:0, opacity:1, scale:1, duration:0.55, ease:"expo.out" }, 2.29);
     tl.fromTo(".em-hid svg", { scale:0 }, { scale:1, duration:0.4, ease:"back.out(3)" }, 3.37);
-    tl.to("#em-prod", { y:-120, scale:0.92, opacity:0.75, duration:0.45, ease:"power2.inOut" }, -11.73);
-    tl.fromTo("#em-fac", { y:200, opacity:0 }, { y:0, opacity:1, duration:0.5, ease:"expo.out" }, -11.63);
+    tl.to("#em-prod", { y:-120, scale:0.92, opacity:0.75, duration:0.45, ease:"power2.inOut" }, 3.71);
+    tl.fromTo("#em-fac", { y:200, opacity:0 }, { y:0, opacity:1, duration:0.5, ease:"expo.out" }, 3.81);
     tl.fromTo("#em-tag", { boxShadow:"0 0 0 rgba(255,98,8,0)" }, { boxShadow:"0 0 30px rgba(255,98,8,.7)", duration:0.4, yoyo:true, repeat:3 }, 5.01);
     tl.to(["#em-man", "#em-phw", "#em-prod", "#em-fac", "#em-lab"], { opacity:0, x:-120, duration:0.35, ease:"power2.in", stagger:0.03 }, 5.35);
     window.__timelines["employe"] = tl;

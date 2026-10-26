@@ -153,7 +153,7 @@
     #en-anim, #en-logo { position:absolute; left:0; top:200px; width:1080px; height:608px; }
     #en-msg { top:880px; width:900px; white-space:normal; font-size:56px; font-weight:800; line-height:1.22; letter-spacing:-.01em; }
     #en-cta { top:1240px; font-size:48px; font-weight:800; color:#C9D6E3; }
-    #en-tel { top:1340px; display:flex; align-items:center; gap:24px; font-size:104px; font-weight:900; letter-spacing:.01em; padding:26px 46px; border-radius:40px; background:rgba(37,211,102,.08); border:3px solid rgba(37,211,102,.55); box-shadow:0 0 60px rgba(37,211,102,.18); }
+    #en-tel { top:1340px; white-space:nowrap; display:flex; align-items:center; gap:24px; font-size:86px; font-weight:900; letter-spacing:.01em; padding:26px 46px; border-radius:40px; background:rgba(37,211,102,.08); border:3px solid rgba(37,211,102,.55); box-shadow:0 0 60px rgba(37,211,102,.18); }
   </style>
   <div id="root" data-composition-id="end" data-width="1080" data-height="1920">
     <video id="en-anim" class="clip" data-start="0" data-duration="6.0" src="assets/brand/logo_anim.webm" muted playsinline></video>
@@ -167,7 +167,7 @@
     const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
-    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }, at); };
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
 
     tl.fromTo("#en-anim", { opacity:0 }, { opacity:1, duration:0.3 }, 0);
     tl.fromTo("#en-msg", { opacity:0, y:40, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.7, ease:"expo.out" }, 0.6);

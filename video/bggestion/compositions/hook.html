@@ -162,10 +162,10 @@
   <div id="root" data-composition-id="hook" data-width="1080" data-height="1920">
     <div id="hk-shape" class="clip" data-start="0" data-duration="6.55"><div class="hk-i" id="hk-i0"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6"/></svg></div><div class="hk-i" id="hk-i1"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7zM8.5 8.5l7 7"/></svg></div><div class="hk-i" id="hk-i2"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div><div class="hk-i" id="hk-i3"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg></div><div class="hk-i" id="hk-i4"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div><div class="hk-i" id="hk-i5"><svg class="ico " viewBox="0 0 24 24" width="150" height="150" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div></div>
     <div id="hk-ph" class="clip" data-start="0" data-duration="6.55"><div id="hk-q">?</div></div>
-    <div id="hk-l1" class="clip cap big" data-start="-0.02" data-duration="2.97"><span class="w">Votre </span><span class="w">activité… </span></div>
-    <div id="hk-l2" class="clip cap big" data-start="1.34" data-duration="1.66"><span class="w">est </span><span class="w"><span class="o">unique.</span> </span></div>
-    <div id="hk-l3" class="clip cap big" data-start="3.5" data-duration="3.05"><span class="w">Et </span><span class="w">votre </span><span class="w">application </span></div>
-    <div id="hk-l4" class="clip cap big" data-start="4.58" data-duration="1.97"><span class="w">de </span><span class="w">gestion </span><span class="w"><span class="t">?</span> </span></div>
+    <div id="hk-l1" class="clip cap big" data-start="0.08" data-duration="2.97"><span class="w">Votre </span><span class="w">activité… </span></div>
+    <div id="hk-l2" class="clip cap big" data-start="1.44" data-duration="1.66"><span class="w">est </span><span class="w"><span class="o">unique.</span> </span></div>
+    <div id="hk-l3" class="clip cap big" data-start="3.6" data-duration="2.95"><span class="w">Et </span><span class="w">votre </span><span class="w">application </span></div>
+    <div id="hk-l4" class="clip cap big" data-start="4.68" data-duration="1.87"><span class="w">de </span><span class="w">gestion </span><span class="w"><span class="t">?</span> </span></div>
 
   </div>
   <script>
@@ -173,14 +173,14 @@
     const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
-    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }, at); };
-    tl.fromTo("#hk-l1 .w", { opacity:0, y:48, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, -0.02);
-    tl.to("#hk-l1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.63);
-    tl.fromTo("#hk-l2 .w", { opacity:0, y:66, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 1.34);
-    tl.to("#hk-l2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.68);
-    tl.fromTo("#hk-l3 .w", { opacity:0, y:38, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.08 }, 3.5);
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
+    tl.fromTo("#hk-l1 .w", { opacity:0, y:48, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 0.08);
+    tl.to("#hk-l1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.73);
+    tl.fromTo("#hk-l2 .w", { opacity:0, y:66, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 1.44);
+    tl.to("#hk-l2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 2.78);
+    tl.fromTo("#hk-l3 .w", { opacity:0, y:38, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.08 }, 3.6);
     tl.to("#hk-l3", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 6.23);
-    tl.fromTo("#hk-l4 .w", { opacity:0, y:38, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 4.58);
+    tl.fromTo("#hk-l4 .w", { opacity:0, y:38, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 4.68);
     tl.to("#hk-l4", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 6.23);
 
     tl.fromTo("#hk-shape", { scale:0, rotation:-40 }, { scale:1, rotation:0, duration:0.7, ease:"back.out(1.6)" }, 0.05);
@@ -202,10 +202,10 @@
     tl.fromTo("#hk-i5", { opacity:0, scale:0.5, rotation:-20 }, { opacity:1, scale:1, rotation:0, duration:0.25, ease:"back.out(2)" }, 2.85);
     tl.to("#hk-i5", { opacity:0, scale:1.3, duration:0.18, ease:"power2.in" }, 3.27);
     tl.to("#hk-shape", { borderRadius:150, rotation:5, duration:0.4, ease:"power3.inOut" }, 2.85);
-    tl.to("#hk-shape", { scaleX:1.1, scaleY:2.2, borderRadius:58, opacity:0, duration:0.6, ease:"expo.in" }, 3.5);
-    tl.fromTo("#hk-ph", { scaleX:0.9, scaleY:0.45, opacity:0 }, { scaleX:1, scaleY:1, opacity:1, duration:0.7, ease:"expo.out" }, 3.85);
-    tl.fromTo("#hk-q", { opacity:0, scale:0.4 }, { opacity:1, scale:1, duration:0.5, ease:"back.out(2)" }, 4.3);
-    tl.to("#hk-q", { scale:1.12, duration:0.5, yoyo:true, repeat:3, ease:"sine.inOut" }, 4.8);
+    tl.to("#hk-shape", { scaleX:1.1, scaleY:2.2, borderRadius:58, opacity:0, duration:0.6, ease:"expo.in" }, 3.6);
+    tl.fromTo("#hk-ph", { scaleX:0.9, scaleY:0.45, opacity:0 }, { scaleX:1, scaleY:1, opacity:1, duration:0.7, ease:"expo.out" }, 3.95);
+    tl.fromTo("#hk-q", { opacity:0, scale:0.4 }, { opacity:1, scale:1, duration:0.5, ease:"back.out(2)" }, 4.4);
+    tl.to("#hk-q", { scale:1.12, duration:0.5, yoyo:true, repeat:3, ease:"sine.inOut" }, 4.9);
     tl.to("#hk-ph", { scale:3.2, opacity:0, filter:"blur(20px)", duration:0.5, ease:"power3.in" }, 6.0);
     window.__timelines["hook"] = tl;
   </script>

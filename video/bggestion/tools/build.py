@@ -12,6 +12,10 @@ VO_END = V0 + WORDS[-1]['end']
 DUR = round(VO_END + 5.6, 2)
 
 
+def norm(x):
+    return x.lower().strip('…,.?!:;«» ')
+
+
 def W(word, n=1, after=0.0):
     """Film time of the n-th spoken word starting with `word` (after film time `after`)."""
     k = 0
@@ -19,7 +23,8 @@ def W(word, n=1, after=0.0):
         t = V0 + w['start']
         if t < after:
             continue
-        if w['text'].lower().startswith(word.lower()):
+        a, q = norm(w['text']), norm(word)
+        if a == q or (len(q) >= 4 and a.startswith(q) and word[-1] not in '…,.?!:;'):
             k += 1
             if k == n:
                 return round(t, 2)
@@ -65,7 +70,7 @@ def scene(id, body, css, js, w=1080, h=1920):
     const fmt = (n) => Math.round(n).toString().replace(/\\B(?=(\\d{{3}})+(?!\\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => {{ const o = {{ v: from }}; tl.to(o, {{ v: to, duration: dur, ease: "power3.out", onUpdate: () => {{ document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); }} }}, at); }};
     const type = (sel, text, at, dt) => {{ for (let i = 0; i <= text.length; i++) tl.set(sel, {{ textContent: text.slice(0, i) || "\\u00a0" }}, at + i * dt); }};
-    const tap = (sel, at) => {{ tl.fromTo(sel, {{ scale: 0.35, opacity: 0.95 }}, {{ scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }}, at); }};
+    const tap = (sel, at) => {{ tl.fromTo(sel, {{ scale: 0.35, opacity: 0.95 }}, {{ scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }}, at); }};
 {js}
     window.__timelines["{id}"] = tl;
   </script>
@@ -379,7 +384,7 @@ def build_intro():
 
 # ---------- 1. hook: morphing tile (unique businesses) -> phone outline
 def build_hook():
-    S = 4.6
+    S = 4.5
     L = host('hook', S, 11.15)
     icons = ['store', 'pill', 'utensils', 'cart', 'bag', 'phone']
     ico = ''.join(f'<div class="hk-i" id="hk-i{i}">{ic(n, 150, "#fff", 1.6)}</div>' for i, n in enumerate(icons))
@@ -491,10 +496,9 @@ def build_reveal():
     .rv-dl { position:absolute; font-size:30px; font-weight:800; color:#00D4C8; letter-spacing:.06em; }'''
     js = j1 + j2 + f'''
     tl.fromTo("#rv-logo", {{ opacity:0, scale:0.8, filter:"blur(20px)" }}, {{ opacity:1, scale:1, filter:"blur(0px)", duration:0.8, ease:"expo.out" }}, {r(L(W('Chez')) - 0.1)});
-    tl.to("#rv-logo", {{ y:-470, scale:0.42, duration:0.8, ease:"expo.inOut" }}, {r(tv - 0.2)});
+    tl.to("#rv-logo", {{ y:-120, scale:0.6, opacity:0, filter:"blur(12px)", duration:0.6, ease:"power3.in" }}, {r(tv - 0.2)});
     tl.from("#rv-ttl .w", {{ opacity:0, y:80, filter:"blur(16px)", duration:0.7, ease:"expo.out", stagger:0.2 }}, {r(tv + 0.3)});
     tl.to("#rv-ttl", {{ y:-20, scale:0.82, duration:0.7, ease:"power3.inOut" }}, {r(L(W("L'application")) - 0.3)});
-    tl.to("#rv-logo", {{ y:-520, duration:0.7, ease:"power3.inOut" }}, {r(L(W("L'application")) - 0.3)});
     tl.fromTo("#rv-ph", {{ y:500, opacity:0, rotation:8 }}, {{ y:0, opacity:1, rotation:0, duration:0.7, ease:"expo.out" }}, {r(tdev - 0.15)});
     tl.fromTo("#rv-tb", {{ x:-600, opacity:0, rotation:-6 }}, {{ x:0, opacity:1, rotation:0, duration:0.7, ease:"expo.out" }}, {r(L(W('tablette')) - 0.15)});
     tl.fromTo("#rv-lp", {{ y:-400, opacity:0, scale:0.85 }}, {{ y:0, opacity:1, scale:1, duration:0.8, ease:"expo.out" }}, {r(L(W('ordinateur')) - 0.25)});
@@ -502,7 +506,7 @@ def build_reveal():
     tl.from("#rv-d2", {{ opacity:0, y:20, duration:0.3 }}, {r(L(W('tablette')) + 0.3)});
     tl.from("#rv-d3", {{ opacity:0, y:20, duration:0.3 }}, {r(L(W('ordinateur')) + 0.3)});
     tl.to("#rv-dev", {{ opacity:0, scale:1.15, filter:"blur(14px)", duration:0.4, ease:"power2.in" }}, 9.65);
-    tl.to(["#rv-ttl", "#rv-logo"], {{ opacity:0, y:-60, duration:0.35, ease:"power2.in" }}, 9.65);'''
+    tl.to(["#rv-ttl"], {{ opacity:0, y:-60, duration:0.35, ease:"power2.in" }}, 9.65);'''
     write('reveal', scene('reveal', body, css, js))
 
 
@@ -534,10 +538,11 @@ def build_phone():
     p = 'pd'
     taps = ''.join(f'<div class="tap" id="{p}tap{i}" style="left:{x}px;top:{y}px"></div>' for i, (x, y) in enumerate([(195, 792), (100, 545), (195, 712), (195, 712)]))
     toast = f'<div class="toast" id="{p}toast"><i>{ic("check", 16, "#06301E", 3)}</i>Commande CMD-212 enregistrée</div>'
-    inner = dash_phone(p) + sheet_create(p) + form_commande(p) + toast + precommande_screen(p) + taps
+    ov = '<div class="app" style="background:transparent;z-index:%d">%s</div>'
+    inner = dash_phone(p) + ov % (20, sheet_create(p)) + form_commande(p) + ov % (70, toast) + precommande_screen(p) + taps
     ph = phone('pd-phone', s, inner, 'left:250px;top:610px;')
     # pop-out widgets (copies of KPI cards)
-    w1 = f'<div id="pd-w1" class="clip app popw" data-start="{L(W("ventes,")) - 0.1}" data-duration="{r(L(W("l\'évolution")) - L(W("ventes,")) + 0.2)}">{kpi("", "cart", "Ventes du jour", "0 F", "+3 ventes aujourd\'hui", TEAL, [6, 9, 5, 12, 8, 14, 26], "pdw1v", True)}</div>'
+    w1 = f'<div id="pd-w1" class="clip app popw" data-start="{L(W("ventes,", 1, 34)) - 0.1}" data-duration="{r(L(W("l\'évolution")) - L(W("ventes,", 1, 34)) + 0.2)}">{kpi("", "cart", "Ventes du jour", "0 F", "+3 ventes aujourd\'hui", TEAL, [6, 9, 5, 12, 8, 14, 26], "pdw1v", True)}</div>'
     w2 = f'<div id="pd-w2" class="clip app popw" data-start="{L(W("bénéfice")) - 0.1}" data-duration="{r(L(W("l\'évolution")) - L(W("bénéfice")) + 0.2)}">{kpi("or", "db", "Bénéfice du jour", "+0 F", "Visible par le patron", ORANGE, [4, 7, 5, 9, 6, 10, 22], "pdw2v")}</div>'
     tinv = L(W('facture', 1, 45))
     tpre = L(W('précommande'))
@@ -552,10 +557,10 @@ def build_phone():
     caps = []
     caps.append(kin('pd-c1', 'L\'essentiel,', 210, 104, L(W('Dès')), L(W("l'évolution")) - 0.05))
     caps.append(kin('pd-c1b', '<span class="t">en un coup d\'œil.</span>', 330, 84, L(W('tableau')), L(W("l'évolution")) - 0.05))
-    caps.append(kin('pd-c2', 'Chiffre d\'affaires', 170, 74, L(W("l'évolution")), L(W('Un')) - 0.05))
-    caps.append(kin('pd-c3', '<span class="t">Top produits</span>', 280, 74, L(W('meilleurs')), L(W('Un')) - 0.05))
-    caps.append(kin('pd-c4', '<span class="o">Objectif du mois</span>', 390, 74, L(W("l'objectif")), L(W('Un')) - 0.05))
-    caps.append(kin('pd-c5', 'Une vente,', 200, 104, L(W('Un')), tinv - 0.1))
+    caps.append(kin('pd-c2', 'Chiffre d\'affaires', 170, 74, L(W("l'évolution")), L(W('Un', 1, 40)) - 0.05))
+    caps.append(kin('pd-c3', '<span class="t">Top produits</span>', 280, 74, L(W('meilleurs')), L(W('Un', 1, 40)) - 0.05))
+    caps.append(kin('pd-c4', '<span class="o">Objectif du mois</span>', 390, 74, L(W("l'objectif")), L(W('Un', 1, 40)) - 0.05))
+    caps.append(kin('pd-c5', 'Une vente,', 200, 104, L(W('Un', 1, 40)), tinv - 0.1))
     caps.append(kin('pd-c6', 'Client · <span class="t">Téléphone</span> · <span class="o">Prix</span>', 340, 62, L(W('client,')), tinv - 0.1, weight=800))
     caps.append(kin('pd-c7', 'La facture <span class="o">suit…</span>', 230, 96, tinv, tpre - 0.05))
     caps.append(kin('pd-c8', 'Précommandes', 190, 100, tpre, 21.65))
@@ -588,11 +593,11 @@ def build_phone():
     tl.set(["#{p}form", "#{p}pre"], {{ x:390 }}, 0);
     tl.set(["#{p}h2", "#{p}h3"], {{ opacity:0 }}, 0);
     tl.from(".{p}bar", {{ scaleY:0, transformOrigin:"50% 100%", duration:0.8, ease:"expo.out", stagger:0.06 }}, 0.6);
-    count("#{p}k1, #pdw1v", 0, 485000, {L(W('ventes,'))}, 1.1, "", " F");
+    count("#{p}k1, #pdw1v", 0, 485000, {L(W('ventes,', 1, 34))}, 1.1, "", " F");
     count("#{p}k2, #pdw2v", 0, 58500, {L(W('bénéfice'))}, 1.1, "+", " F");
     count("#{p}k3", 0, 6, {L(W('bénéfice')) + 0.3}, 0.8, "", "");
     count("#{p}k4", 0, 3, {L(W('bénéfice')) + 0.45}, 0.8, "", "");
-    tl.fromTo("#pd-w1", {{ x:250, y:-200, scale:0.4, opacity:0 }}, {{ x:0, y:0, scale:1, opacity:1, duration:0.6, ease:"back.out(1.4)" }}, {L(W('ventes,')) - 0.1});
+    tl.fromTo("#pd-w1", {{ x:250, y:-200, scale:0.4, opacity:0 }}, {{ x:0, y:0, scale:1, opacity:1, duration:0.6, ease:"back.out(1.4)" }}, {L(W('ventes,', 1, 34)) - 0.1});
     tl.fromTo("#pd-w2", {{ x:-250, y:-300, scale:0.4, opacity:0 }}, {{ x:0, y:0, scale:1, opacity:1, duration:0.6, ease:"back.out(1.4)" }}, {L(W('bénéfice')) - 0.1});
     tl.to(["#pd-w1", "#pd-w2"], {{ scale:0.5, opacity:0, duration:0.3, ease:"power2.in" }}, {L(W("l'évolution")) - 0.2});
     tl.to("#{p}scroll", {{ y:-420, duration:0.7, ease:"power3.inOut" }}, {L(W("l'évolution")) - 0.2});
@@ -605,7 +610,7 @@ def build_phone():
     tl.to("#{p}scroll", {{ y:-1225, duration:0.7, ease:"power3.inOut" }}, {L(W("l'objectif")) - 0.5});
     tl.fromTo("#{p}ring", {{ attr:{{ "stroke-dashoffset":314.16 }} }}, {{ attr:{{ "stroke-dashoffset":91.1 }}, duration:1.3, ease:"power3.out" }}, {L(W("l'objectif"))});
     tl.fromTo("#{p}obj", {{ boxShadow:"0 0 0 rgba(0,212,200,0)" }}, {{ boxShadow:"0 0 40px rgba(0,212,200,.45)", duration:0.6, yoyo:true, repeat:1 }}, {L(W("l'objectif"))});
-    tl.to("#{p}scroll", {{ y:0, duration:0.6, ease:"power3.inOut" }}, {L(W('Un')) - 0.1});
+    tl.to("#{p}scroll", {{ y:0, duration:0.6, ease:"power3.inOut" }}, {L(W('Un', 1, 40)) - 0.1});
     tap("#{p}tap0", {L(W('plus'))});
     tl.to("#{p}fab", {{ rotation:45, duration:0.3, ease:"back.out(2)" }}, {L(W('plus')) + 0.05});
     tl.to("#{p}dim", {{ opacity:1, duration:0.25 }}, {L(W('plus')) + 0.1});
@@ -743,9 +748,9 @@ def build_suivi():
     tl.to("#sv-an", {{ scale:0.9, duration:0.12, yoyo:true, repeat:1 }}, {r(tfo + 0.55)});
     tl.to("#sv-paste", {{ opacity:0, y:-30, duration:0.35 }}, {r(L(W('comparés')) - 0.3)});
     tl.to(["#sv-f0", "#sv-f1", "#sv-f2"], {{ opacity:1, duration:0.35, stagger:0.15 }}, {r(L(W('comparés')) - 0.1)});
-    tl.from("#sv-best", {{ scale:0, duration:0.4, ease:"back.out(3)" }}, {r(L(W('meilleur.')))});
-    tl.to("#sv-f1", {{ boxShadow:"0 0 40px rgba(0,212,200,.55)", duration:0.4, yoyo:true, repeat:1 }}, {r(L(W('meilleur.')))});
-    tl.to("#sv-mg", {{ opacity:1, duration:0.4 }}, {r(L(W('meilleur.')) + 0.2)});
+    tl.from("#sv-best", {{ scale:0, duration:0.4, ease:"back.out(3)" }}, {r(L(W('meilleur.', 1, 61)))});
+    tl.to("#sv-f1", {{ boxShadow:"0 0 40px rgba(0,212,200,.55)", duration:0.4, yoyo:true, repeat:1 }}, {r(L(W('meilleur.', 1, 61)))});
+    tl.to("#sv-mg", {{ opacity:1, duration:0.4 }}, {r(L(W('meilleur.', 1, 61)) + 0.2)});
     tl.to(["#sv-a", "#sv-b", "#sv-bell", "#sv-c"], {{ opacity:0, y:-80, filter:"blur(10px)", duration:0.4, stagger:0.05, ease:"power2.in" }}, 8.6);'''
     write('suivi', scene('suivi', body, css, js))
 
@@ -835,14 +840,14 @@ def build_admin():
     <img id="ad-man" class="clip" data-start="0" data-duration="3.85" src="assets/people/admin.png" alt="Administrateur (illustration)" />
     <div id="ad-lpw" class="clip" data-start="0" data-duration="3.85">{lp}<div class="cur" id="ad-cur" style="left:{cx}px;top:{cy}px">{CURSOR}</div><div class="tap" id="ad-tap" style="left:{cx}px;top:{cy}px"></div></div>
     <div id="ad-ch1" class="clip ad-chip" data-start="{r(L(W('stock', 1, 72)) - 0.1)}" data-duration="{r(3.85 - L(W('stock', 1, 72)) + 0.1)}">{ic('alert', 34, ORANGE)} Stock bas · 2 produits</div>
-    <div id="ad-ch2" class="clip ad-chip" data-start="{r(L(W('fournisseurs.')) - 0.1)}" data-duration="{r(3.85 - L(W('fournisseurs.')) + 0.1)}">{ic('factory', 34, TEAL)} Fournisseurs · prix comparés</div>
+    <div id="ad-ch2" class="clip ad-chip" data-start="{r(L(W('fournisseurs.', 1, 72)) - 0.1)}" data-duration="{r(3.85 - L(W('fournisseurs.', 1, 72)) + 0.1)}">{ic('factory', 34, TEAL)} Fournisseurs · prix comparés</div>
 '''
     b1, c1, j1 = kin('ad-k1', 'Il <span class="t">valide</span>, surveille', 200, 70, 0.25, 3.85)
     b2, c2, j2 = kin('ad-k2', 'le stock et les fournisseurs.', 290, 54, L(W('surveille')), 3.85, weight=800)
     body += b1 + b2
     css = c1 + c2 + '''
     #ad-lab { top:110px; }
-    #ad-man { position:absolute; left:560px; top:880px; height:1080px; width:auto; filter:drop-shadow(0 30px 60px rgba(0,0,0,.6)); }
+    #ad-man { position:absolute; left:610px; top:1090px; height:900px; width:auto; filter:drop-shadow(0 30px 60px rgba(0,0,0,.6)); }
     #ad-lpw { position:absolute; inset:0; }
     .ad-chip { position:absolute; left:60px; display:flex; align-items:center; gap:16px; padding:22px 30px; border-radius:24px; font-size:32px; font-weight:800; background:linear-gradient(180deg,rgba(20,32,48,.92),rgba(9,14,24,.94)); border:2px solid rgba(255,255,255,.14); box-shadow:0 30px 60px rgba(0,0,0,.5); }
     #ad-ch1 { top:1190px; border-color:rgba(255,98,8,.55); } #ad-ch2 { top:1350px; border-color:rgba(0,212,200,.55); }'''
@@ -852,11 +857,13 @@ def build_admin():
     tl.fromTo("#ad-man", {{ x:500, opacity:0 }}, {{ x:0, opacity:1, duration:0.7, ease:"expo.out" }}, 0.1);
     tl.fromTo("#ad-cur", {{ x:-420, y:300, opacity:0 }}, {{ x:0, y:0, opacity:1, duration:0.7, ease:"power3.inOut" }}, {r(tv - 0.8)});
     tap("#ad-tap", {r(tv - 0.05)});
+    tl.fromTo("#ad-lpw", {{ scale:1 }}, {{ scale:1.45, transformOrigin:"{cx}px {cy}px", duration:0.7, ease:"power3.inOut" }}, {r(tv - 0.9)});
+    tl.to("#ad-lpw", {{ scale:1, duration:0.6, ease:"power3.inOut" }}, {r(tv + 0.6)});
     tl.set("#ads0", {{ className:"tag g", textContent:"Validée" }}, {r(tv)});
     tl.to("#adv0", {{ opacity:0.25, duration:0.2 }}, {r(tv)});
     tl.fromTo("#adr0", {{ backgroundColor:"rgba(60,203,127,.0)" }}, {{ backgroundColor:"rgba(60,203,127,.16)", duration:0.3, yoyo:true, repeat:1 }}, {r(tv)});
     tl.fromTo("#ad-ch1", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(L(W('stock', 1, 72)) - 0.1)});
-    tl.fromTo("#ad-ch2", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(L(W('fournisseurs.')) - 0.1)});
+    tl.fromTo("#ad-ch2", {{ x:-600, opacity:0 }}, {{ x:0, opacity:1, duration:0.5, ease:"expo.out" }}, {r(L(W('fournisseurs.', 1, 72)) - 0.1)});
     tl.to(["#ad-lab", "#ad-lpw", "#ad-man", "#ad-ch1", "#ad-ch2", "#ad-k1", "#ad-k2"], {{ opacity:0, x:120, duration:0.3, ease:"power2.in", stagger:0.02 }}, 3.5);'''
     write('admin', scene('admin', body, css, js))
 
@@ -1051,7 +1058,7 @@ def build_end():
     #en-anim, #en-logo { position:absolute; left:0; top:200px; width:1080px; height:608px; }
     #en-msg { top:880px; width:900px; white-space:normal; font-size:56px; font-weight:800; line-height:1.22; letter-spacing:-.01em; }
     #en-cta { top:1240px; font-size:48px; font-weight:800; color:#C9D6E3; }
-    #en-tel { top:1340px; display:flex; align-items:center; gap:24px; font-size:104px; font-weight:900; letter-spacing:.01em; padding:26px 46px; border-radius:40px; background:rgba(37,211,102,.08); border:3px solid rgba(37,211,102,.55); box-shadow:0 0 60px rgba(37,211,102,.18); }'''
+    #en-tel { top:1340px; white-space:nowrap; display:flex; align-items:center; gap:24px; font-size:86px; font-weight:900; letter-spacing:.01em; padding:26px 46px; border-radius:40px; background:rgba(37,211,102,.08); border:3px solid rgba(37,211,102,.55); box-shadow:0 0 60px rgba(37,211,102,.18); }'''
     js = f'''
     tl.fromTo("#en-anim", {{ opacity:0 }}, {{ opacity:1, duration:0.3 }}, 0);
     tl.fromTo("#en-msg", {{ opacity:0, y:40, filter:"blur(12px)" }}, {{ opacity:1, y:0, filter:"blur(0px)", duration:0.7, ease:"expo.out" }}, 0.6);
@@ -1141,7 +1148,7 @@ def plan_sfx():
     sfx('success', W('solde.') + 0.35, 0.5)
     sfx('success', W('valide…'), 0.5)
     sfx('notif', W('prévient'), 0.5)
-    sfx('success', W('meilleur.'), 0.4)
+    sfx('success', W('meilleur.', 1, 61), 0.4)
     sfx('tap', W('droits') + 0.25, 0.5)
     sfx('success', W('Écrivez-nous') + 0.5, 0.45)
 
@@ -1150,4 +1157,8 @@ if __name__ == '__main__':
     build_bg(); build_intro(); build_hook(); build_besoin(); build_reveal(); build_phone(); build_suivi(); build_roles()
     build_employe(); build_admin(); build_patron(); build_perso(); build_founder(); build_end(); build_fx()
     plan_sfx(); build_index()
+    for f in os.listdir(OUT):
+        bad = re.findall(r'\}, (-[0-9.]+)\);', open(os.path.join(OUT, f)).read())
+        if bad:
+            print('NEGATIVE POSITIONS', f, bad[:5])
     print('DUR', DUR, 'VO_END', VO_END)

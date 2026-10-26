@@ -225,17 +225,16 @@
     const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
     const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
-    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out" }, at); };
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
     tl.fromTo("#rv-l1 .w", { opacity:0, y:32, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 1.21);
     tl.to("#rv-l1", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 3.0);
     tl.fromTo("#rv-l2 .w", { opacity:0, y:25, filter:"blur(12px)" }, { opacity:1, y:0, filter:"blur(0px)", duration:0.45, ease:"expo.out", stagger:0.06 }, 5.04);
     tl.to("#rv-l2", { opacity:0, y:-50, filter:"blur(12px)", duration:0.3, ease:"power3.in" }, 9.73);
 
     tl.fromTo("#rv-logo", { opacity:0, scale:0.8, filter:"blur(20px)" }, { opacity:1, scale:1, filter:"blur(0px)", duration:0.8, ease:"expo.out" }, 0.09);
-    tl.to("#rv-logo", { y:-470, scale:0.42, duration:0.8, ease:"expo.inOut" }, 3.02);
+    tl.to("#rv-logo", { y:-120, scale:0.6, opacity:0, filter:"blur(12px)", duration:0.6, ease:"power3.in" }, 3.02);
     tl.from("#rv-ttl .w", { opacity:0, y:80, filter:"blur(16px)", duration:0.7, ease:"expo.out", stagger:0.2 }, 3.52);
     tl.to("#rv-ttl", { y:-20, scale:0.82, duration:0.7, ease:"power3.inOut" }, 4.74);
-    tl.to("#rv-logo", { y:-520, duration:0.7, ease:"power3.inOut" }, 4.74);
     tl.fromTo("#rv-ph", { y:500, opacity:0, rotation:8 }, { y:0, opacity:1, rotation:0, duration:0.7, ease:"expo.out" }, 7.09);
     tl.fromTo("#rv-tb", { x:-600, opacity:0, rotation:-6 }, { x:0, opacity:1, rotation:0, duration:0.7, ease:"expo.out" }, 8.09);
     tl.fromTo("#rv-lp", { y:-400, opacity:0, scale:0.85 }, { y:0, opacity:1, scale:1, duration:0.8, ease:"expo.out" }, 8.83);
@@ -243,7 +242,7 @@
     tl.from("#rv-d2", { opacity:0, y:20, duration:0.3 }, 8.54);
     tl.from("#rv-d3", { opacity:0, y:20, duration:0.3 }, 9.38);
     tl.to("#rv-dev", { opacity:0, scale:1.15, filter:"blur(14px)", duration:0.4, ease:"power2.in" }, 9.65);
-    tl.to(["#rv-ttl", "#rv-logo"], { opacity:0, y:-60, duration:0.35, ease:"power2.in" }, 9.65);
+    tl.to(["#rv-ttl"], { opacity:0, y:-60, duration:0.35, ease:"power2.in" }, 9.65);
     window.__timelines["reveal"] = tl;
   </script>
 </template>
