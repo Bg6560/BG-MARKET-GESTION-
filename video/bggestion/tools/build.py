@@ -117,7 +117,7 @@ def tablet(id, s, inner, extra_style=''):
 
 
 CURSOR = '<svg viewBox="0 0 24 24" width="34" height="34"><path d="M4 2l15 11-7 1.3 4.2 7.5-3 1.7-4.2-7.6L4 21z" fill="#fff" stroke="#0B0F14" stroke-width="1.4" stroke-linejoin="round"/></svg>'
-FOUNDER_AV = 'assets/people/founder_face.png'
+FOUNDER_AV = 'assets/people/founder_round.jpg'
 
 # ------------------------------------------------------------------ app screens (simulated demo data)
 CHART_MONTHS = [('mai', 1.12, 0.10), ('juin', 1.48, 0.13), ('juil', 1.86, 0.17), ('août', 1.64, 0.15), ('sept', 2.38, 0.24), ('oct', 2.14, 0.26)]
@@ -760,8 +760,8 @@ def build_roles():
     S = 61.95
     L = host('roles', S, 64.8)
     people = [('employe', 'Employé', 'Yannick K.', 'Vend · suit ses propres ventes', TEAL), ('admin', 'Administrateur', 'Arnaud B.', 'Valide · stock · fournisseurs', '#3B9BFF'),
-              ('founder', 'Patron', 'Gnohité Djôlo', 'Voit tout · décide des droits', ORANGE)]
-    cards = ''.join(f'<div class="rl-c" id="rl-c{i}" style="top:{560 + i * 380}px;border-color:{c}"><img src="assets/people/{n}_face.png" style="border-color:{c}" alt="" />'
+              ('founder_r', 'Patron', 'Gnohité Djôlo', 'Voit tout · décide des droits', ORANGE)]
+    cards = ''.join(f'<div class="rl-c" id="rl-c{i}" style="top:{560 + i * 380}px;border-color:{c}"><img src="assets/people/{'founder_round.jpg' if n == 'founder_r' else n + '_face.png'}" style="border-color:{c}" alt="" />'
                     f'<div><em style="color:{c}">{role}</em><b>{nm}</b><span>{d}</span></div></div>' for i, (n, role, nm, d, c) in enumerate(people))
     b1, c1, j1 = kin('rl-k1', 'Chacun voit', 190, 110, L(W('chacun')) - 0.3, 2.85)
     b2, c2, j2 = kin('rl-k2', '<span class="t">ce qu\'il doit voir.</span>', 320, 84, L(W('voit', 1, 63)), 2.85)
@@ -881,7 +881,7 @@ def build_patron():
     rights = [('Coûts et bénéfices', False), ('Suppression', False), ('Réglages de travail', True), ('Totaux de la boutique', False)]
     rows = ''.join(f'<div class="pt-rr"><span>{n}</span><i class="sw{" on" if on else ""}" id="pt-sw{i}"><u></u></i></div>' for i, (n, on) in enumerate(rights))
     body = f'''    <div id="pt-lab" class="clip lab" data-start="0.05" data-duration="{D - 0.05}">LE PATRON</div>
-    <img id="pt-man" class="clip" data-start="0" data-duration="{D}" src="assets/people/founder.png" alt="Gnohité Djôlo" />
+    <div id="pt-man" class="clip rnd" data-start="0" data-duration="{D}"><img src="assets/people/founder_round.jpg" alt="Gnohité Djôlo" /><span>Gnohité Djôlo · Patron</span></div>
     <div id="pt-lpw" class="clip" data-start="0" data-duration="{D}">{lp}</div>
     <div id="pt-rg" class="clip glass" data-start="{r(td - 0.6)}" data-duration="{r(D - td + 0.6)}"><div class="pt-rh"><img src="assets/people/employe_face.png" alt="" /><div><b>Droits de Yannick K.</b><em>Employé · décidé par le patron</em></div></div>{rows}</div>
 '''
@@ -890,7 +890,10 @@ def build_patron():
     body += b1 + b2
     css = c1 + c2 + '''
     #pt-lab { top:110px; }
-    #pt-man { position:absolute; left:-60px; top:1180px; height:760px; width:auto; filter:drop-shadow(0 30px 60px rgba(0,0,0,.6)); }
+    .rnd { position:absolute; border-radius:50%; padding:10px; background:conic-gradient(from 200deg,#00D4C8,#FF6208,#00D4C8); box-shadow:0 30px 70px rgba(0,0,0,.6), 0 0 60px rgba(0,212,200,.3); }
+    .rnd img { display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; border:8px solid #0B0F14; }
+    .rnd span { position:absolute; left:50%; bottom:-34px; transform:translateX(-50%); white-space:nowrap; font-size:26px; font-weight:800; padding:10px 22px; border-radius:24px; background:#0B0F14; border:2px solid rgba(255,98,8,.6); color:#FF8A3D; }
+    #pt-man { left:50px; top:1200px; width:360px; height:360px; }
     #pt-lpw { position:absolute; inset:0; }
     #pt-rg { position:absolute; left:440px; top:1150px; width:600px; padding:26px 30px; border-color:rgba(255,98,8,.55); }
     .pt-rh { display:flex; align-items:center; gap:16px; margin-bottom:8px; } .pt-rh img { width:72px; height:72px; border-radius:50%; border:3px solid #00D4C8; object-fit:cover; }
@@ -1024,18 +1027,21 @@ def build_founder():
     tn = L(W('Gnohité'))
     b1, c1, j1 = kin('fd-k1', 'Derrière BG-MARKET…', 190, 78, 0.05, D)
     body = f'''    <div id="fd-halo" class="clip" data-start="0" data-duration="{D}"></div>
-    <img id="fd-man" class="clip" data-start="0" data-duration="{D}" src="assets/people/founder.png" alt="Gnohité Djôlo, fondateur de BG-MARKET" />
+    <div id="fd-man" class="clip" data-start="0" data-duration="{D}"><div id="fd-ring"></div><img src="assets/people/founder_round.jpg" alt="Gnohité Djôlo, fondateur de BG-MARKET" /></div>
     <div id="fd-plate" class="clip" data-start="{r(tn - 0.15)}" data-duration="{r(D - tn + 0.15)}"><b>GNOHITÉ DJÔLO</b><span>Fondateur de BG-MARKET</span></div>
 {b1}'''
     css = c1 + '''
-    #fd-halo { position:absolute; left:140px; top:520px; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(0,212,200,.45), rgba(255,98,8,.18) 55%, transparent 72%); filter:blur(30px); }
-    #fd-man { position:absolute; left:50%; top:420px; height:1500px; width:auto; transform-origin:50% 100%; margin-left:-501px; filter:drop-shadow(0 0 40px rgba(0,212,200,.25)); }
-    #fd-plate { position:absolute; left:60px; right:60px; top:1430px; padding:34px 40px; border-radius:34px; background:linear-gradient(180deg,rgba(11,15,20,.85),rgba(11,15,20,.95)); border:2px solid rgba(0,212,200,.55); text-align:center; box-shadow:0 30px 60px rgba(0,0,0,.6); }
+    #fd-halo { position:absolute; left:140px; top:380px; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(0,212,200,.45), rgba(255,98,8,.18) 55%, transparent 72%); filter:blur(30px); }
+    #fd-man { position:absolute; left:200px; top:440px; width:680px; height:680px; }
+    #fd-ring { position:absolute; inset:-16px; border-radius:50%; background:conic-gradient(from 0deg,#00D4C8,#FF6208,#00D4C8 60%,#FF6208,#00D4C8); box-shadow:0 0 80px rgba(0,212,200,.45); }
+    #fd-man img { position:absolute; inset:0; width:680px; height:680px; border-radius:50%; object-fit:cover; border:12px solid #0B0F14; }
+    #fd-plate { position:absolute; left:60px; right:60px; top:1260px; padding:34px 40px; border-radius:34px; background:linear-gradient(180deg,rgba(11,15,20,.85),rgba(11,15,20,.95)); border:2px solid rgba(0,212,200,.55); text-align:center; box-shadow:0 30px 60px rgba(0,0,0,.6); }
     #fd-plate b { display:block; font-size:84px; font-weight:900; letter-spacing:.02em; }
     #fd-plate span { display:block; margin-top:8px; font-size:44px; font-weight:800; color:#FF6208; }'''
     js = j1 + f'''
-    tl.fromTo("#fd-man", {{ opacity:0, y:120, scale:0.96 }}, {{ opacity:1, y:0, scale:1, duration:1.0, ease:"expo.out" }}, 0.0);
-    tl.to("#fd-man", {{ scale:1.05, duration:{D - 1}, ease:"none" }}, 1.0);
+    tl.fromTo("#fd-man", {{ opacity:0, scale:0.6 }}, {{ opacity:1, scale:1, duration:1.0, ease:"expo.out" }}, 0.0);
+    tl.fromTo("#fd-ring", {{ rotation:0 }}, {{ rotation:200, duration:{D}, ease:"none" }}, 0.0);
+    tl.to("#fd-man img", {{ scale:1.04, duration:{D - 1}, ease:"none" }}, 1.0);
     tl.fromTo("#fd-halo", {{ opacity:0, scale:0.6 }}, {{ opacity:1, scale:1, duration:1.2, ease:"power2.out" }}, 0.0);
     tl.fromTo("#fd-plate", {{ y:200, opacity:0 }}, {{ y:0, opacity:1, duration:0.6, ease:"expo.out" }}, {r(tn - 0.15)});
     tl.from("#fd-plate b", {{ scale:1.25, opacity:0, duration:0.8, ease:"expo.out" }}, {r(tn)});
