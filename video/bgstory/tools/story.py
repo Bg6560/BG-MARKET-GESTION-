@@ -649,7 +649,7 @@ def build_fx(cuts):
 
 
 def build_index(sfx):
-    order = ['bg', 'shop', 'intro', 'chaos', 'months', 'turn', 'phone', 'team', 'payoff', 'perso', 'founder', 'end', 'subs', 'fx']
+    order = ['bg', 'shop', 'intro', 'chaos', 'months', 'turn', 'phone', 'team', 'payoff', 'perso', 'founder', 'end', 'fx']
     hosts = ''
     for z, n in enumerate(order):
         s, e = HOSTS[n]
@@ -762,7 +762,7 @@ def build_shop(nights):
 
 
 if __name__ == '__main__':
-    nights = build_bg(); build_subs(); build_intro(); build_chaos(); build_months(); build_turn(); build_phone(); build_team(); build_payoff(); build_perso(); build_founder(); build_end()
+    nights = build_bg(); build_intro(); build_chaos(); build_months(); build_turn(); build_phone(); build_team(); build_payoff(); build_perso(); build_founder(); build_end()
     build_shop(nights)
     cuts = sorted(v[0] for k, v in HOSTS.items() if k not in ('bg', 'subs', 'intro', 'shop') and v[0] > 1)
     build_fx(cuts)
