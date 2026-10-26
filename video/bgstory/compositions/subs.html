@@ -1,0 +1,514 @@
+<template>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { position:absolute; inset:0; overflow:hidden; font-family:"Montserrat",sans-serif; color:#0B1F33; }
+    .t { color:#00A99F; } .o { color:#FF6208; } .wt { color:#fff; }
+    .w { display:inline-block; white-space:pre; }
+    .cap { position:absolute; left:0; right:0; margin:auto; width:max-content; max-width:980px; text-align:center; }
+    .big { font-weight:900; letter-spacing:-.03em; line-height:1.02; }
+    .card { position:absolute; background:#fff; border-radius:32px; box-shadow:0 30px 80px rgba(11,31,51,.16), 0 2px 0 rgba(255,255,255,.9) inset; border:1px solid rgba(11,31,51,.06); }
+    .bub { position:absolute; background:#fff; color:#0B1F33; border-radius:34px; padding:26px 34px; font-size:40px; font-weight:800; line-height:1.2; box-shadow:0 24px 60px rgba(11,31,51,.22); }
+    .bub::after { content:""; position:absolute; bottom:-22px; width:44px; height:44px; background:#fff; transform:rotate(45deg); border-radius:6px; }
+    .bub.l::after { left:70px; } .bub.r::after { right:70px; }
+    .bub em { display:block; font-style:normal; font-size:24px; font-weight:800; letter-spacing:.14em; color:#FF6208; margin-bottom:6px; }
+    .cut { position:absolute; filter:drop-shadow(0 30px 50px rgba(11,31,51,.28)); }
+    .phn { position:absolute; background:linear-gradient(145deg,#2c3546,#0b0f16 38%,#151b26 70%,#2a3343); box-shadow:0 50px 90px rgba(11,31,51,.35), 0 0 0 2px rgba(255,255,255,.07) inset; }
+    .phn .scr { position:relative; overflow:hidden; background:#060A12; }
+    .phn .appw { position:absolute; left:0; top:0; transform-origin:0 0; }
+    .phn .cam { position:absolute; left:50%; border-radius:50%; background:#000; box-shadow:0 0 0 2px #121822; z-index:60; }
+    .lap { position:absolute; }
+    .lap .lid { position:relative; background:linear-gradient(180deg,#1d2533,#0b0f16); border-radius:22px; padding:14px; box-shadow:0 40px 80px rgba(11,31,51,.3), 0 0 0 2px rgba(255,255,255,.06) inset; }
+    .lap .scr { position:relative; overflow:hidden; border-radius:8px; background:#050D1C; }
+    .lap .appw { position:absolute; left:0; top:0; transform-origin:0 0; }
+    .lap .base { margin:0 auto; height:22px; border-radius:0 0 26px 26px; background:linear-gradient(180deg,#c9d3df,#8e9aab); box-shadow:0 20px 40px rgba(11,31,51,.25); }
+    .tap { position:absolute; width:64px; height:64px; margin:-32px 0 0 -32px; border-radius:50%; border:3px solid rgba(255,255,255,.95); background:rgba(255,255,255,.22); opacity:0; z-index:90; }
+    .cur { position:absolute; width:34px; height:34px; z-index:95; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
+    .chip { position:absolute; display:flex; align-items:center; gap:16px; padding:20px 30px; border-radius:26px; background:#fff; font-size:32px; font-weight:800; box-shadow:0 24px 60px rgba(11,31,51,.16); white-space:nowrap; }
+    .app { position:absolute; left:0; top:0; width:390px; height:844px; overflow:hidden; background:#060A12; color:#E9EEF5; font-family:"Montserrat",sans-serif; }
+    .app * { box-sizing:border-box; }
+    .app .sb { position:absolute; left:0; top:0; width:390px; height:34px; display:flex; align-items:center; justify-content:space-between; padding:0 22px; font-size:13px; font-weight:600; color:#fff; z-index:30; background:#060A12; }
+    .app .sb i { display:inline-block; width:22px; height:11px; border:1.5px solid #fff; border-radius:3px; margin-left:6px; position:relative; }
+    .app .sb i::after { content:""; position:absolute; left:1px; top:1px; bottom:1px; width:72%; background:#fff; border-radius:1px; }
+    .app .hdr { position:absolute; left:0; top:34px; width:390px; height:62px; display:flex; align-items:center; padding:0 16px; gap:10px; z-index:29; background:#060A12; border-bottom:1px solid rgba(255,255,255,.05); }
+    .app .hdr img.lg { height:30px; width:auto; }
+    .app .hdr .sp { flex:1; }
+    .app .hdr .dot { width:8px; height:8px; border-radius:50%; background:#3CCB7F; box-shadow:0 0 8px #3CCB7F; }
+    .app .ib { position:relative; width:38px; height:38px; border-radius:12px; background:#111826; border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; color:#E9EEF5; }
+    .app .ib b { position:absolute; right:-5px; top:-6px; min-width:19px; height:19px; padding:0 4px; border-radius:10px; background:#FF4D5E; color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .app .av { width:38px; height:38px; border-radius:50%; overflow:hidden; border:2px solid rgba(0,212,200,.6); background:#00D4C8; color:#06232A; font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; }
+    .app .av img { width:100%; height:100%; object-fit:cover; object-position:50% 18%; }
+    .app .scroll { position:absolute; left:0; top:96px; width:390px; padding:14px 16px 140px; }
+    .app h1 { font-size:24px; font-weight:800; margin:4px 0 0; letter-spacing:-.01em; }
+    .app h1 em { font-style:normal; color:#00D4C8; }
+    .app .role { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; border:1px solid rgba(0,212,200,.5); color:#00D4C8; background:rgba(0,212,200,.1); vertical-align:middle; margin-left:8px; }
+    .app .role.or { border-color:rgba(255,98,8,.5); color:#FF8A3D; background:rgba(255,98,8,.1); }
+    .app .date { margin-top:12px; display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:14px; border:1px solid rgba(0,212,200,.28); background:#0C1320; font-size:13px; font-weight:700; }
+    .app .qbtn { margin-top:12px; display:flex; gap:8px; }
+    .app .qbtn span { padding:11px 16px; border-radius:16px; font-size:13px; font-weight:700; background:#111826; border:1px solid rgba(255,255,255,.08); white-space:nowrap; }
+    .app .qbtn span.o { background:linear-gradient(180deg,#FF7A26,#FF5A00); border-color:transparent; box-shadow:0 6px 18px rgba(255,98,8,.35); }
+    .app .kpis { margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .app .kpi { position:relative; height:146px; border-radius:20px; padding:14px; background:linear-gradient(180deg,rgba(18,30,44,.95),rgba(10,16,26,.95)); border:1.5px solid rgba(0,212,200,.55); box-shadow:0 0 22px rgba(0,212,200,.18) inset, 0 0 18px rgba(0,212,200,.12); overflow:hidden; }
+    .app .kpi.or { border-color:rgba(255,98,8,.6); box-shadow:0 0 22px rgba(255,98,8,.16) inset, 0 0 18px rgba(255,98,8,.14); }
+    .app .kpi.pu { border-color:rgba(167,139,250,.55); box-shadow:0 0 22px rgba(167,139,250,.15) inset; }
+    .app .kpi.bl { border-color:rgba(59,155,255,.55); box-shadow:0 0 22px rgba(59,155,255,.15) inset; }
+    .app .kpi .ki { width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#22E3D6,#00B3A9); color:#04222A; }
+    .app .kpi.or .ki { background:linear-gradient(180deg,#FF8A3D,#FF5A00); color:#fff; }
+    .app .kpi.pu .ki { background:linear-gradient(180deg,#B9A2FF,#8B6CF0); color:#fff; }
+    .app .kpi.bl .ki { background:linear-gradient(180deg,#5BB0FF,#2F7FE0); color:#fff; }
+    .app .kpi .mb { position:absolute; right:14px; top:16px; display:flex; align-items:flex-end; gap:3px; height:30px; }
+    .app .kpi .mb i { display:block; width:4px; border-radius:2px; background:currentColor; opacity:.9; }
+    .app .kpi .kl { margin-top:12px; font-size:13px; font-weight:700; color:#DCE6F0; }
+    .app .kpi .kv { margin-top:4px; font-size:22px; font-weight:800; letter-spacing:-.01em; }
+    .app .kpi .ks { margin-top:4px; font-size:11px; color:#8FA0B3; font-weight:600; }
+    .app .kpi .ks.up { color:#3CCB7F; }
+    .app .todo { margin-top:14px; display:flex; align-items:center; gap:8px; white-space:nowrap; }
+    .app .todo > b { font-size:11px; letter-spacing:.12em; color:#9FB0C2; }
+    .app .pill { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:14px; background:#0E1522; border:1px solid rgba(255,255,255,.09); font-size:12px; font-weight:600; }
+    .app .pill b { color:#FF8A3D; }
+    .app .crd { margin-top:14px; border-radius:20px; padding:16px; background:linear-gradient(180deg,rgba(17,25,38,.96),rgba(10,15,24,.96)); border:1px solid rgba(0,212,200,.22); }
+    .app .crd h3 { margin:0; font-size:17px; font-weight:800; display:flex; justify-content:space-between; align-items:center; }
+    .app .crd h3 small { font-size:11.5px; font-weight:600; color:#8FA0B3; }
+    .app .crd h3 a { font-size:12px; color:#00D4C8; font-weight:700; }
+    .app .crd p.sub { margin:4px 0 0; font-size:11.5px; color:#8FA0B3; }
+    .app .tabs { margin-top:12px; display:flex; gap:4px; padding:4px; border-radius:14px; background:#0B111C; border:1px solid rgba(255,255,255,.06); }
+    .app .tabs span { flex:1; text-align:center; padding:7px 0; border-radius:10px; font-size:12px; font-weight:700; color:#9FB0C2; }
+    .app .tabs span.on { background:#00D4C8; color:#04222A; }
+    .app .row { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid rgba(255,255,255,.06); }
+    .app .row:first-of-type { border-top:none; }
+    .app .row .ri { width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:rgba(0,212,200,.12); color:#00D4C8; flex:none; }
+    .app .row .rt { flex:1; min-width:0; }
+    .app .row .rt b { display:block; font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .app .row .rt span { display:block; font-size:11.5px; color:#8FA0B3; margin-top:2px; }
+    .app .row .rv { text-align:right; font-size:14px; font-weight:800; color:#00D4C8; white-space:nowrap; }
+    .app .tag { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; }
+    .app .tag.g { color:#3CCB7F; background:rgba(60,203,127,.14); border:1px solid rgba(60,203,127,.4); }
+    .app .tag.o { color:#FF9A4D; background:rgba(255,98,8,.14); border:1px solid rgba(255,98,8,.45); }
+    .app .tag.r { color:#FF7B7B; background:rgba(255,123,123,.12); border:1px solid rgba(255,123,123,.4); }
+    .app .tag.b { color:#6FB6FF; background:rgba(59,155,255,.14); border:1px solid rgba(59,155,255,.4); }
+    .app .nav { position:absolute; left:10px; right:10px; bottom:14px; height:64px; border-radius:24px; background:rgba(16,22,34,.97); border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:space-around; z-index:40; box-shadow:0 -6px 30px rgba(0,0,0,.5); }
+    .app .nav span { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:#9FB0C2; padding:6px 8px; border-radius:14px; min-width:62px; }
+    .app .nav span.on { color:#00D4C8; background:rgba(0,212,200,.12); }
+    .app .nav .fab { width:56px; height:56px; min-width:56px; border-radius:50%; background:linear-gradient(180deg,#FF7A26,#FF5A00); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(255,98,8,.5); padding:0; margin-top:-6px; }
+    .app .ttl { display:flex; align-items:center; gap:12px; margin-top:6px; }
+    .app .ttl .bk { width:38px; height:38px; border-radius:12px; background:#111826; border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; }
+    .app .ttl h2 { margin:0; font-size:24px; font-weight:800; }
+    .app .ttl p { margin:2px 0 0; font-size:11.5px; color:#8FA0B3; }
+    .app .fld { margin-top:10px; }
+    .app .fld label { display:block; font-size:12px; color:#AFC0D2; font-weight:600; margin-bottom:6px; }
+    .app .inp { height:44px; border-radius:13px; background:#0A101A; border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; padding:0 14px; font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; }
+    .app .inp.ph { color:#5E6E80; font-weight:500; }
+    .app .inp.focus { border-color:#00D4C8; box-shadow:0 0 0 3px rgba(0,212,200,.15); }
+    .app .seg { display:flex; gap:8px; margin-top:8px; }
+    .app .seg span { padding:9px 16px; border-radius:13px; font-size:13px; font-weight:700; background:#0E1522; border:1px solid rgba(255,255,255,.1); }
+    .app .seg span.on { color:#00D4C8; border-color:#00D4C8; background:rgba(0,212,200,.12); }
+    .app .cta { margin-top:16px; height:52px; border-radius:16px; background:linear-gradient(180deg,#FF7A26,#FF5A00); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#fff; box-shadow:0 10px 26px rgba(255,98,8,.4); }
+    .app .sheet { position:absolute; left:0; right:0; bottom:0; height:400px; border-radius:26px 26px 0 0; background:#0D1420; border-top:1px solid rgba(255,255,255,.1); padding:12px 16px; z-index:35; }
+    .app .sheet .grab { width:44px; height:5px; border-radius:3px; background:#2A3546; margin:0 auto 12px; }
+    .app .sheet h4 { margin:0 0 12px; font-size:18px; font-weight:800; }
+    .app .sheet .sg { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .app .sheet .sg div { height:70px; border-radius:16px; background:#070C15; border:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:10px; padding:0 12px; font-size:13.5px; font-weight:700; line-height:1.15; }
+    .app .sheet .sg div i { width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex:none; }
+    .app .dim { position:absolute; inset:0; background:rgba(2,5,10,.62); z-index:34; }
+    .app .toast { position:absolute; left:16px; right:16px; top:104px; height:54px; border-radius:16px; background:#0F2A22; border:1px solid rgba(60,203,127,.5); display:flex; align-items:center; gap:10px; padding:0 14px; font-size:13.5px; font-weight:700; z-index:45; color:#CFF7E2; }
+    .app .toast i { width:30px; height:30px; border-radius:50%; background:#3CCB7F; color:#06301E; display:flex; align-items:center; justify-content:center; }
+    .app .blur { filter:blur(6px); }
+
+    .dk { position:absolute; left:0; top:0; width:1280px; height:800px; overflow:hidden; color:#E9EEF5; font-family:"Montserrat",sans-serif; background:radial-gradient(120% 90% at 70% 0%,#0D2A4A 0%,#081830 45%,#050D1C 100%); }
+    .dk * { box-sizing:border-box; }
+    .dk .top { position:absolute; left:0; top:0; right:0; height:64px; display:flex; align-items:center; gap:14px; padding:0 26px; border-bottom:1px solid rgba(120,200,255,.08); }
+    .dk .top .mn { width:40px; height:40px; border-radius:12px; background:rgba(20,40,70,.8); border:1px solid rgba(120,200,255,.15); display:flex; align-items:center; justify-content:center; }
+    .dk .top .se { width:440px; height:40px; border-radius:12px; background:rgba(8,20,40,.8); border:1px solid rgba(120,200,255,.14); display:flex; align-items:center; gap:10px; padding:0 14px; font-size:13px; color:#7FB7E0; }
+    .dk .top .se kbd { margin-left:auto; font-family:inherit; font-size:11px; padding:2px 7px; border-radius:6px; border:1px solid rgba(120,200,255,.25); color:#9CC8EA; }
+    .dk .top .sp { flex:1; }
+    .dk .top .cr { height:40px; padding:0 18px; border-radius:12px; background:linear-gradient(180deg,#FF7A26,#FF5A00); display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; box-shadow:0 6px 18px rgba(255,98,8,.4); }
+    .dk .top .ib { position:relative; width:40px; height:40px; border-radius:12px; background:rgba(20,40,70,.8); border:1px solid rgba(120,200,255,.15); display:flex; align-items:center; justify-content:center; }
+    .dk .top .ib b { position:absolute; right:-6px; top:-6px; min-width:20px; height:20px; border-radius:10px; background:#FF4D5E; font-size:10px; display:flex; align-items:center; justify-content:center; font-weight:800; padding:0 4px; }
+    .dk .top .pr { display:flex; align-items:center; gap:10px; padding:4px 12px 4px 4px; border-radius:16px; background:rgba(20,40,70,.7); border:1px solid rgba(120,200,255,.15); }
+    .dk .top .pr .av { width:36px; height:36px; border-radius:50%; overflow:hidden; border:2px solid #00D4C8; background:#00D4C8; color:#04222A; font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .dk .top .pr .av img { width:100%; height:100%; object-fit:cover; object-position:50% 18%; }
+    .dk .top .pr b { display:block; font-size:13px; } .dk .top .pr span { display:block; font-size:11px; color:#7FD8F0; }
+    .dk .main { position:absolute; left:0; top:64px; right:0; bottom:0; padding:20px 40px; }
+    .dk h1 { margin:0; font-size:28px; font-weight:800; } .dk h1 em { font-style:normal; color:#00D4C8; }
+    .dk .role { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid rgba(0,212,200,.55); color:#00D4C8; background:rgba(0,212,200,.1); vertical-align:middle; margin-left:10px; }
+    .dk .gl { border-radius:20px; background:linear-gradient(180deg,rgba(14,46,84,.72),rgba(8,26,52,.78)); border:1.5px solid rgba(70,200,255,.32); box-shadow:0 0 30px rgba(40,170,255,.12) inset, 0 10px 30px rgba(0,0,0,.25); }
+    .dk .kp { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px; }
+    .dk .kp > div { height:94px; display:flex; align-items:center; gap:14px; padding:0 18px; }
+    .dk .kp .ki { width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#22E3D6,#00B3A9); color:#04222A; flex:none; }
+    .dk .kp .or { border-color:rgba(255,120,40,.6); background:linear-gradient(180deg,rgba(60,40,50,.75),rgba(30,26,46,.8)); }
+    .dk .kp .or .ki { background:linear-gradient(180deg,#FF8A3D,#FF5A00); color:#fff; }
+    .dk .kp .bl .ki { background:linear-gradient(180deg,#5BB0FF,#2F7FE0); color:#fff; }
+    .dk .kp b { display:block; font-size:13.5px; } .dk .kp strong { display:block; font-size:23px; font-weight:800; margin-top:2px; } .dk .kp span { display:block; font-size:11px; color:#8FC4E6; margin-top:1px; }
+    .dk .todo { margin-top:14px; display:flex; gap:10px; align-items:center; font-size:12.5px; font-weight:600; }
+    .dk .todo > b { font-size:11px; letter-spacing:.12em; color:#8FC4E6; }
+    .dk .todo span { padding:8px 13px; border-radius:12px; background:rgba(14,40,74,.75); border:1px solid rgba(70,200,255,.25); }
+    .dk .todo span i { font-style:normal; color:#FFB547; font-weight:800; margin-right:4px; }
+    .dk h3 { margin:0; font-size:17px; font-weight:800; display:flex; justify-content:space-between; align-items:center; }
+    .dk h3 a { font-size:12px; color:#00D4C8; } .dk p.sub { margin:3px 0 0; font-size:12px; color:#8FC4E6; }
+    .dk table { width:100%; border-collapse:collapse; font-size:13px; }
+    .dk th { text-align:left; font-size:11px; letter-spacing:.08em; color:#7FD8F0; font-weight:700; padding:10px 8px; border-bottom:1px solid rgba(120,200,255,.15); }
+    .dk td { padding:11px 8px; border-bottom:1px solid rgba(120,200,255,.08); font-weight:600; }
+    .dk .tag { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+    .dk .tag.g { color:#3CCB7F; background:rgba(60,203,127,.14); border:1px solid rgba(60,203,127,.45); }
+    .dk .tag.o { color:#FFB067; background:rgba(255,98,8,.16); border:1px solid rgba(255,98,8,.5); }
+    .dk .tag.r { color:#FF8C8C; background:rgba(255,123,123,.14); border:1px solid rgba(255,123,123,.45); }
+    .dk .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:11px; font-size:12.5px; font-weight:700; }
+    .dk .btn.v { background:#00D4C8; color:#04222A; } .dk .btn.d { background:rgba(20,40,70,.8); border:1px solid rgba(120,200,255,.2); }
+
+    
+    .sb { position:absolute; left:0; right:0; top:1640px; display:flex; justify-content:center; }
+    .sb div { max-width:940px; text-align:center; padding:16px 30px; border-radius:20px; background:rgba(11,31,51,.86); color:#fff; font-size:38px; font-weight:700; line-height:1.3; }
+  </style>
+  <div id="root" data-composition-id="subs" data-width="1080" data-height="1920">
+    <div id="sb0" class="clip sb" data-start="0.63" data-duration="0.8"><div><span id="sb0_0">Lui…</span></div></div>
+    <div id="sb1" class="clip sb" data-start="1.35" data-duration="0.88"><div><span id="sb1_0">c'est</span> <span id="sb1_1">Serge.</span></div></div>
+    <div id="sb2" class="clip sb" data-start="2.23" data-duration="1.36"><div><span id="sb2_0">Il</span> <span id="sb2_1">a</span> <span id="sb2_2">une</span> <span id="sb2_3">boutique</span> <span id="sb2_4">de</span> <span id="sb2_5">téléphones,</span></div></div>
+    <div id="sb3" class="clip sb" data-start="3.59" data-duration="0.96"><div><span id="sb3_0">à</span> <span id="sb3_1">Yopougon.</span></div></div>
+    <div id="sb4" class="clip sb" data-start="4.55" data-duration="1.28"><div><span id="sb4_0">Il</span> <span id="sb4_1">est</span> <span id="sb4_2">vingt-et-une</span> <span id="sb4_3">heures.</span></div></div>
+    <div id="sb5" class="clip sb" data-start="5.83" data-duration="1.44"><div><span id="sb5_0">La</span> <span id="sb5_1">boutique</span> <span id="sb5_2">est</span> <span id="sb5_3">fermée…</span></div></div>
+    <div id="sb6" class="clip sb" data-start="7.27" data-duration="1.04"><div><span id="sb6_0">mais</span> <span id="sb6_1">Serge,</span> <span id="sb6_2">lui,</span></div></div>
+    <div id="sb7" class="clip sb" data-start="8.31" data-duration="1.47"><div><span id="sb7_0">n'a</span> <span id="sb7_1">pas</span> <span id="sb7_2">fini.</span></div></div>
+    <div id="sb8" class="clip sb" data-start="13.0" data-duration="1.76"><div><span id="sb8_0">Le</span> <span id="sb8_1">cahier</span> <span id="sb8_2">dit</span> <span id="sb8_3">une</span> <span id="sb8_4">chose.</span></div></div>
+    <div id="sb9" class="clip sb" data-start="14.76" data-duration="1.09"><div><span id="sb9_0">WhatsApp</span> <span id="sb9_1">en</span> <span id="sb9_2">dit</span> <span id="sb9_3">une</span> <span id="sb9_4">autre.</span></div></div>
+    <div id="sb10" class="clip sb" data-start="15.85" data-duration="0.99"><div><span id="sb10_0">Et</span> <span id="sb10_1">la</span> <span id="sb10_2">caisse…</span></div></div>
+    <div id="sb11" class="clip sb" data-start="16.84" data-duration="0.95"><div><span id="sb11_0">encore</span> <span id="sb11_1">une</span> <span id="sb11_2">autre.</span></div></div>
+    <div id="sb12" class="clip sb" data-start="17.79" data-duration="1.69"><div><span id="sb12_0">Le</span> <span id="sb12_1">Galaxy</span> <span id="sb12_2">A16</span> <span id="sb12_3">?</span> <span id="sb12_4">Il</span> <span id="sb12_5">en</span> <span id="sb12_6">reste</span></div></div>
+    <div id="sb13" class="clip sb" data-start="19.48" data-duration="0.8"><div><span id="sb13_0">un…</span></div></div>
+    <div id="sb14" class="clip sb" data-start="19.96" data-duration="0.93"><div><span id="sb14_0">ou</span> <span id="sb14_1">zéro.</span></div></div>
+    <div id="sb15" class="clip sb" data-start="20.89" data-duration="1.57"><div><span id="sb15_0">Personne</span> <span id="sb15_1">ne</span> <span id="sb15_2">sait</span> <span id="sb15_3">vraiment.</span></div></div>
+    <div id="sb16" class="clip sb" data-start="26.16" data-duration="1.32"><div><span id="sb16_0">Ça</span> <span id="sb16_1">fait</span> <span id="sb16_2">trois</span> <span id="sb16_3">mois</span> <span id="sb16_4">que</span> <span id="sb16_5">c'est</span> <span id="sb16_6">comme</span></div></div>
+    <div id="sb17" class="clip sb" data-start="27.48" data-duration="0.8"><div><span id="sb17_0">ça.</span></div></div>
+    <div id="sb18" class="clip sb" data-start="27.87" data-duration="1.81"><div><span id="sb18_0">Trois</span> <span id="sb18_1">mois</span> <span id="sb18_2">qu'il</span> <span id="sb18_3">se</span> <span id="sb18_4">dit</span> <span id="sb18_5">:</span> <span id="sb18_6">demain,</span></div></div>
+    <div id="sb19" class="clip sb" data-start="29.68" data-duration="1.11"><div><span id="sb19_0">je</span> <span id="sb19_1">m'organise.</span></div></div>
+    <div id="sb20" class="clip sb" data-start="30.79" data-duration="1.02"><div><span id="sb20_0">Sauf</span> <span id="sb20_1">que</span> <span id="sb20_2">demain…</span></div></div>
+    <div id="sb21" class="clip sb" data-start="31.81" data-duration="1.23"><div><span id="sb21_0">il</span> <span id="sb21_1">y</span> <span id="sb21_2">a</span> <span id="sb21_3">encore</span> <span id="sb21_4">des</span> <span id="sb21_5">clients.</span></div></div>
+    <div id="sb22" class="clip sb" data-start="33.04" data-duration="1.36"><div><span id="sb22_0">Et</span> <span id="sb22_1">encore</span> <span id="sb22_2">des</span> <span id="sb22_3">cahiers.</span></div></div>
+    <div id="sb23" class="clip sb" data-start="34.4" data-duration="2.72"><div><span id="sb23_0">Chez</span> <span id="sb23_1">BG-MARKET,</span> <span id="sb23_2">on</span> <span id="sb23_3">a</span> <span id="sb23_4">connu</span> <span id="sb23_5">exactement</span> <span id="sb23_6">ça.</span></div></div>
+    <div id="sb24" class="clip sb" data-start="37.12" data-duration="2.16"><div><span id="sb24_0">Alors</span> <span id="sb24_1">on</span> <span id="sb24_2">a</span> <span id="sb24_3">construit</span> <span id="sb24_4">notre</span> <span id="sb24_5">propre</span> <span id="sb24_6">application.</span></div></div>
+    <div id="sb25" class="clip sb" data-start="39.28" data-duration="0.8"><div><span id="sb25_0">Voici…</span></div></div>
+    <div id="sb26" class="clip sb" data-start="40.0" data-duration="1.36"><div><span id="sb26_0">BG-MARKET-GESTION.</span></div></div>
+    <div id="sb27" class="clip sb" data-start="41.36" data-duration="2.13"><div><span id="sb27_0">Le</span> <span id="sb27_1">matin,</span> <span id="sb27_2">Serge</span> <span id="sb27_3">ouvre</span> <span id="sb27_4">son</span> <span id="sb27_5">téléphone.</span></div></div>
+    <div id="sb28" class="clip sb" data-start="43.49" data-duration="1.28"><div><span id="sb28_0">Tout</span> <span id="sb28_1">est</span> <span id="sb28_2">là</span> <span id="sb28_3">:</span> <span id="sb28_4">les</span> <span id="sb28_5">ventes,</span></div></div>
+    <div id="sb29" class="clip sb" data-start="44.77" data-duration="1.19"><div><span id="sb29_0">le</span> <span id="sb29_1">bénéfice</span> <span id="sb29_2">du</span> <span id="sb29_3">jour…</span></div></div>
+    <div id="sb30" class="clip sb" data-start="45.96" data-duration="1.08"><div><span id="sb30_0">l'objectif</span> <span id="sb30_1">du</span> <span id="sb30_2">mois.</span></div></div>
+    <div id="sb31" class="clip sb" data-start="47.04" data-duration="1.01"><div><span id="sb31_0">Un</span> <span id="sb31_1">client</span> <span id="sb31_2">arrive.</span></div></div>
+    <div id="sb32" class="clip sb" data-start="48.05" data-duration="1.39"><div><span id="sb32_0">Un</span> <span id="sb32_1">appui</span> <span id="sb32_2">sur</span> <span id="sb32_3">«</span> <span id="sb32_4">plus</span> <span id="sb32_5">»…</span> <span id="sb32_6">le</span></div></div>
+    <div id="sb33" class="clip sb" data-start="49.44" data-duration="1.39"><div><span id="sb33_0">client,</span> <span id="sb33_1">le</span> <span id="sb33_2">téléphone,</span></div></div>
+    <div id="sb34" class="clip sb" data-start="50.83" data-duration="0.8"><div><span id="sb34_0">le</span> <span id="sb34_1">prix.</span></div></div>
+    <div id="sb35" class="clip sb" data-start="51.36" data-duration="1.01"><div><span id="sb35_0">La</span> <span id="sb35_1">facture</span> <span id="sb35_2">est</span> <span id="sb35_3">prête.</span></div></div>
+    <div id="sb36" class="clip sb" data-start="52.37" data-duration="1.22"><div><span id="sb36_0">Il</span> <span id="sb36_1">l'envoie</span> <span id="sb36_2">sur</span> <span id="sb36_3">WhatsApp.</span></div></div>
+    <div id="sb37" class="clip sb" data-start="53.59" data-duration="1.82"><div><span id="sb37_0">Une</span> <span id="sb37_1">précommande</span> <span id="sb37_2">?</span> <span id="sb37_3">L'acompte</span> <span id="sb37_4">est</span> <span id="sb37_5">noté,</span></div></div>
+    <div id="sb38" class="clip sb" data-start="55.41" data-duration="0.91"><div><span id="sb38_0">jusqu'au</span> <span id="sb38_1">solde.</span></div></div>
+    <div id="sb39" class="clip sb" data-start="56.32" data-duration="2.08"><div><span id="sb39_0">Une</span> <span id="sb39_1">réparation</span> <span id="sb39_2">?</span> <span id="sb39_3">Le</span> <span id="sb39_4">SAV</span> <span id="sb39_5">suit</span> <span id="sb39_6">chaque</span></div></div>
+    <div id="sb40" class="clip sb" data-start="58.4" data-duration="0.8"><div><span id="sb40_0">étape.</span></div></div>
+    <div id="sb41" class="clip sb" data-start="58.93" data-duration="0.8"><div><span id="sb41_0">Et</span> <span id="sb41_1">le</span> <span id="sb41_2">stock…</span></div></div>
+    <div id="sb42" class="clip sb" data-start="59.71" data-duration="1.25"><div><span id="sb42_0">prévient</span> <span id="sb42_1">avant</span> <span id="sb42_2">la</span> <span id="sb42_3">rupture.</span></div></div>
+    <div id="sb43" class="clip sb" data-start="60.96" data-duration="1.2"><div><span id="sb43_0">Yannick,</span> <span id="sb43_1">son</span> <span id="sb43_2">vendeur,</span></div></div>
+    <div id="sb44" class="clip sb" data-start="62.16" data-duration="1.28"><div><span id="sb44_0">vend</span> <span id="sb44_1">et</span> <span id="sb44_2">suit</span> <span id="sb44_3">ses</span> <span id="sb44_4">ventes…</span></div></div>
+    <div id="sb45" class="clip sb" data-start="63.44" data-duration="1.6"><div><span id="sb45_0">sans</span> <span id="sb45_1">jamais</span> <span id="sb45_2">voir</span> <span id="sb45_3">les</span> <span id="sb45_4">prix</span> <span id="sb45_5">d'achat.</span></div></div>
+    <div id="sb46" class="clip sb" data-start="65.04" data-duration="2.68"><div><span id="sb46_0">Arnaud,</span> <span id="sb46_1">l'administrateur,</span> <span id="sb46_2">valide</span> <span id="sb46_3">les</span> <span id="sb46_4">factures</span> <span id="sb46_5">et</span> <span id="sb46_6">compare</span></div></div>
+    <div id="sb47" class="clip sb" data-start="67.72" data-duration="0.98"><div><span id="sb47_0">les</span> <span id="sb47_1">fournisseurs.</span></div></div>
+    <div id="sb48" class="clip sb" data-start="68.71" data-duration="1.53"><div><span id="sb48_0">Et</span> <span id="sb48_1">Serge</span> <span id="sb48_2">?</span> <span id="sb48_3">Il</span> <span id="sb48_4">voit</span> <span id="sb48_5">tout.</span></div></div>
+    <div id="sb49" class="clip sb" data-start="70.24" data-duration="1.2"><div><span id="sb49_0">Même</span> <span id="sb49_1">sur</span> <span id="sb49_2">son</span> <span id="sb49_3">ordinateur,</span></div></div>
+    <div id="sb50" class="clip sb" data-start="71.44" data-duration="0.8"><div><span id="sb50_0">à</span> <span id="sb50_1">la</span> <span id="sb50_2">maison.</span></div></div>
+    <div id="sb51" class="clip sb" data-start="72.2" data-duration="2.35"><div><span id="sb51_0">Vingt-et-une</span> <span id="sb51_1">heures,</span> <span id="sb51_2">le</span> <span id="sb51_3">soir.</span></div></div>
+    <div id="sb52" class="clip sb" data-start="77.27" data-duration="1.79"><div><span id="sb52_0">La</span> <span id="sb52_1">réponse</span> <span id="sb52_2">est</span> <span id="sb52_3">déjà</span> <span id="sb52_4">là.</span></div></div>
+    <div id="sb53" class="clip sb" data-start="80.6" data-duration="0.85"><div><span id="sb53_0">Oui,</span> <span id="sb53_1">Serge.</span></div></div>
+    <div id="sb54" class="clip sb" data-start="81.45" data-duration="0.8"><div><span id="sb54_0">C'est</span> <span id="sb54_1">tout.</span></div></div>
+    <div id="sb55" class="clip sb" data-start="82.09" data-duration="0.83"><div><span id="sb55_0">Tu</span> <span id="sb55_1">peux</span> <span id="sb55_2">rentrer.</span></div></div>
+    <div id="sb56" class="clip sb" data-start="82.92" data-duration="3.01"><div><span id="sb56_0">BG-MARKET-GESTION,</span> <span id="sb56_1">c'est</span> <span id="sb56_2">l'application</span> <span id="sb56_3">de</span> <span id="sb56_4">notre</span> <span id="sb56_5">boutique.</span></div></div>
+    <div id="sb57" class="clip sb" data-start="85.93" data-duration="1.39"><div><span id="sb57_0">La</span> <span id="sb57_1">vôtre</span> <span id="sb57_2">aura</span> <span id="sb57_3">vos</span> <span id="sb57_4">règles,</span></div></div>
+    <div id="sb58" class="clip sb" data-start="87.32" data-duration="0.8"><div><span id="sb58_0">vos</span> <span id="sb58_1">rôles…</span></div></div>
+    <div id="sb59" class="clip sb" data-start="88.01" data-duration="0.83"><div><span id="sb59_0">votre</span> <span id="sb59_1">marque.</span></div></div>
+    <div id="sb60" class="clip sb" data-start="88.84" data-duration="1.84"><div><span id="sb60_0">Boutique,</span> <span id="sb60_1">pharmacie,</span> <span id="sb60_2">restaurant,</span></div></div>
+    <div id="sb61" class="clip sb" data-start="90.68" data-duration="0.85"><div><span id="sb61_0">supermarché…</span></div></div>
+    <div id="sb62" class="clip sb" data-start="91.53" data-duration="1.47"><div><span id="sb62_0">On</span> <span id="sb62_1">fait</span> <span id="sb62_2">l'audit</span> <span id="sb62_3">de</span> <span id="sb62_4">votre</span> <span id="sb62_5">activité,</span></div></div>
+    <div id="sb63" class="clip sb" data-start="93.0" data-duration="1.66"><div><span id="sb63_0">et</span> <span id="sb63_1">on</span> <span id="sb63_2">la</span> <span id="sb63_3">construit</span> <span id="sb63_4">pour</span> <span id="sb63_5">vous.</span></div></div>
+    <div id="sb64" class="clip sb" data-start="94.66" data-duration="2.13"><div><span id="sb64_0">Derrière</span> <span id="sb64_1">BG-MARKET,</span> <span id="sb64_2">il</span> <span id="sb64_3">y</span> <span id="sb64_4">a</span> <span id="sb64_5">Gnohité</span> <span id="sb64_6">Djôlo,</span></div></div>
+    <div id="sb65" class="clip sb" data-start="96.79" data-duration="0.91"><div><span id="sb65_0">son</span> <span id="sb65_1">fondateur.</span></div></div>
+    <div id="sb66" class="clip sb" data-start="97.69" data-duration="0.8"><div><span id="sb66_0">Et</span> <span id="sb66_1">vous…</span></div></div>
+    <div id="sb67" class="clip sb" data-start="98.39" data-duration="1.63"><div><span id="sb67_0">ce</span> <span id="sb67_1">soir,</span> <span id="sb67_2">vous</span> <span id="sb67_3">savez</span> <span id="sb67_4">combien</span> <span id="sb67_5">vous</span> <span id="sb67_6">avez</span></div></div>
+    <div id="sb68" class="clip sb" data-start="100.01" data-duration="2.45"><div><span id="sb68_0">vendu</span> <span id="sb68_1">?</span> <span id="sb68_2">Écrivez-nous</span> <span id="sb68_3">sur</span> <span id="sb68_4">WhatsApp.</span></div></div>
+
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    const count = (sel, from, to, at, dur, pre, suf) => { const o = { v: from }; tl.to(o, { v: to, duration: dur, ease: "power3.out", onUpdate: () => { document.querySelectorAll(sel).forEach(e => e.textContent = (pre || "") + fmt(o.v) + (suf || "")); } }, at); };
+    const type = (sel, text, at, dt) => { for (let i = 0; i <= text.length; i++) tl.set(sel, { textContent: text.slice(0, i) || "\u00a0" }, at + i * dt); };
+    const tap = (sel, at) => { tl.fromTo(sel, { scale: 0.35, opacity: 0.95 }, { scale: 1.7, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, at); };
+    tl.set("#sb0_0", { color:"#3DF2E6" }, 0.68);
+    tl.set("#sb1_0", { color:"#3DF2E6" }, 1.4);
+    tl.set("#sb1_1", { color:"#3DF2E6" }, 1.6);
+    tl.set("#sb2_0", { color:"#3DF2E6" }, 2.28);
+    tl.set("#sb2_1", { color:"#3DF2E6" }, 2.39);
+    tl.set("#sb2_2", { color:"#3DF2E6" }, 2.44);
+    tl.set("#sb2_3", { color:"#3DF2E6" }, 2.6);
+    tl.set("#sb2_4", { color:"#3DF2E6" }, 2.84);
+    tl.set("#sb2_5", { color:"#3DF2E6" }, 3.0);
+    tl.set("#sb3_0", { color:"#3DF2E6" }, 3.64);
+    tl.set("#sb3_1", { color:"#3DF2E6" }, 3.72);
+    tl.set("#sb4_0", { color:"#3DF2E6" }, 4.6);
+    tl.set("#sb4_1", { color:"#3DF2E6" }, 4.72);
+    tl.set("#sb4_2", { color:"#3DF2E6" }, 4.84);
+    tl.set("#sb4_3", { color:"#3DF2E6" }, 5.24);
+    tl.set("#sb5_0", { color:"#3DF2E6" }, 5.88);
+    tl.set("#sb5_1", { color:"#3DF2E6" }, 6.04);
+    tl.set("#sb5_2", { color:"#3DF2E6" }, 6.36);
+    tl.set("#sb5_3", { color:"#3DF2E6" }, 6.56);
+    tl.set("#sb6_0", { color:"#3DF2E6" }, 7.32);
+    tl.set("#sb6_1", { color:"#3DF2E6" }, 7.52);
+    tl.set("#sb6_2", { color:"#3DF2E6" }, 7.88);
+    tl.set("#sb7_0", { color:"#3DF2E6" }, 8.36);
+    tl.set("#sb7_1", { color:"#3DF2E6" }, 8.6);
+    tl.set("#sb7_2", { color:"#3DF2E6" }, 8.76);
+    tl.set("#sb8_0", { color:"#3DF2E6" }, 13.05);
+    tl.set("#sb8_1", { color:"#3DF2E6" }, 13.17);
+    tl.set("#sb8_2", { color:"#3DF2E6" }, 13.45);
+    tl.set("#sb8_3", { color:"#3DF2E6" }, 13.61);
+    tl.set("#sb8_4", { color:"#3DF2E6" }, 13.85);
+    tl.set("#sb9_0", { color:"#3DF2E6" }, 14.81);
+    tl.set("#sb9_1", { color:"#3DF2E6" }, 15.01);
+    tl.set("#sb9_2", { color:"#3DF2E6" }, 15.13);
+    tl.set("#sb9_3", { color:"#3DF2E6" }, 15.25);
+    tl.set("#sb9_4", { color:"#3DF2E6" }, 15.37);
+    tl.set("#sb10_0", { color:"#3DF2E6" }, 15.9);
+    tl.set("#sb10_1", { color:"#3DF2E6" }, 16.01);
+    tl.set("#sb10_2", { color:"#3DF2E6" }, 16.17);
+    tl.set("#sb11_0", { color:"#3DF2E6" }, 16.89);
+    tl.set("#sb11_1", { color:"#3DF2E6" }, 17.13);
+    tl.set("#sb11_2", { color:"#3DF2E6" }, 17.29);
+    tl.set("#sb12_0", { color:"#3DF2E6" }, 17.84);
+    tl.set("#sb12_1", { color:"#3DF2E6" }, 17.93);
+    tl.set("#sb12_2", { color:"#3DF2E6" }, 18.33);
+    tl.set("#sb12_3", { color:"#3DF2E6" }, 18.97);
+    tl.set("#sb12_4", { color:"#3DF2E6" }, 19.02);
+    tl.set("#sb12_5", { color:"#3DF2E6" }, 19.13);
+    tl.set("#sb12_6", { color:"#3DF2E6" }, 19.21);
+    tl.set("#sb13_0", { color:"#3DF2E6" }, 19.53);
+    tl.set("#sb14_0", { color:"#3DF2E6" }, 20.01);
+    tl.set("#sb14_1", { color:"#3DF2E6" }, 20.17);
+    tl.set("#sb15_0", { color:"#3DF2E6" }, 20.94);
+    tl.set("#sb15_1", { color:"#3DF2E6" }, 21.17);
+    tl.set("#sb15_2", { color:"#3DF2E6" }, 21.29);
+    tl.set("#sb15_3", { color:"#3DF2E6" }, 21.45);
+    tl.set("#sb16_0", { color:"#3DF2E6" }, 26.21);
+    tl.set("#sb16_1", { color:"#3DF2E6" }, 26.37);
+    tl.set("#sb16_2", { color:"#3DF2E6" }, 26.53);
+    tl.set("#sb16_3", { color:"#3DF2E6" }, 26.73);
+    tl.set("#sb16_4", { color:"#3DF2E6" }, 26.89);
+    tl.set("#sb16_5", { color:"#3DF2E6" }, 26.96);
+    tl.set("#sb16_6", { color:"#3DF2E6" }, 27.09);
+    tl.set("#sb17_0", { color:"#3DF2E6" }, 27.53);
+    tl.set("#sb18_0", { color:"#3DF2E6" }, 27.92);
+    tl.set("#sb18_1", { color:"#3DF2E6" }, 28.13);
+    tl.set("#sb18_2", { color:"#3DF2E6" }, 28.34);
+    tl.set("#sb18_3", { color:"#3DF2E6" }, 28.53);
+    tl.set("#sb18_4", { color:"#3DF2E6" }, 28.69);
+    tl.set("#sb18_5", { color:"#3DF2E6" }, 29.17);
+    tl.set("#sb18_6", { color:"#3DF2E6" }, 29.33);
+    tl.set("#sb19_0", { color:"#3DF2E6" }, 29.73);
+    tl.set("#sb19_1", { color:"#3DF2E6" }, 29.81);
+    tl.set("#sb20_0", { color:"#3DF2E6" }, 30.84);
+    tl.set("#sb20_1", { color:"#3DF2E6" }, 31.01);
+    tl.set("#sb20_2", { color:"#3DF2E6" }, 31.17);
+    tl.set("#sb21_0", { color:"#3DF2E6" }, 31.86);
+    tl.set("#sb21_1", { color:"#3DF2E6" }, 31.91);
+    tl.set("#sb21_2", { color:"#3DF2E6" }, 31.95);
+    tl.set("#sb21_3", { color:"#3DF2E6" }, 32.05);
+    tl.set("#sb21_4", { color:"#3DF2E6" }, 32.29);
+    tl.set("#sb21_5", { color:"#3DF2E6" }, 32.69);
+    tl.set("#sb22_0", { color:"#3DF2E6" }, 33.09);
+    tl.set("#sb22_1", { color:"#3DF2E6" }, 33.25);
+    tl.set("#sb22_2", { color:"#3DF2E6" }, 33.65);
+    tl.set("#sb22_3", { color:"#3DF2E6" }, 33.77);
+    tl.set("#sb23_0", { color:"#3DF2E6" }, 34.45);
+    tl.set("#sb23_1", { color:"#3DF2E6" }, 34.58);
+    tl.set("#sb23_2", { color:"#3DF2E6" }, 35.33);
+    tl.set("#sb23_3", { color:"#3DF2E6" }, 35.45);
+    tl.set("#sb23_4", { color:"#3DF2E6" }, 35.57);
+    tl.set("#sb23_5", { color:"#3DF2E6" }, 36.05);
+    tl.set("#sb23_6", { color:"#3DF2E6" }, 36.89);
+    tl.set("#sb24_0", { color:"#3DF2E6" }, 37.17);
+    tl.set("#sb24_1", { color:"#3DF2E6" }, 37.37);
+    tl.set("#sb24_2", { color:"#3DF2E6" }, 37.45);
+    tl.set("#sb24_3", { color:"#3DF2E6" }, 37.57);
+    tl.set("#sb24_4", { color:"#3DF2E6" }, 37.89);
+    tl.set("#sb24_5", { color:"#3DF2E6" }, 38.21);
+    tl.set("#sb24_6", { color:"#3DF2E6" }, 38.45);
+    tl.set("#sb25_0", { color:"#3DF2E6" }, 39.33);
+    tl.set("#sb26_0", { color:"#3DF2E6" }, 40.05);
+    tl.set("#sb27_0", { color:"#3DF2E6" }, 41.41);
+    tl.set("#sb27_1", { color:"#3DF2E6" }, 41.61);
+    tl.set("#sb27_2", { color:"#3DF2E6" }, 42.05);
+    tl.set("#sb27_3", { color:"#3DF2E6" }, 42.41);
+    tl.set("#sb27_4", { color:"#3DF2E6" }, 42.69);
+    tl.set("#sb27_5", { color:"#3DF2E6" }, 42.81);
+    tl.set("#sb28_0", { color:"#3DF2E6" }, 43.54);
+    tl.set("#sb28_1", { color:"#3DF2E6" }, 43.69);
+    tl.set("#sb28_2", { color:"#3DF2E6" }, 43.81);
+    tl.set("#sb28_3", { color:"#3DF2E6" }, 44.17);
+    tl.set("#sb28_4", { color:"#3DF2E6" }, 44.25);
+    tl.set("#sb28_5", { color:"#3DF2E6" }, 44.45);
+    tl.set("#sb29_0", { color:"#3DF2E6" }, 44.82);
+    tl.set("#sb29_1", { color:"#3DF2E6" }, 44.93);
+    tl.set("#sb29_2", { color:"#3DF2E6" }, 45.33);
+    tl.set("#sb29_3", { color:"#3DF2E6" }, 45.49);
+    tl.set("#sb30_0", { color:"#3DF2E6" }, 46.01);
+    tl.set("#sb30_1", { color:"#3DF2E6" }, 46.53);
+    tl.set("#sb30_2", { color:"#3DF2E6" }, 46.65);
+    tl.set("#sb31_0", { color:"#3DF2E6" }, 47.09);
+    tl.set("#sb31_1", { color:"#3DF2E6" }, 47.29);
+    tl.set("#sb31_2", { color:"#3DF2E6" }, 47.49);
+    tl.set("#sb32_0", { color:"#3DF2E6" }, 48.1);
+    tl.set("#sb32_1", { color:"#3DF2E6" }, 48.21);
+    tl.set("#sb32_2", { color:"#3DF2E6" }, 48.57);
+    tl.set("#sb32_3", { color:"#3DF2E6" }, 48.77);
+    tl.set("#sb32_4", { color:"#3DF2E6" }, 48.93);
+    tl.set("#sb32_5", { color:"#3DF2E6" }, 49.25);
+    tl.set("#sb32_6", { color:"#3DF2E6" }, 49.33);
+    tl.set("#sb33_0", { color:"#3DF2E6" }, 49.49);
+    tl.set("#sb33_1", { color:"#3DF2E6" }, 50.01);
+    tl.set("#sb33_2", { color:"#3DF2E6" }, 50.13);
+    tl.set("#sb34_0", { color:"#3DF2E6" }, 50.88);
+    tl.set("#sb34_1", { color:"#3DF2E6" }, 51.13);
+    tl.set("#sb35_0", { color:"#3DF2E6" }, 51.41);
+    tl.set("#sb35_1", { color:"#3DF2E6" }, 51.57);
+    tl.set("#sb35_2", { color:"#3DF2E6" }, 51.81);
+    tl.set("#sb35_3", { color:"#3DF2E6" }, 51.93);
+    tl.set("#sb36_0", { color:"#3DF2E6" }, 52.42);
+    tl.set("#sb36_1", { color:"#3DF2E6" }, 52.53);
+    tl.set("#sb36_2", { color:"#3DF2E6" }, 52.85);
+    tl.set("#sb36_3", { color:"#3DF2E6" }, 53.25);
+    tl.set("#sb37_0", { color:"#3DF2E6" }, 53.64);
+    tl.set("#sb37_1", { color:"#3DF2E6" }, 53.73);
+    tl.set("#sb37_2", { color:"#3DF2E6" }, 54.48);
+    tl.set("#sb37_3", { color:"#3DF2E6" }, 54.53);
+    tl.set("#sb37_4", { color:"#3DF2E6" }, 54.89);
+    tl.set("#sb37_5", { color:"#3DF2E6" }, 55.05);
+    tl.set("#sb38_0", { color:"#3DF2E6" }, 55.46);
+    tl.set("#sb38_1", { color:"#3DF2E6" }, 55.81);
+    tl.set("#sb39_0", { color:"#3DF2E6" }, 56.37);
+    tl.set("#sb39_1", { color:"#3DF2E6" }, 56.49);
+    tl.set("#sb39_2", { color:"#3DF2E6" }, 57.21);
+    tl.set("#sb39_3", { color:"#3DF2E6" }, 57.29);
+    tl.set("#sb39_4", { color:"#3DF2E6" }, 57.49);
+    tl.set("#sb39_5", { color:"#3DF2E6" }, 57.89);
+    tl.set("#sb39_6", { color:"#3DF2E6" }, 58.21);
+    tl.set("#sb40_0", { color:"#3DF2E6" }, 58.45);
+    tl.set("#sb41_0", { color:"#3DF2E6" }, 58.98);
+    tl.set("#sb41_1", { color:"#3DF2E6" }, 59.05);
+    tl.set("#sb41_2", { color:"#3DF2E6" }, 59.17);
+    tl.set("#sb42_0", { color:"#3DF2E6" }, 59.76);
+    tl.set("#sb42_1", { color:"#3DF2E6" }, 60.09);
+    tl.set("#sb42_2", { color:"#3DF2E6" }, 60.24);
+    tl.set("#sb42_3", { color:"#3DF2E6" }, 60.29);
+    tl.set("#sb43_0", { color:"#3DF2E6" }, 61.01);
+    tl.set("#sb43_1", { color:"#3DF2E6" }, 61.52);
+    tl.set("#sb43_2", { color:"#3DF2E6" }, 61.61);
+    tl.set("#sb44_0", { color:"#3DF2E6" }, 62.21);
+    tl.set("#sb44_1", { color:"#3DF2E6" }, 62.53);
+    tl.set("#sb44_2", { color:"#3DF2E6" }, 62.69);
+    tl.set("#sb44_3", { color:"#3DF2E6" }, 62.93);
+    tl.set("#sb44_4", { color:"#3DF2E6" }, 63.13);
+    tl.set("#sb45_0", { color:"#3DF2E6" }, 63.49);
+    tl.set("#sb45_1", { color:"#3DF2E6" }, 63.81);
+    tl.set("#sb45_2", { color:"#3DF2E6" }, 64.05);
+    tl.set("#sb45_3", { color:"#3DF2E6" }, 64.21);
+    tl.set("#sb45_4", { color:"#3DF2E6" }, 64.37);
+    tl.set("#sb45_5", { color:"#3DF2E6" }, 64.48);
+    tl.set("#sb46_0", { color:"#3DF2E6" }, 65.09);
+    tl.set("#sb46_1", { color:"#3DF2E6" }, 65.49);
+    tl.set("#sb46_2", { color:"#3DF2E6" }, 66.37);
+    tl.set("#sb46_3", { color:"#3DF2E6" }, 66.61);
+    tl.set("#sb46_4", { color:"#3DF2E6" }, 66.85);
+    tl.set("#sb46_5", { color:"#3DF2E6" }, 67.25);
+    tl.set("#sb46_6", { color:"#3DF2E6" }, 67.57);
+    tl.set("#sb47_0", { color:"#3DF2E6" }, 67.77);
+    tl.set("#sb47_1", { color:"#3DF2E6" }, 67.85);
+    tl.set("#sb48_0", { color:"#3DF2E6" }, 68.76);
+    tl.set("#sb48_1", { color:"#3DF2E6" }, 68.81);
+    tl.set("#sb48_2", { color:"#3DF2E6" }, 69.45);
+    tl.set("#sb48_3", { color:"#3DF2E6" }, 69.53);
+    tl.set("#sb48_4", { color:"#3DF2E6" }, 69.61);
+    tl.set("#sb48_5", { color:"#3DF2E6" }, 69.81);
+    tl.set("#sb49_0", { color:"#3DF2E6" }, 70.29);
+    tl.set("#sb49_1", { color:"#3DF2E6" }, 70.53);
+    tl.set("#sb49_2", { color:"#3DF2E6" }, 70.69);
+    tl.set("#sb49_3", { color:"#3DF2E6" }, 71.01);
+    tl.set("#sb50_0", { color:"#3DF2E6" }, 71.49);
+    tl.set("#sb50_1", { color:"#3DF2E6" }, 71.54);
+    tl.set("#sb50_2", { color:"#3DF2E6" }, 71.65);
+    tl.set("#sb51_0", { color:"#3DF2E6" }, 72.25);
+    tl.set("#sb51_1", { color:"#3DF2E6" }, 72.73);
+    tl.set("#sb51_2", { color:"#3DF2E6" }, 73.26);
+    tl.set("#sb51_3", { color:"#3DF2E6" }, 73.37);
+    tl.set("#sb52_0", { color:"#3DF2E6" }, 77.32);
+    tl.set("#sb52_1", { color:"#3DF2E6" }, 77.48);
+    tl.set("#sb52_2", { color:"#3DF2E6" }, 77.76);
+    tl.set("#sb52_3", { color:"#3DF2E6" }, 77.88);
+    tl.set("#sb52_4", { color:"#3DF2E6" }, 78.12);
+    tl.set("#sb53_0", { color:"#3DF2E6" }, 80.65);
+    tl.set("#sb53_1", { color:"#3DF2E6" }, 80.89);
+    tl.set("#sb54_0", { color:"#3DF2E6" }, 81.5);
+    tl.set("#sb54_1", { color:"#3DF2E6" }, 81.85);
+    tl.set("#sb55_0", { color:"#3DF2E6" }, 82.14);
+    tl.set("#sb55_1", { color:"#3DF2E6" }, 82.25);
+    tl.set("#sb55_2", { color:"#3DF2E6" }, 82.41);
+    tl.set("#sb56_0", { color:"#3DF2E6" }, 82.97);
+    tl.set("#sb56_1", { color:"#3DF2E6" }, 84.09);
+    tl.set("#sb56_2", { color:"#3DF2E6" }, 84.2);
+    tl.set("#sb56_3", { color:"#3DF2E6" }, 84.77);
+    tl.set("#sb56_4", { color:"#3DF2E6" }, 84.97);
+    tl.set("#sb56_5", { color:"#3DF2E6" }, 85.33);
+    tl.set("#sb57_0", { color:"#3DF2E6" }, 85.98);
+    tl.set("#sb57_1", { color:"#3DF2E6" }, 86.09);
+    tl.set("#sb57_2", { color:"#3DF2E6" }, 86.41);
+    tl.set("#sb57_3", { color:"#3DF2E6" }, 86.73);
+    tl.set("#sb57_4", { color:"#3DF2E6" }, 86.89);
+    tl.set("#sb58_0", { color:"#3DF2E6" }, 87.37);
+    tl.set("#sb58_1", { color:"#3DF2E6" }, 87.53);
+    tl.set("#sb59_0", { color:"#3DF2E6" }, 88.06);
+    tl.set("#sb59_1", { color:"#3DF2E6" }, 88.45);
+    tl.set("#sb60_0", { color:"#3DF2E6" }, 88.89);
+    tl.set("#sb60_1", { color:"#3DF2E6" }, 89.42);
+    tl.set("#sb60_2", { color:"#3DF2E6" }, 90.09);
+    tl.set("#sb61_0", { color:"#3DF2E6" }, 90.73);
+    tl.set("#sb62_0", { color:"#3DF2E6" }, 91.58);
+    tl.set("#sb62_1", { color:"#3DF2E6" }, 91.69);
+    tl.set("#sb62_2", { color:"#3DF2E6" }, 91.8);
+    tl.set("#sb62_3", { color:"#3DF2E6" }, 92.13);
+    tl.set("#sb62_4", { color:"#3DF2E6" }, 92.21);
+    tl.set("#sb62_5", { color:"#3DF2E6" }, 92.41);
+    tl.set("#sb63_0", { color:"#3DF2E6" }, 93.05);
+    tl.set("#sb63_1", { color:"#3DF2E6" }, 93.17);
+    tl.set("#sb63_2", { color:"#3DF2E6" }, 93.29);
+    tl.set("#sb63_3", { color:"#3DF2E6" }, 93.45);
+    tl.set("#sb63_4", { color:"#3DF2E6" }, 94.05);
+    tl.set("#sb63_5", { color:"#3DF2E6" }, 94.37);
+    tl.set("#sb64_0", { color:"#3DF2E6" }, 94.71);
+    tl.set("#sb64_1", { color:"#3DF2E6" }, 94.89);
+    tl.set("#sb64_2", { color:"#3DF2E6" }, 95.61);
+    tl.set("#sb64_3", { color:"#3DF2E6" }, 95.73);
+    tl.set("#sb64_4", { color:"#3DF2E6" }, 95.81);
+    tl.set("#sb64_5", { color:"#3DF2E6" }, 95.93);
+    tl.set("#sb64_6", { color:"#3DF2E6" }, 96.33);
+    tl.set("#sb65_0", { color:"#3DF2E6" }, 96.84);
+    tl.set("#sb65_1", { color:"#3DF2E6" }, 96.97);
+    tl.set("#sb66_0", { color:"#3DF2E6" }, 97.74);
+    tl.set("#sb66_1", { color:"#3DF2E6" }, 98.05);
+    tl.set("#sb67_0", { color:"#3DF2E6" }, 98.44);
+    tl.set("#sb67_1", { color:"#3DF2E6" }, 98.53);
+    tl.set("#sb67_2", { color:"#3DF2E6" }, 99.13);
+    tl.set("#sb67_3", { color:"#3DF2E6" }, 99.33);
+    tl.set("#sb67_4", { color:"#3DF2E6" }, 99.56);
+    tl.set("#sb67_5", { color:"#3DF2E6" }, 99.73);
+    tl.set("#sb67_6", { color:"#3DF2E6" }, 99.85);
+    tl.set("#sb68_0", { color:"#3DF2E6" }, 100.06);
+    tl.set("#sb68_1", { color:"#3DF2E6" }, 100.65);
+    tl.set("#sb68_2", { color:"#3DF2E6" }, 100.73);
+    tl.set("#sb68_3", { color:"#3DF2E6" }, 101.21);
+    tl.set("#sb68_4", { color:"#3DF2E6" }, 101.53);
+
+    window.__timelines["subs"] = tl;
+  </script>
+</template>
