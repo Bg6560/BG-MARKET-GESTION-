@@ -4,6 +4,7 @@ import json, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import build as B
 from build import r, phone, laptop, dash_phone, dash_employe, sheet_create, form_commande, invoice_paper, precommande_screen, dk_factures, dk_dashboard, kpi, words_html, CURSOR
+from illus import a16_svg, TRADES
 from ui import ic, APP_CSS, DK_CSS, TEAL, ORANGE, GREEN
 
 ROOT = B.ROOT
@@ -208,7 +209,7 @@ def build_chaos():
     <div id="ch-wa" class="clip card chc" data-start="{r(tw - 0.15)}" data-duration="{r(tg - tw + 0.6)}"><em>{ic('wa', 32)} WhatsApp</em><b>« 490 000 je crois »</b></div>
     <div id="ch-ca" class="clip card chc" data-start="{r(tk - 0.15)}" data-duration="{r(tg - tk + 0.6)}"><em>{ic('card', 30, '#4A5D72')} La caisse</em><b>Total : <span class="o">512 000 F</span></b></div>
     <div id="ch-ne" class="clip" data-start="{r(L(W('encore', 1, 16.5)) - 0.1)}" data-duration="{r(tg - L(W('encore', 1, 16.5)) + 0.5)}">≠</div>
-    <div id="ch-st" class="clip card" data-start="{r(tg - 0.2)}" data-duration="{r(tq2 - tg + 0.3)}"><span>{ic('phone', 70, '#4A5D72', 1.6)}</span><b>Galaxy A16</b><i>Reste en stock</i><strong id="ch-n">1</strong></div>
+    <div id="ch-st" class="clip card" data-start="{r(tg - 0.2)}" data-duration="{r(tq2 - tg + 0.3)}"><div id="ch-ph">{a16_svg(300, 420)}</div><div id="ch-tx"><b>Galaxy A16</b><i>Reste en stock</i><strong id="ch-n">1</strong></div><div id="ch-sh"></div></div>
 '''
     b2, j2 = bubble('ch-q', 'SERGE → YANNICK', 'Yannick ! La facture de Koffi… tu l\'as envoyée ?', 80, 560, 760, tq2 - 0.1, D)
     cards += b2 + f'''    <div id="ch-typ" class="clip" data-start="{r(tq2 + 1.6)}" data-duration="{r(D - tq2 - 1.6)}"><img src="assets/people/employe_face.png" alt="" /><span><i></i><i></i><i></i></span></div>
@@ -221,10 +222,12 @@ def build_chaos():
     .chc b { display:block; margin-top:10px; font-size:52px; font-weight:900; letter-spacing:-.02em; }
     #ch-nb { left:60px; top:300px; } #ch-wa { left:400px; top:640px; } #ch-ca { left:90px; top:980px; }
     #ch-ne { position:absolute; left:760px; top:1000px; font-size:200px; font-weight:900; color:#FF6208; }
-    #ch-st { left:190px; top:520px; width:700px; height:700px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    #ch-st span { width:140px; height:140px; border-radius:40px; background:#EEF4F8; display:flex; align-items:center; justify-content:center; }
-    #ch-st b { margin-top:24px; font-size:64px; font-weight:900; } #ch-st i { font-style:normal; font-size:32px; color:#4A5D72; font-weight:700; }
-    #ch-st strong { margin-top:20px; font-size:220px; font-weight:900; line-height:1; color:#FF6208; font-variant-numeric:tabular-nums; }
+    #ch-st { left:70px; top:560px; width:940px; height:620px; display:flex; align-items:center; gap:10px; padding:0 40px 0 20px; overflow:hidden; }
+    #ch-ph { width:400px; height:560px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 55%, #E3F3F6 0, #F7FAFC 60%); border-radius:28px; }
+    #ch-tx { flex:1; display:flex; flex-direction:column; align-items:center; }
+    #ch-st b { font-size:62px; font-weight:900; } #ch-st i { font-style:normal; font-size:32px; color:#4A5D72; font-weight:700; }
+    #ch-st strong { margin-top:16px; font-size:220px; font-weight:900; line-height:1; color:#FF6208; font-variant-numeric:tabular-nums; }
+    #ch-sh { position:absolute; top:-100px; left:0; width:160px; height:900px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0)); transform:translateX(-300px) rotate(18deg); }
     #ch-typ { position:absolute; left:500px; top:900px; display:flex; align-items:center; gap:18px; }
     #ch-typ img { width:110px; height:110px; border-radius:50%; border:5px solid #00D4C8; object-fit:cover; background:#0E2235; }
     #ch-typ span { display:flex; gap:10px; padding:26px 30px; border-radius:30px; background:#fff; }
@@ -237,7 +240,10 @@ def build_chaos():
     js += f'''
     tl.fromTo("#ch-ne", {{ scale:0, rotation:-30 }}, {{ scale:1, rotation:0, duration:0.45, ease:"back.out(2)" }}, {r(L(W('encore', 1, 16.5)) - 0.1)});
     tl.to("#ch-ne", {{ opacity:0, duration:0.3 }}, {r(tg - 0.2)});
-    tl.fromTo("#ch-st", {{ scale:0.6, opacity:0 }}, {{ scale:1, opacity:1, duration:0.6, ease:"expo.out" }}, {r(tg - 0.2)});'''
+    tl.fromTo("#ch-st", {{ scale:0.6, opacity:0 }}, {{ scale:1, opacity:1, duration:0.6, ease:"expo.out" }}, {r(tg - 0.2)});
+    tl.fromTo("#ch-ph svg", {{ x:-260, rotation:-14, scale:0.8 }}, {{ x:0, rotation:0, scale:1, duration:0.9, ease:"expo.out" }}, {r(tg - 0.1)});
+    tl.fromTo("#ch-ph svg", {{ y:0 }}, {{ y:-14, duration:1.1, yoyo:true, repeat:2, ease:"sine.inOut" }}, {r(tg + 0.8)});
+    tl.fromTo("#ch-sh", {{ x:-300 }}, {{ x:1200, duration:0.9, ease:"power2.inOut" }}, {r(tg + 0.5)});'''
     seq = ['1', '0', '?', '1', '0', '?']
     for i, v in enumerate(seq):
         js += f'\n    tl.set("#ch-n", {{ textContent:"{v}" }}, {r(L(W("un…", 1, 19)) + i * 0.32)});'
@@ -546,7 +552,8 @@ def build_perso():
     mk = phone('ps-mk', 0.98, B.generic_app('gx'), 'left:328px;top:460px;')
     trades = [('store', 'Boutique', TEAL, 'Boutique'), ('pill', 'Pharmacie', GREEN, 'pharmacie'), ('utensils', 'Restaurant', '#E0A100', 'restaurant'), ('cart', 'Supermarché', ORANGE, 'supermarché')]
     pos = [(40, 520), (790, 520), (40, 980), (790, 980)]
-    tiles = ''.join(f'<div class="ps-t" id="ps-t{i}" style="left:{x}px;top:{y}px;--c:{c}"><span>{ic(k, 54, c, 2)}</span><b>{n}</b></div>' for i, ((k, n, c, w), (x, y)) in enumerate(zip(trades, pos)))
+    pos = [(30, 470), (790, 470), (30, 960), (790, 960)]
+    tiles = ''.join(f'<div class="ps-t" id="ps-t{i}" style="left:{x}px;top:{y}px;--c:{c}"><div class="ps-im"><div class="ps-kb">{TRADES[k]()}</div><i class="ps-gl"></i></div><b><span>{ic(k, 30, c, 2.2)}</span>{n}</b></div>' for i, ((k, n, c, w), (x, y)) in enumerate(zip(trades, pos)))
     chips = [('Vos règles', 'règles,'), ('Vos rôles', 'rôles…'), ('Votre marque', 'marque.')]
     ch = ''.join(f'<div class="ps-c" id="ps-c{i}">{n}</div>' for i, (n, w) in enumerate(chips))
     body = f'''    <div id="ps-mkw" class="clip" data-start="{r(L(W('vôtre')) - 0.2)}" data-duration="{r(D - L(W('vôtre')) + 0.2)}">{mk}<div id="ps-lab">Maquette d'illustration</div></div>
@@ -562,9 +569,13 @@ def build_perso():
     #ps-mkw, #ps-tw, #ps-cw { position:absolute; inset:0; }
     #ps-mk { --acc:#00A8E8; }
     #ps-lab { position:absolute; left:0; right:0; top:1340px; text-align:center; font-size:24px; font-weight:700; color:#6A7C90; }
-    .ps-t { position:absolute; width:250px; height:250px; border-radius:36px; background:#fff; border:3px solid var(--c); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; box-shadow:0 24px 60px rgba(11,31,51,.16); }
-    .ps-t span { width:100px; height:100px; border-radius:28px; background:color-mix(in srgb, var(--c) 14%, white); display:flex; align-items:center; justify-content:center; }
-    .ps-t b { font-size:30px; font-weight:800; }
+    .ps-t { position:absolute; width:260px; height:360px; border-radius:30px; background:#fff; padding:10px; box-shadow:0 30px 70px rgba(11,31,51,.22); border:3px solid var(--c); }
+    .ps-im { position:relative; width:234px; height:270px; border-radius:22px; overflow:hidden; background:#ddd; }
+    .ps-kb { position:absolute; inset:0; }
+    .ps-kb svg { display:block; width:100%; height:100%; }
+    .ps-gl { position:absolute; top:-40px; left:0; width:90px; height:360px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.7),rgba(255,255,255,0)); transform:translateX(-160px) rotate(16deg); }
+    .ps-t b { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:16px; font-size:28px; font-weight:800; }
+    .ps-t b span { display:flex; }
     #ps-cw { display:flex; flex-direction:column; align-items:flex-start; gap:20px; padding:560px 0 0 40px; }
     .ps-c { padding:20px 32px; border-radius:30px; font-size:38px; font-weight:900; background:#fff; box-shadow:0 20px 50px rgba(11,31,51,.14); border:3px solid #00D4C8; }
     #ps-au { left:150px; top:1400px; }'''
@@ -575,7 +586,13 @@ def build_perso():
         js += f'\n    tl.fromTo("#ps-c{i}", {{ x:-400, opacity:0 }}, {{ x:0, opacity:1, duration:0.4, ease:"expo.out" }}, {r(L(W(w)) - 0.15)});'
     js += f'\n    tl.to("#ps-cw", {{ opacity:0, x:-200, duration:0.3 }}, {r(L(W("Boutique", 1, 88)) - 0.2)});'
     for i, (k, n, c, w) in enumerate(trades):
-        js += f'\n    tl.fromTo("#ps-t{i}", {{ scale:0.3, opacity:0 }}, {{ scale:1, opacity:1, duration:0.45, ease:"back.out(1.7)" }}, {r(L(W(w, 1, 88)) - 0.1)});'
+        t0 = L(W(w, 1, 88)) - 0.1
+        dx = -420 if i % 2 == 0 else 420
+        js += f'''
+    tl.fromTo("#ps-t{i}", {{ x:{dx}, rotation:{-10 if i % 2 == 0 else 10}, opacity:0 }}, {{ x:0, rotation:{-3 if i % 2 == 0 else 3}, opacity:1, duration:0.7, ease:"expo.out" }}, {r(t0)});
+    tl.fromTo("#ps-t{i} .ps-kb", {{ scale:1.35 }}, {{ scale:1.0, duration:3.2, ease:"power2.out" }}, {r(t0)});
+    tl.fromTo("#ps-t{i} .ps-gl", {{ x:-160 }}, {{ x:340, duration:0.8, ease:"power2.inOut" }}, {r(t0 + 0.45)});
+    tl.to("#ps-t{i}", {{ y:-10, duration:1.4, yoyo:true, repeat:1, ease:"sine.inOut" }}, {r(t0 + 0.7)});'''
     for i, col in enumerate(['#FF3B6B', '#2DBE60', '#E0A100', '#FF6208', '#00A8E8']):
         js += f'\n    tl.set("#ps-mk", {{ "--acc":"{col}" }}, {r(L(W("Boutique", 1, 88)) + i * 0.5)});'
     js += f'''
@@ -642,7 +659,20 @@ def build_fx(cuts):
     js = ''.join(f'''
     tl.fromTo("#fx-s{i} i", {{ y:-2400, skewY:-14, opacity:0 }}, {{ y:2400, skewY:-14, opacity:0.8, duration:0.7, ease:"power2.inOut" }}, {r(t - 0.35)});
     tl.to("#fx-s{i} i", {{ opacity:0, duration:0.2 }}, {r(t + 0.41)});''' for i, t in enumerate(cuts))
+    wipes = [t for i, t in enumerate(cuts) if i % 2 == 1]
+    streaks += ''.join(f'<div id="fx-w{i}" class="clip fxw" data-start="{r(t - 0.42)}" data-duration="0.9"><i class="a"></i><i class="b"></i><i class="c"></i></div>' for i, t in enumerate(wipes))
+    for i, t in enumerate(wipes):
+        js += f'''
+    tl.fromTo("#fx-w{i} .a", {{ xPercent:-130 }}, {{ xPercent:0, duration:0.38, ease:"power3.in" }}, {r(t - 0.42)});
+    tl.fromTo("#fx-w{i} .b", {{ xPercent:-130 }}, {{ xPercent:0, duration:0.38, ease:"power3.in" }}, {r(t - 0.36)});
+    tl.fromTo("#fx-w{i} .c", {{ xPercent:-130 }}, {{ xPercent:0, duration:0.38, ease:"power3.in" }}, {r(t - 0.30)});
+    tl.to("#fx-w{i} .a", {{ xPercent:130, duration:0.4, ease:"power3.out" }}, {r(t + 0.04)});
+    tl.to("#fx-w{i} .b", {{ xPercent:130, duration:0.4, ease:"power3.out" }}, {r(t + 0.08)});
+    tl.to("#fx-w{i} .c", {{ xPercent:130, duration:0.4, ease:"power3.out" }}, {r(t + 0.0)});'''
     write('fx', scene('fx', streaks, '''
+    .fxw { position:absolute; inset:0; overflow:hidden; }
+    .fxw i { position:absolute; left:-25%; width:150%; height:2400px; top:-240px; transform:skewX(-16deg); }
+    .fxw .a { background:#00D4C8; } .fxw .b { background:#FF6208; } .fxw .c { background:#FFFFFF; }
     .fxs { position:absolute; inset:0; overflow:hidden; }
     .fxs i { position:absolute; left:-200px; top:50%; width:1480px; height:300px; margin-top:-150px; background:linear-gradient(180deg,rgba(0,212,200,0),rgba(0,212,200,.25) 40%,rgba(255,255,255,.75) 50%,rgba(255,98,8,.2) 60%,rgba(255,98,8,0)); filter:blur(18px); }''', js))
     HOSTS['fx'] = (0, DUR)

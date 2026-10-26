@@ -161,10 +161,12 @@
     .chc b { display:block; margin-top:10px; font-size:52px; font-weight:900; letter-spacing:-.02em; }
     #ch-nb { left:60px; top:300px; } #ch-wa { left:400px; top:640px; } #ch-ca { left:90px; top:980px; }
     #ch-ne { position:absolute; left:760px; top:1000px; font-size:200px; font-weight:900; color:#FF6208; }
-    #ch-st { left:190px; top:520px; width:700px; height:700px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    #ch-st span { width:140px; height:140px; border-radius:40px; background:#EEF4F8; display:flex; align-items:center; justify-content:center; }
-    #ch-st b { margin-top:24px; font-size:64px; font-weight:900; } #ch-st i { font-style:normal; font-size:32px; color:#4A5D72; font-weight:700; }
-    #ch-st strong { margin-top:20px; font-size:220px; font-weight:900; line-height:1; color:#FF6208; font-variant-numeric:tabular-nums; }
+    #ch-st { left:70px; top:560px; width:940px; height:620px; display:flex; align-items:center; gap:10px; padding:0 40px 0 20px; overflow:hidden; }
+    #ch-ph { width:400px; height:560px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 55%, #E3F3F6 0, #F7FAFC 60%); border-radius:28px; }
+    #ch-tx { flex:1; display:flex; flex-direction:column; align-items:center; }
+    #ch-st b { font-size:62px; font-weight:900; } #ch-st i { font-style:normal; font-size:32px; color:#4A5D72; font-weight:700; }
+    #ch-st strong { margin-top:16px; font-size:220px; font-weight:900; line-height:1; color:#FF6208; font-variant-numeric:tabular-nums; }
+    #ch-sh { position:absolute; top:-100px; left:0; width:160px; height:900px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0)); transform:translateX(-300px) rotate(18deg); }
     #ch-typ { position:absolute; left:500px; top:900px; display:flex; align-items:center; gap:18px; }
     #ch-typ img { width:110px; height:110px; border-radius:50%; border:5px solid #00D4C8; object-fit:cover; background:#0E2235; }
     #ch-typ span { display:flex; gap:10px; padding:26px 30px; border-radius:30px; background:#fff; }
@@ -175,7 +177,44 @@
     <div id="ch-wa" class="clip card chc" data-start="1.81" data-duration="3.72"><em><svg class="ico " viewBox="0 0 24 24" width="32" height="32"><path d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.2 21.8l4.9-1.3A9.8 9.8 0 1 0 12 2.2z" fill="#25D366"/><path d="M8.6 7.3c-.2-.5-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.6 5.6 4.9 2.8 1.1 3.3.9 3.9.8.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.4s-1.9-.9-2.2-1-.5-.2-.7.2c-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4z" fill="#fff"/></svg> WhatsApp</em><b>« 490 000 je crois »</b></div>
     <div id="ch-ca" class="clip card chc" data-start="3.17" data-duration="2.36"><em><svg class="ico " viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4A5D72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> La caisse</em><b>Total : <span class="o">512 000 F</span></b></div>
     <div id="ch-ne" class="clip" data-start="3.94" data-duration="1.54">≠</div>
-    <div id="ch-st" class="clip card" data-start="4.88" data-duration="4.87"><span><svg class="ico " viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="#4A5D72" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><b>Galaxy A16</b><i>Reste en stock</i><strong id="ch-n">1</strong></div>
+    <div id="ch-st" class="clip card" data-start="4.88" data-duration="4.87"><div id="ch-ph"><svg viewBox="0 0 330 460" width="300" height="420" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="a16blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="12"/></filter>
+  <linearGradient id="a16back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B5567"/><stop offset=".45" stop-color="#1E2633"/><stop offset=".75" stop-color="#2E3847"/><stop offset="1" stop-color="#151B25"/></linearGradient>
+  <linearGradient id="a16frame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5C6778"/><stop offset=".5" stop-color="#262E3B"/><stop offset="1" stop-color="#5C6778"/></linearGradient>
+  <linearGradient id="a16wall" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#0B2742"/><stop offset=".55" stop-color="#0E4A6B"/><stop offset="1" stop-color="#0A2236"/></linearGradient>
+  <linearGradient id="a16ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8C2CE"/><stop offset="1" stop-color="#3A4452"/></linearGradient>
+  <radialGradient id="a16lens" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#2B5C8A"/><stop offset=".45" stop-color="#0D1A2A"/><stop offset="1" stop-color="#020407"/></radialGradient>
+</defs>
+<g transform="rotate(-9 109.0 225.0)">
+  <rect x="20" y="44" width="190" height="390" rx="34" fill="#0B1F33" opacity=".28" filter="url(#a16blur)"/>
+  <rect x="14" y="30" width="190" height="390" rx="34" fill="url(#a16back)"/>
+  <rect x="14" y="30" width="190" height="390" rx="34" fill="none" stroke="#7E8A9A" stroke-width="2" opacity=".6"/>
+  <path d="M42.5 30 L 109.0 30 L 14 244.50000000000003 L 14 108.0 Z" fill="#fff" opacity=".1"/>
+  <circle cx="60" cy="76" r="21" fill="#0A0D12" stroke="url(#a16ring)" stroke-width="4"/>
+  <circle cx="60" cy="76" r="13" fill="url(#a16lens)"/>
+  <circle cx="55" cy="71" r="3.2" fill="#fff" opacity=".75"/><circle cx="60" cy="130" r="21" fill="#0A0D12" stroke="url(#a16ring)" stroke-width="4"/>
+  <circle cx="60" cy="130" r="13" fill="url(#a16lens)"/>
+  <circle cx="55" cy="125" r="3.2" fill="#fff" opacity=".75"/><circle cx="60" cy="184" r="21" fill="#0A0D12" stroke="url(#a16ring)" stroke-width="4"/>
+  <circle cx="60" cy="184" r="13" fill="url(#a16lens)"/>
+  <circle cx="55" cy="179" r="3.2" fill="#fff" opacity=".75"/>
+  <circle cx="100" cy="76" r="6" fill="#E8E2C8" opacity=".9"/>
+  <text x="109.0" y="370" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="15" letter-spacing="5" fill="#A9B4C2">SAMSUNG</text>
+</g>
+<g transform="rotate(6 221.0 239.0)">
+  <rect x="132" y="58" width="190" height="390" rx="34" fill="#0B1F33" opacity=".28" filter="url(#a16blur)"/>
+  <rect x="126" y="44" width="190" height="390" rx="34" fill="url(#a16frame)"/>
+  <rect x="133" y="51" width="176" height="376" rx="28" fill="#05080D"/>
+  <rect x="137" y="55" width="168" height="368" rx="25" fill="url(#a16wall)"/>
+  <path d="M137 285.8 C 192.5 246.8, 259.0 332.6, 305 278.0 L 305 398 Q 305 423 280 423 L 162 423 Q 137 423 137 398 Z" fill="#00D4C8" opacity=".35"/>
+  <path d="M137 324.8 C 202.0 293.6, 240.0 371.59999999999997, 305 317.0 L 305 398 Q 305 423 280 423 L 162 423 Q 137 423 137 398 Z" fill="#0B6FA8" opacity=".55"/>
+  <circle cx="221.0" cy="70" r="6" fill="#05080D"/>
+  <text x="221.0" y="149.3" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="45.6" fill="#fff">21:00</text>
+  <text x="221.0" y="175.3" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="14" fill="#CFEFF2">lundi 26 octobre</text>
+  <rect x="181.0" y="408" width="80" height="5" rx="2.5" fill="#fff" opacity=".7"/>
+  <path d="M137 84 L 230.5 55 L 278.0 55 L 137 219.5 Z" fill="#fff" opacity=".08"/>
+</g>
+</svg></div><div id="ch-tx"><b>Galaxy A16</b><i>Reste en stock</i><strong id="ch-n">1</strong></div><div id="ch-sh"></div></div>
     <div id="ch-q" class="clip bub l" data-start="9.55" data-duration="3.71" style="left:80px;top:560px;width:760px"><em>SERGE → YANNICK</em>Yannick ! La facture de Koffi… tu l'as envoyée ?</div>
     <div id="ch-typ" class="clip" data-start="11.25" data-duration="2.01"><img src="assets/people/employe_face.png" alt="" /><span><i></i><i></i><i></i></span></div>
     <div id="ch-k1" class="clip cap big" data-start="8.09" data-duration="1.46"><span class="w">Personne </span><span class="w">ne </span><span class="w">sait </span><span class="w"><span class="t">vraiment.</span> </span></div>
@@ -201,6 +240,9 @@
     tl.fromTo("#ch-ne", { scale:0, rotation:-30 }, { scale:1, rotation:0, duration:0.45, ease:"back.out(2)" }, 3.94);
     tl.to("#ch-ne", { opacity:0, duration:0.3 }, 4.88);
     tl.fromTo("#ch-st", { scale:0.6, opacity:0 }, { scale:1, opacity:1, duration:0.6, ease:"expo.out" }, 4.88);
+    tl.fromTo("#ch-ph svg", { x:-260, rotation:-14, scale:0.8 }, { x:0, rotation:0, scale:1, duration:0.9, ease:"expo.out" }, 4.98);
+    tl.fromTo("#ch-ph svg", { y:0 }, { y:-14, duration:1.1, yoyo:true, repeat:2, ease:"sine.inOut" }, 5.88);
+    tl.fromTo("#ch-sh", { x:-300 }, { x:1200, duration:0.9, ease:"power2.inOut" }, 5.58);
     tl.set("#ch-n", { textContent:"1" }, 6.68);
     tl.set("#ch-n", { textContent:"0" }, 7.0);
     tl.set("#ch-n", { textContent:"?" }, 7.32);

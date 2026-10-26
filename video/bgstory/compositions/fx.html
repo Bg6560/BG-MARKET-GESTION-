@@ -155,11 +155,14 @@
     .dk .btn.v { background:#00D4C8; color:#04222A; } .dk .btn.d { background:rgba(20,40,70,.8); border:1px solid rgba(120,200,255,.2); }
 
     
+    .fxw { position:absolute; inset:0; overflow:hidden; }
+    .fxw i { position:absolute; left:-25%; width:150%; height:2400px; top:-240px; transform:skewX(-16deg); }
+    .fxw .a { background:#00D4C8; } .fxw .b { background:#FF6208; } .fxw .c { background:#FFFFFF; }
     .fxs { position:absolute; inset:0; overflow:hidden; }
     .fxs i { position:absolute; left:-200px; top:50%; width:1480px; height:300px; margin-top:-150px; background:linear-gradient(180deg,rgba(0,212,200,0),rgba(0,212,200,.25) 40%,rgba(255,255,255,.75) 50%,rgba(255,98,8,.2) 60%,rgba(255,98,8,0)); filter:blur(18px); }
   </style>
   <div id="root" data-composition-id="fx" data-width="1080" data-height="1920">
-<div id="fx-s0" class="clip fxs" data-start="12.5" data-duration="0.95"><i></i></div><div id="fx-s1" class="clip fxs" data-start="25.71" data-duration="0.95"><i></i></div><div id="fx-s2" class="clip fxs" data-start="33.95" data-duration="0.95"><i></i></div><div id="fx-s3" class="clip fxs" data-start="40.86" data-duration="0.95"><i></i></div><div id="fx-s4" class="clip fxs" data-start="60.46" data-duration="0.95"><i></i></div><div id="fx-s5" class="clip fxs" data-start="71.6" data-duration="0.95"><i></i></div><div id="fx-s6" class="clip fxs" data-start="82.32" data-duration="0.95"><i></i></div><div id="fx-s7" class="clip fxs" data-start="94.16" data-duration="0.95"><i></i></div><div id="fx-s8" class="clip fxs" data-start="97.24" data-duration="0.95"><i></i></div>
+<div id="fx-s0" class="clip fxs" data-start="12.5" data-duration="0.95"><i></i></div><div id="fx-s1" class="clip fxs" data-start="25.71" data-duration="0.95"><i></i></div><div id="fx-s2" class="clip fxs" data-start="33.95" data-duration="0.95"><i></i></div><div id="fx-s3" class="clip fxs" data-start="40.86" data-duration="0.95"><i></i></div><div id="fx-s4" class="clip fxs" data-start="60.46" data-duration="0.95"><i></i></div><div id="fx-s5" class="clip fxs" data-start="71.6" data-duration="0.95"><i></i></div><div id="fx-s6" class="clip fxs" data-start="82.32" data-duration="0.95"><i></i></div><div id="fx-s7" class="clip fxs" data-start="94.16" data-duration="0.95"><i></i></div><div id="fx-s8" class="clip fxs" data-start="97.24" data-duration="0.95"><i></i></div><div id="fx-w0" class="clip fxw" data-start="25.64" data-duration="0.9"><i class="a"></i><i class="b"></i><i class="c"></i></div><div id="fx-w1" class="clip fxw" data-start="40.79" data-duration="0.9"><i class="a"></i><i class="b"></i><i class="c"></i></div><div id="fx-w2" class="clip fxw" data-start="71.53" data-duration="0.9"><i class="a"></i><i class="b"></i><i class="c"></i></div><div id="fx-w3" class="clip fxw" data-start="94.09" data-duration="0.9"><i class="a"></i><i class="b"></i><i class="c"></i></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -186,6 +189,30 @@
     tl.to("#fx-s7 i", { opacity:0, duration:0.2 }, 94.92);
     tl.fromTo("#fx-s8 i", { y:-2400, skewY:-14, opacity:0 }, { y:2400, skewY:-14, opacity:0.8, duration:0.7, ease:"power2.inOut" }, 97.24);
     tl.to("#fx-s8 i", { opacity:0, duration:0.2 }, 98.0);
+    tl.fromTo("#fx-w0 .a", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 25.64);
+    tl.fromTo("#fx-w0 .b", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 25.7);
+    tl.fromTo("#fx-w0 .c", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 25.76);
+    tl.to("#fx-w0 .a", { xPercent:130, duration:0.4, ease:"power3.out" }, 26.1);
+    tl.to("#fx-w0 .b", { xPercent:130, duration:0.4, ease:"power3.out" }, 26.14);
+    tl.to("#fx-w0 .c", { xPercent:130, duration:0.4, ease:"power3.out" }, 26.06);
+    tl.fromTo("#fx-w1 .a", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 40.79);
+    tl.fromTo("#fx-w1 .b", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 40.85);
+    tl.fromTo("#fx-w1 .c", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 40.91);
+    tl.to("#fx-w1 .a", { xPercent:130, duration:0.4, ease:"power3.out" }, 41.25);
+    tl.to("#fx-w1 .b", { xPercent:130, duration:0.4, ease:"power3.out" }, 41.29);
+    tl.to("#fx-w1 .c", { xPercent:130, duration:0.4, ease:"power3.out" }, 41.21);
+    tl.fromTo("#fx-w2 .a", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 71.53);
+    tl.fromTo("#fx-w2 .b", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 71.59);
+    tl.fromTo("#fx-w2 .c", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 71.65);
+    tl.to("#fx-w2 .a", { xPercent:130, duration:0.4, ease:"power3.out" }, 71.99);
+    tl.to("#fx-w2 .b", { xPercent:130, duration:0.4, ease:"power3.out" }, 72.03);
+    tl.to("#fx-w2 .c", { xPercent:130, duration:0.4, ease:"power3.out" }, 71.95);
+    tl.fromTo("#fx-w3 .a", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 94.09);
+    tl.fromTo("#fx-w3 .b", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 94.15);
+    tl.fromTo("#fx-w3 .c", { xPercent:-130 }, { xPercent:0, duration:0.38, ease:"power3.in" }, 94.21);
+    tl.to("#fx-w3 .a", { xPercent:130, duration:0.4, ease:"power3.out" }, 94.55);
+    tl.to("#fx-w3 .b", { xPercent:130, duration:0.4, ease:"power3.out" }, 94.59);
+    tl.to("#fx-w3 .c", { xPercent:130, duration:0.4, ease:"power3.out" }, 94.51);
     window.__timelines["fx"] = tl;
   </script>
 </template>
