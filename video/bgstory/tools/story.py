@@ -649,7 +649,7 @@ def build_fx(cuts):
 
 
 def build_index(sfx):
-    order = ['bg', 'intro', 'chaos', 'months', 'turn', 'phone', 'team', 'payoff', 'perso', 'founder', 'end', 'subs', 'fx']
+    order = ['bg', 'shop', 'intro', 'chaos', 'months', 'turn', 'phone', 'team', 'payoff', 'perso', 'founder', 'end', 'subs', 'fx']
     hosts = ''
     for z, n in enumerate(order):
         s, e = HOSTS[n]
@@ -698,9 +698,73 @@ def plan_sfx():
     return s
 
 
+# ------------------------------------------------------------------ simulated set: the phone shop (night and day versions)
+def shop_svg(night):
+    wall = ('#15304A', '#0E2236') if night else ('#FFFFFF', '#E9F6F7')
+    shelf = '#24425F' if night else '#D7E6EE'
+    edge = '#33587A' if night else '#BFD3DE'
+    phc = ['#2C4A68', '#3A5B7C', '#1F3A55'] if night else ['#0B1F33', '#3B4A5C', '#F1F4F8']
+    scr = '#0F2A40' if night else '#BFEFF0'
+    tag = '#C2551A' if night else '#FF6208'
+    out = f'''<svg viewBox="0 0 1080 1920" width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="w{int(night)}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{wall[0]}"/><stop offset="1" stop-color="{wall[1]}"/></linearGradient>
+<linearGradient id="c{int(night)}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{'#1B3550' if night else '#FFFFFF'}"/><stop offset="1" stop-color="{'#0A1828' if night else '#DCEBF0'}"/></linearGradient></defs>
+<rect width="1080" height="1920" fill="url(#w{int(night)})"/>
+<rect x="0" y="0" width="1080" height="1920" fill="{'#00D4C8' if not night else '#00D4C8'}" opacity="{0.05 if not night else 0.04}"/>'''
+    for k, y in enumerate([330, 610, 890]):
+        out += f'<rect x="90" y="{y + 150}" width="900" height="18" rx="6" fill="{shelf}"/><rect x="90" y="{y + 168}" width="900" height="6" fill="{edge}"/>'
+        for i in range(9):
+            x = 120 + i * 96 + (k % 2) * 20
+            c = phc[(i + k) % 3]
+            out += (f'<rect x="{x}" y="{y + 30}" width="62" height="120" rx="12" fill="{c}"/>'
+                    f'<rect x="{x + 5}" y="{y + 38}" width="52" height="102" rx="8" fill="{scr}" opacity="{0.35 if night else 0.9}"/>'
+                    f'<rect x="{x + 8}" y="{y + 158}" width="44" height="8" rx="3" fill="{tag}" opacity="{0.6 if night else 0.9}"/>')
+    # counter
+    out += (f'<rect x="0" y="1330" width="1080" height="590" fill="url(#c{int(night)})"/>'
+            f'<rect x="0" y="1330" width="1080" height="10" fill="{edge}"/>'
+            f'<rect x="0" y="1520" width="1080" height="16" fill="#00D4C8" opacity="{0.35 if night else 0.85}"/>'
+            f'<rect x="0" y="1546" width="1080" height="6" fill="#FF6208" opacity="{0.3 if night else 0.8}"/>')
+    for i in range(6):
+        out += f'<rect x="{110 + i * 150}" y="1390" width="70" height="110" rx="12" fill="{phc[i % 3]}" opacity="0.8"/>'
+    return out + '</svg>'
+
+
+def build_shop(nights):
+    # visible windows of the set: story scenes before the app and the evening payoff; blurred behind the team
+    S0, S1 = 0.0, HOSTS['phone'][0] + 0.3
+    T0, T1 = HOSTS['team'][0], HOSTS['perso'][0] + 0.3
+    body = f'''    <div id="sh-a" class="clip shw" data-start="{S0}" data-duration="{r(S1 - S0)}"><div class="day">{shop_svg(False)}</div><div class="night">{shop_svg(True)}</div></div>
+    <div id="sh-b" class="clip shw" data-start="{r(T0)}" data-duration="{r(T1 - T0)}"><div class="day">{shop_svg(False)}</div><div class="night">{shop_svg(True)}</div></div>
+    <div id="sh-shut" class="clip" data-start="0" data-duration="{r(HOSTS['months'][1])}"></div>'''
+    css = '''
+    .shw { position:absolute; inset:0; }
+    .shw .day, .shw .night { position:absolute; inset:0; }
+    .sh-logo { position:absolute; left:290px; top:120px; width:500px; height:auto; opacity:.9; }
+    #sh-shut { position:absolute; left:0; top:0; width:1080px; height:520px; background:repeating-linear-gradient(180deg,#3a4a5c 0 26px,#2a3848 26px 30px); box-shadow:0 14px 30px rgba(0,0,0,.45); transform:translateY(-560px); }'''
+    tf = W('fermée')
+    js = f'''
+    tl.set(".shw .night", {{ opacity:0 }}, 0);
+    tl.to("#sh-a", {{ opacity:0.55, filter:"blur(3px)", duration:0.6 }}, {r(HOSTS['chaos'][0] - 0.3)});
+    tl.to("#sh-a", {{ opacity:0.35, filter:"blur(6px)", duration:0.8 }}, {r(HOSTS['turn'][0] - 0.2)});
+    tl.to("#sh-a", {{ opacity:0, duration:0.4 }}, {r(S1 - 0.45)});
+    tl.fromTo("#sh-b", {{ opacity:0 }}, {{ opacity:0.55, filter:"blur(5px)", duration:0.5 }}, {r(T0)});
+    tl.to("#sh-b", {{ opacity:1, filter:"blur(0px)", duration:0.6 }}, {r(HOSTS['payoff'][0])});
+    tl.to("#sh-b", {{ opacity:0, duration:0.35 }}, {r(T1 - 0.4)});
+    tl.fromTo("#sh-shut", {{ y:-560 }}, {{ y:-120, duration:1.4, ease:"power2.inOut" }}, {r(tf - 0.3)});
+    tl.to("#sh-shut", {{ y:-560, duration:1.0, ease:"power2.inOut" }}, {r(HOSTS['months'][1] - 1.1)});'''
+    for sel in ['#sh-a', '#sh-b']:
+        for a, b in nights:
+            js += f'''
+    tl.to("{sel} .night", {{ opacity:1, duration:1.2, ease:"power2.inOut" }}, {r(a)});
+    tl.to("{sel} .night", {{ opacity:0, duration:1.4, ease:"power2.inOut" }}, {r(b)});'''
+    write('shop', scene('shop', body, css, js))
+    HOSTS['shop'] = (0, DUR)
+
+
 if __name__ == '__main__':
-    build_bg(); build_subs(); build_intro(); build_chaos(); build_months(); build_turn(); build_phone(); build_team(); build_payoff(); build_perso(); build_founder(); build_end()
-    cuts = sorted(v[0] for k, v in HOSTS.items() if k not in ('bg', 'subs', 'intro') and v[0] > 1)
+    nights = build_bg(); build_subs(); build_intro(); build_chaos(); build_months(); build_turn(); build_phone(); build_team(); build_payoff(); build_perso(); build_founder(); build_end()
+    build_shop(nights)
+    cuts = sorted(v[0] for k, v in HOSTS.items() if k not in ('bg', 'subs', 'intro', 'shop') and v[0] > 1)
     build_fx(cuts)
     build_index(plan_sfx())
     for f in os.listdir(OUT):
