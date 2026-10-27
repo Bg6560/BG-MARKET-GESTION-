@@ -1,0 +1,131 @@
+/* Bibliothèque motion design — copiée dans chaque projet par `render.mjs init`.
+   Principe : tout est animation CSS. Le rendu met toutes les animations en pause
+   et fixe leur currentTime image par image : le résultat est exact et reproductible.
+
+   Temps :
+   - chaque .scene porte --t0 (début, s) et --dur (durée, s) ;
+   - chaque élément animé porte --d (retard dans la scène, s) et éventuellement --len (durée de l'effet, s).
+   Un effet s'écrit donc : <h1 class="fx fade-up" style="--d:.4">. */
+
+:root {
+  --bg: #0b0b10;
+  --fg: #ffffff;
+  --accent: #ff7a00;
+  --accent-2: #ffd166;
+  --muted: rgba(255, 255, 255, .7);
+  --font: 'Inter Display', 'Inter', 'DejaVu Sans', sans-serif;
+  /* Courbes « pro » : sortie douce, rebond léger */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+/* ---------- Scènes : visibles seulement dans leur fenêtre [t0, t0 + dur[ ---------- */
+.scene {
+  position: absolute; inset: 0; visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4%;
+  padding: 8%; text-align: center; isolation: isolate;
+  animation: scene-window calc(var(--dur) * 1s) linear calc(var(--t0) * 1s) none;
+}
+@keyframes scene-window { from, to { visibility: visible; } }
+
+/* ---------- Effets : retard relatif à la scène ---------- */
+.fx {
+  animation-duration: calc(var(--len, .8) * 1s);
+  animation-delay: calc((var(--t0, 0) + var(--d, 0)) * 1s);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+/* Sortie : à combiner sur un wrapper (.fx-out) pour enchaîner entrée et sortie */
+.fx-out {
+  animation-duration: calc(var(--len-out, .5) * 1s);
+  animation-delay: calc((var(--t0, 0) + var(--dur) - var(--len-out, .5) - var(--out-early, 0)) * 1s);
+  animation-timing-function: var(--ease-in-out);
+  animation-fill-mode: both;
+}
+
+/* Entrées */
+.fade        { animation-name: fade; }
+.fade-up     { animation-name: fade-up; }
+.fade-down   { animation-name: fade-down; }
+.slide-left  { animation-name: slide-left; }
+.slide-right { animation-name: slide-right; }
+.pop         { animation-name: pop; animation-timing-function: var(--ease-back); }
+.zoom-in     { animation-name: zoom-in; }
+.blur-in     { animation-name: blur-in; }
+.mask-up     { animation-name: mask-up; }            /* révélation par le bas (clip-path) */
+.wipe-right  { animation-name: wipe-right; }         /* révélation de gauche à droite */
+.stamp       { animation-name: stamp; animation-timing-function: var(--ease-back); }
+.spin-in     { animation-name: spin-in; animation-timing-function: var(--ease-back); }
+.draw        { animation-name: draw; }               /* SVG : stroke-dasharray/offset = longueur du tracé */
+.underline   { position: relative; }
+.underline::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -.08em; height: .12em; background: var(--accent);
+  transform-origin: left; animation: grow-x calc(var(--len, .6) * 1s) var(--ease-out) calc((var(--t0, 0) + var(--d, 0) + .3) * 1s) both;
+}
+
+/* Sorties */
+.out-fade { animation-name: out-fade; }
+.out-up   { animation-name: out-up; }
+.out-zoom { animation-name: out-zoom; }
+
+/* Mouvements continus (toute la scène) */
+.float     { animation: float calc(var(--dur) * 1s) var(--ease-in-out) calc(var(--t0) * 1s) both; }
+.ken-burns { animation: ken-burns calc(var(--dur) * 1s) linear calc(var(--t0) * 1s) both; }
+.drift     { animation: drift calc(var(--dur) * 1s) linear calc(var(--t0) * 1s) both; }
+
+@keyframes fade        { from { opacity: 0; } }
+@keyframes fade-up     { from { opacity: 0; transform: translateY(60px); } }
+@keyframes fade-down   { from { opacity: 0; transform: translateY(-60px); } }
+@keyframes slide-left  { from { opacity: 0; transform: translateX(120px); } }
+@keyframes slide-right { from { opacity: 0; transform: translateX(-120px); } }
+@keyframes pop         { from { opacity: 0; transform: scale(.4); } }
+@keyframes zoom-in     { from { opacity: 0; transform: scale(1.25); } }
+@keyframes blur-in     { from { opacity: 0; filter: blur(24px); transform: scale(1.05); } }
+@keyframes mask-up     { from { clip-path: inset(100% 0 0 0); transform: translateY(30%); } to { clip-path: inset(-25% -25% -25% -25%); } }
+@keyframes wipe-right  { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(-25% -25% -25% -25%); } }
+@keyframes stamp       { 0% { opacity: 0; transform: scale(2.4) rotate(-12deg); } 100% { opacity: 1; transform: scale(1) rotate(-6deg); } }
+@keyframes spin-in     { from { opacity: 0; transform: rotate(-180deg) scale(.3); } }
+@keyframes draw        { from { stroke-dashoffset: var(--path-len, 1000); } to { stroke-dashoffset: 0; } }
+@keyframes grow-x      { from { transform: scaleX(0); } }
+@keyframes out-fade    { to { opacity: 0; } }
+@keyframes out-up      { to { opacity: 0; transform: translateY(-80px); } }
+@keyframes out-zoom    { to { opacity: 0; transform: scale(.85); filter: blur(10px); } }
+@keyframes float       { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3%); } }
+@keyframes ken-burns   { from { transform: scale(1); } to { transform: scale(1.12) translate(-2%, -1%); } }
+@keyframes drift       { from { transform: translateX(0); } to { transform: translateX(-6%); } }
+
+/* ---------- Texte cinétique : chaque mot apparaît à tour de rôle ----------
+   <h1 class="words" data-step=".08" style="--d:.2">Votre marché en ligne</h1>
+   Le script de la composition découpe les mots (voir template.html). */
+.words .w { display: inline-block; white-space: pre; }
+.words.fx { animation: none; }
+
+/* ---------- Transitions entre scènes (bandeau qui balaie l'écran) ----------
+   <div class="wipe" style="--at:4.6"></div> : placé dans #stage, hors scène. */
+.wipe {
+  position: absolute; inset: 0; background: var(--accent); z-index: 50; pointer-events: none;
+  transform: translateX(-100%);
+  animation: wipe-pass .9s var(--ease-in-out) calc((var(--at) - .45) * 1s) both;
+}
+@keyframes wipe-pass { 0% { transform: translateX(-100%); } 50% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+
+/* ---------- Blocs utiles ---------- */
+.title    { font-size: 9vmin; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+.subtitle { font-size: 4.6vmin; font-weight: 500; color: var(--muted); line-height: 1.3; }
+.kicker   { font-size: 3.4vmin; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+.big      { font-size: 18vmin; font-weight: 900; line-height: 1; color: var(--accent); }
+.chip     { display: inline-block; padding: .4em 1em; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 800; font-size: 4vmin; }
+.card     { font-size: 4.6vmin; font-weight: 600; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14); border-radius: 3vmin; padding: 2.4vmin 5vmin; }
+.row      { display: flex; gap: 4vmin; align-items: center; justify-content: center; flex-wrap: wrap; }
+.logo     { max-width: 50%; max-height: 22%; object-fit: contain; }
+.cover    { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+.shade    { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.8)); }
+/* Maquette de téléphone pour montrer une capture d'écran */
+.phone    { height: 58vmin; aspect-ratio: 9 / 19.5; border-radius: 6vmin; border: 1.6vmin solid #111; background: #000; overflow: hidden; box-shadow: 0 4vmin 10vmin rgba(0,0,0,.5); }
+.phone img { width: 100%; height: 100%; object-fit: cover; }

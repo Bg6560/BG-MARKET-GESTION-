@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Composition motion design</title>
+<link rel="stylesheet" href="lib.css">
+<style>
+  /* Charte du projet : surcharger ici les couleurs et la police de lib.css */
+  :root {
+    --bg: #0b0b10;
+    --fg: #ffffff;
+    --accent: #ff7a00;
+    --accent-2: #ffd166;
+  }
+  body { background: radial-gradient(120% 80% at 50% 0%, #1d1d2b 0%, var(--bg) 60%); }
+</style>
+</head>
+<!-- Réglages lus par render.mjs : taille (px), images/s, durée totale (s) -->
+<body data-width="1080" data-height="1920" data-fps="30" data-duration="15">
+<div id="stage">
+
+  <!-- Scène 1 — accroche (0 → 4 s) -->
+  <section class="scene" style="--t0:0; --dur:4">
+    <div class="fx-out out-up" style="--len-out:.5">
+      <p class="kicker fx fade" style="--d:.2">BG Market</p>
+      <h1 class="title words" data-step=".09" style="--d:.5">Votre marché, en ligne</h1>
+    </div>
+  </section>
+
+  <!-- Scène 2 — le chiffre clé (4 → 8 s) -->
+  <section class="scene" style="--t0:4; --dur:4">
+    <p class="subtitle fx fade-up" style="--d:.3">Déjà plus de</p>
+    <p class="big fx pop" style="--d:.5"><span data-count-to="1500" data-at=".5" data-len="1.4">0</span></p>
+    <p class="subtitle fx fade-up" style="--d:1.2">produits disponibles</p>
+  </section>
+
+  <!-- Scène 3 — bénéfices (8 → 12 s) -->
+  <section class="scene" style="--t0:8; --dur:4">
+    <h2 class="title fx mask-up" style="--d:.2">Simple. <span class="underline" style="--d:.2">Rapide.</span></h2>
+    <div class="row">
+      <span class="chip fx pop" style="--d:.9">Livraison</span>
+      <span class="chip fx pop" style="--d:1.1">Paiement mobile</span>
+      <span class="chip fx pop" style="--d:1.3">WhatsApp</span>
+    </div>
+  </section>
+
+  <!-- Scène 4 — appel à l'action (12 → 15 s) -->
+  <section class="scene" style="--t0:12; --dur:3">
+    <h2 class="title fx blur-in" style="--d:.2">Commandez maintenant</h2>
+    <p class="chip fx stamp" style="--d:.9">bgmarket.example</p>
+  </section>
+
+  <!-- Transitions : un balayage centré sur chaque changement de scène -->
+  <div class="wipe" style="--at:4"></div>
+  <div class="wipe" style="--at:12"></div>
+</div>
+
+<!-- Bruitages synthétisés au rendu : whoosh, pop, click, rise, impact (t = secondes) -->
+<script type="application/json" id="mv-audio">
+{ "sfx": [
+  { "t": 0.5,  "s": "whoosh" },
+  { "t": 3.6,  "s": "whoosh" },
+  { "t": 4.5,  "s": "pop" },
+  { "t": 7.6,  "s": "rise" },
+  { "t": 8.9,  "s": "click" }, { "t": 9.1, "s": "click" }, { "t": 9.3, "s": "click" },
+  { "t": 11.6, "s": "whoosh" },
+  { "t": 12.9, "s": "impact" }
+] }
+</script>
+
+<script>
+/* Moteur de la composition — ne pas modifier, sauf pour ajouter des effets pilotés en JS dans seek(). */
+(() => {
+  /* Texte cinétique : découpe .words en mots animés l'un après l'autre */
+  document.querySelectorAll('.words').forEach((el) => {
+    const step = parseFloat(el.dataset.step || '.08');
+    const parts = el.textContent.trim().split(/(\s+)/);
+    el.textContent = '';
+    let i = 0;
+    for (const p of parts) {
+      const s = document.createElement('span');
+      s.textContent = p;
+      if (p.trim()) {
+        s.className = 'w fx ' + (el.dataset.fx || 'fade-up');
+        s.style.setProperty('--d', `calc(${getComputedStyle(el).getPropertyValue('--d') || 0} + ${(i++ * step).toFixed(3)})`);
+      }
+      el.appendChild(s);
+    }
+  });
+
+  /* Compteurs : <span data-count-to="1500" data-at="1" data-len="1.2" data-from="0" data-decimals="0"> (data-at relatif à la scène) */
+  const counters = [...document.querySelectorAll('[data-count-to]')].map((el) => {
+    const scene = el.closest('.scene');
+    const t0 = scene ? parseFloat(getComputedStyle(scene).getPropertyValue('--t0')) || 0 : 0;
+    return { el, start: t0 + parseFloat(el.dataset.at || 0), len: parseFloat(el.dataset.len || 1),
+      from: parseFloat(el.dataset.from || 0), to: parseFloat(el.dataset.countTo), dec: parseInt(el.dataset.decimals || 0, 10) };
+  });
+  const fmt = (n, dec) => n.toFixed(dec).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); /* 1 500,5 */
+
+  const duration = parseFloat(document.body.dataset.duration);
+  window.__mv = {
+    duration,
+    fps: parseInt(document.body.dataset.fps, 10),
+    width: parseInt(document.body.dataset.width, 10),
+    height: parseInt(document.body.dataset.height, 10),
+    /* Place toute la composition à l'instant t (secondes) */
+    seek(t) {
+      for (const a of document.getAnimations()) { a.pause(); a.currentTime = t * 1000; }
+      for (const c of counters) {
+        const p = Math.min(1, Math.max(0, (t - c.start) / c.len));
+        c.el.textContent = fmt(c.from + (c.to - c.from) * (1 - Math.pow(1 - p, 3)), c.dec);
+      }
+    },
+  };
+
+  /* Ouverte dans un navigateur (hors rendu) : lecture en boucle pour l'aperçu */
+  if (!window.__MV_RENDER) {
+    const t0 = performance.now();
+    const tick = () => { window.__mv.seek(((performance.now() - t0) / 1000) % duration); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+})();
+</script>
+</body>
+</html>

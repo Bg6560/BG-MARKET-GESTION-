@@ -5,3 +5,4 @@ tools/out/
 sauvegardes/
 backups/
 tests/e2e/shots/gallery/
+motion/*/out/
